@@ -51,6 +51,27 @@ vkhillgaruda is a collection of Flutter apps built to support seva coordination 
 
 # How to build
 
+## Pre-requisites
+
+Install CLI tools once (if not already installed)
+
+```bash
+npm install -g firebase-tools
+dart pub global activate flutterfire_cli
+firebase login
+```
+
+add firebase cli to PATH
+for windows:
+```ps
+  $pubBin = "$env:LOCALAPPDATA\Pub\Cache\bin"
+  $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+  if ($userPath -notlike "*$pubBin*") {
+      [Environment]::SetEnvironmentVariable("Path", "$userPath;$pubBin", "User")
+  }
+```
+
+
 ## 1. Clone the Repository
 ```bash
 git clone https://github.com/jayanta-debnath/vkhillgaruda.git
@@ -67,14 +88,9 @@ Add the secrets:
    `garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json`
 4. copy `key.properties` for both apps to:
     `<app>/android`
+   make sure the contents of the file has the right path to key materials
 
 Generate Firebase Dart config files (not committed to git):
-
-```bash
-# Install CLI tools once (if not already installed)
-npm install -g firebase-tools
-dart pub global activate flutterfire_cli
-firebase login
 
 # Garuda
 cd vkhgaruda
@@ -83,7 +99,7 @@ flutterfire configure --project=garuda-1ba07 --platforms=android,web --out=lib/f
 # SangeetSeva
 cd ../vkhsangeetseva
 flutterfire configure --project=garuda-1ba07 --platforms=android,web --out=lib/firebase_options.dart
-```
+
 
 ## 2. Install Dependencies
 
