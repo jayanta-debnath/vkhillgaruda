@@ -59,52 +59,44 @@ class _TicketPageState extends State<TicketPage>
     String dbDate = DateFormat('yyyy-MM-dd').format(widget.session.timestamp);
     String sessionKey =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
-    // FB().listenForChange(
-    //     "${Const().dbrootGaruda}/NityaSeva/$dbDate/$sessionKey/Tickets",
-    //     FBCallbacks(
-    //       // add
-    //       add: (data) {
-    //         // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-    //         // setState(() {
-    //         //   if (_tickets.values.toList().indexWhere((element) =>
-    //         //           element.timestamp ==
-    //         //           DateTime.parse(ticket['timestamp'])) ==
-    //         //       -1) {
-    //         //     _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
-    //         //     _tickets = Map.fromEntries(_tickets.entries.toList()
-    //         //       ..sort((a, b) =>
-    //         //           b.value.timestamp.compareTo(a.value.timestamp)));
-    //         //   }
-    //         // });
-    //       },
+    FB().listenForChange(
+        "${Const().dbrootGaruda}/NityaSeva/$dbDate/$sessionKey/Tickets",
+        FBCallbacks(
+          // add
+          add: (data) {
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+            if (!_tickets.containsKey(key)) {
+              setState(() {
+                _tickets[key] = ticket;
 
-    //       // edit
-    //       edit: () async {
-    //         // await refresh();
-    //       },
+                _tickets = Map.fromEntries(_tickets.entries.toList()
+                  ..sort((a, b) =>
+                      b.value.timestamp.compareTo(a.value.timestamp)));
+              });
+            }
+          },
 
-    //       // delete
-    //       delete: (data) {
-    //         // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-    //         // print(_tickets);
-    //         // if (_tickets.values.toList().indexWhere((element) =>
-    //         //         element.timestamp == DateTime.parse(ticket['timestamp'])) !=
-    //         //     -1) {
-    //         //   print("check");
-    //         //   setState(() {
-    //         //     _tickets.remove(Ticket.fromJson(ticket));
-    //         //     _tickets = Map.fromEntries(_tickets.entries.toList()
-    //         //       ..sort((a, b) =>
-    //         //           b.value.timestamp.compareTo(a.value.timestamp)));
-    //         //   });
-    //         // }
-    //       },
+          // edit
+          edit: () async {
+            await refresh();
+          },
 
-    //       // get listeners
-    //       getListeners: (listeners) {
-    //         _listeners = listeners;
-    //       },
-    //     ));
+          // delete
+          delete: (data) {
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+
+            setState(() {
+              _tickets.remove(key);
+            });
+          },
+
+          // get listeners
+          getListeners: (listeners) {
+            _listeners = listeners;
+          },
+        ));
 
     // write the current session to LS
     // this is used by tally cash and tally UPI

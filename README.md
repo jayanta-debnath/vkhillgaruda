@@ -100,6 +100,17 @@ cd vkhsangeetseva && flutter pub get
 
 These files are automatically ignored by `.gitignore`
 
+# Archiecture and Concepts
+
+## data synchronization
+
+1. The tickets page follows a "local first" approach.
+1. Local data entry directly is used to update the UI
+1. Update data to server asynchronously
+1. Incoming "add" data from other devices will be added only when "key" not existing locally
+1. For incoming "edit" data, server data will be given preference
+
 # License
 
 See [LICENSE](LICENSE) file for details.
+
