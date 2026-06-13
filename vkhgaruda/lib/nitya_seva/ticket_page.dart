@@ -59,52 +59,52 @@ class _TicketPageState extends State<TicketPage>
     String dbDate = DateFormat('yyyy-MM-dd').format(widget.session.timestamp);
     String sessionKey =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
-    FB().listenForChange(
-        "${Const().dbrootGaruda}/NityaSeva/$dbDate/$sessionKey/Tickets",
-        FBCallbacks(
-          // add
-          add: (data) {
-            // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            // setState(() {
-            //   if (_tickets.values.toList().indexWhere((element) =>
-            //           element.timestamp ==
-            //           DateTime.parse(ticket['timestamp'])) ==
-            //       -1) {
-            //     _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
-            //     _tickets = Map.fromEntries(_tickets.entries.toList()
-            //       ..sort((a, b) =>
-            //           b.value.timestamp.compareTo(a.value.timestamp)));
-            //   }
-            // });
-          },
+    // FB().listenForChange(
+    //     "${Const().dbrootGaruda}/NityaSeva/$dbDate/$sessionKey/Tickets",
+    //     FBCallbacks(
+    //       // add
+    //       add: (data) {
+    //         // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
+    //         // setState(() {
+    //         //   if (_tickets.values.toList().indexWhere((element) =>
+    //         //           element.timestamp ==
+    //         //           DateTime.parse(ticket['timestamp'])) ==
+    //         //       -1) {
+    //         //     _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
+    //         //     _tickets = Map.fromEntries(_tickets.entries.toList()
+    //         //       ..sort((a, b) =>
+    //         //           b.value.timestamp.compareTo(a.value.timestamp)));
+    //         //   }
+    //         // });
+    //       },
 
-          // edit
-          edit: () async {
-            // await refresh();
-          },
+    //       // edit
+    //       edit: () async {
+    //         // await refresh();
+    //       },
 
-          // delete
-          delete: (data) {
-            // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            // print(_tickets);
-            // if (_tickets.values.toList().indexWhere((element) =>
-            //         element.timestamp == DateTime.parse(ticket['timestamp'])) !=
-            //     -1) {
-            //   print("check");
-            //   setState(() {
-            //     _tickets.remove(Ticket.fromJson(ticket));
-            //     _tickets = Map.fromEntries(_tickets.entries.toList()
-            //       ..sort((a, b) =>
-            //           b.value.timestamp.compareTo(a.value.timestamp)));
-            //   });
-            // }
-          },
+    //       // delete
+    //       delete: (data) {
+    //         // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
+    //         // print(_tickets);
+    //         // if (_tickets.values.toList().indexWhere((element) =>
+    //         //         element.timestamp == DateTime.parse(ticket['timestamp'])) !=
+    //         //     -1) {
+    //         //   print("check");
+    //         //   setState(() {
+    //         //     _tickets.remove(Ticket.fromJson(ticket));
+    //         //     _tickets = Map.fromEntries(_tickets.entries.toList()
+    //         //       ..sort((a, b) =>
+    //         //           b.value.timestamp.compareTo(a.value.timestamp)));
+    //         //   });
+    //         // }
+    //       },
 
-          // get listeners
-          getListeners: (listeners) {
-            _listeners = listeners;
-          },
-        ));
+    //       // get listeners
+    //       getListeners: (listeners) {
+    //         _listeners = listeners;
+    //       },
+    //     ));
 
     // write the current session to LS
     // this is used by tally cash and tally UPI
@@ -181,13 +181,14 @@ class _TicketPageState extends State<TicketPage>
     }
 
     // fetch tickets
-    List ticketsJson = await FB().getList(
-        path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets");
+    String dbpath =
+        "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets";
+    Map<String, dynamic> ticketsJson = await FB().getJson(path: dbpath);
     await _lock.synchronized(() async {
       _tickets.clear();
-      for (var t in ticketsJson) {
-        Map<String, dynamic> ticket = Map<String, dynamic>.from(t);
-        _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
+      for (var t in ticketsJson.values) {
+        Ticket ticket = Utils().convertRawToDatatype(t, Ticket.fromJson);
+        _tickets[Utils().convertTimestampToDbKey(ticket.timestamp)] = ticket;
       }
     });
 
