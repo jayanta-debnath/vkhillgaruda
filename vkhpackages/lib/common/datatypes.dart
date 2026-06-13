@@ -75,7 +75,9 @@ class Ticket {
       amount: json['amount'],
       mode: json['mode'],
       ticketNumber: json['ticketNumber'],
-      uploaded: json['uploaded'] ?? false,
+      uploaded:
+          json['uploaded'] ??
+          true, // setting default to true for backward compatibility
       user: json['user'],
       note: json['note'],
       seva: json['seva'],

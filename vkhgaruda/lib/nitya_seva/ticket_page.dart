@@ -28,6 +28,7 @@ class _TicketPageState extends State<TicketPage> {
   bool _isSessionLocked = false;
   bool _isAdmin = false;
   int _nextFestivalTicketNumber = 1;
+  bool _isSyncing = false;
 
   // lists
   Map<String, Ticket> _tickets = {};
@@ -55,40 +56,40 @@ class _TicketPageState extends State<TicketPage> {
         FBCallbacks(
           // add
           add: (data) {
-            Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            setState(() {
-              if (_tickets.values.toList().indexWhere((element) =>
-                      element.timestamp ==
-                      DateTime.parse(ticket['timestamp'])) ==
-                  -1) {
-                _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
-                _tickets = Map.fromEntries(_tickets.entries.toList()
-                  ..sort((a, b) =>
-                      b.value.timestamp.compareTo(a.value.timestamp)));
-              }
-            });
+            // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
+            // setState(() {
+            //   if (_tickets.values.toList().indexWhere((element) =>
+            //           element.timestamp ==
+            //           DateTime.parse(ticket['timestamp'])) ==
+            //       -1) {
+            //     _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
+            //     _tickets = Map.fromEntries(_tickets.entries.toList()
+            //       ..sort((a, b) =>
+            //           b.value.timestamp.compareTo(a.value.timestamp)));
+            //   }
+            // });
           },
 
           // edit
           edit: () async {
-            await refresh();
+            // await refresh();
           },
 
           // delete
           delete: (data) {
-            Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            print(_tickets);
-            if (_tickets.values.toList().indexWhere((element) =>
-                    element.timestamp == DateTime.parse(ticket['timestamp'])) !=
-                -1) {
-              print("check");
-              setState(() {
-                _tickets.remove(Ticket.fromJson(ticket));
-                _tickets = Map.fromEntries(_tickets.entries.toList()
-                  ..sort((a, b) =>
-                      b.value.timestamp.compareTo(a.value.timestamp)));
-              });
-            }
+            // Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
+            // print(_tickets);
+            // if (_tickets.values.toList().indexWhere((element) =>
+            //         element.timestamp == DateTime.parse(ticket['timestamp'])) !=
+            //     -1) {
+            //   print("check");
+            //   setState(() {
+            //     _tickets.remove(Ticket.fromJson(ticket));
+            //     _tickets = Map.fromEntries(_tickets.entries.toList()
+            //       ..sort((a, b) =>
+            //           b.value.timestamp.compareTo(a.value.timestamp)));
+            //   });
+            // }
           },
 
           // get listeners
@@ -516,38 +517,51 @@ class _TicketPageState extends State<TicketPage> {
                                               }
                                             }
 
-                                            // add ticket to database
-                                            String dbDate = DateFormat(
-                                                    "yyyy-MM-dd")
-                                                .format(
-                                                    widget.session.timestamp)
-                                                .toString();
-                                            String dbSession = widget
-                                                .session.timestamp
-                                                .toIso8601String()
-                                                .replaceAll(".", "^");
-                                            String key = ticketNew.timestamp
-                                                .toIso8601String()
-                                                .replaceAll(".", "^");
                                             if (ticket == null) {
                                               // add
-                                              await FB().addMapToList(
-                                                  path:
-                                                      "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
-                                                  data: ticketNew.toJson());
+
+                                              // UI update
+                                              setState(() {
+                                                String key = Utils()
+                                                    .convertTimestampToDbKey(
+                                                        ticketNew.timestamp);
+                                                _tickets[key] = ticketNew;
+
+                                                _tickets = Map.fromEntries(
+                                                    _tickets.entries.toList()
+                                                      ..sort((a, b) => b
+                                                          .value.timestamp
+                                                          .compareTo(a.value
+                                                              .timestamp)));
+                                              });
+
+                                              // sync to db
+                                              _syncAdd(ticketNew);
                                             } else {
                                               // edit
-                                              await FB().editJson(
-                                                  path:
-                                                      "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
-                                                  json: ticketNew.toJson());
+
+                                              // UI update
+                                              setState(() {
+                                                String key = Utils()
+                                                    .convertTimestampToDbKey(
+                                                        ticket.timestamp);
+                                                _tickets[key] = ticketNew;
+
+                                                _tickets = Map.fromEntries(
+                                                    _tickets.entries.toList()
+                                                      ..sort((a, b) => b
+                                                          .value.timestamp
+                                                          .compareTo(a.value
+                                                              .timestamp)));
+                                              });
+
+                                              // sync to db
+                                              _syncEdit(ticketNew);
                                             }
 
                                             // clear all lists
                                             sevaNames.clear();
                                             filteredTickets.clear();
-
-                                            setState(() {});
                                           });
                                         } finally {
                                           if (mounted) {
@@ -725,19 +739,15 @@ class _TicketPageState extends State<TicketPage> {
         msg: "Are you sure you want to delete this ticket?",
         callbacks: ConfirmationCallbacks(onConfirm: () {
           // delete ticket from list
-          // setState(() {
-          //   _tickets.remove(ticket);
-          // });
+          String key = _tickets.keys.firstWhere((k) => _tickets[k] == ticket);
+          setState(() {
+            _tickets.remove(key);
 
-          // delete ticket from database
-          String dbDate =
-              DateFormat("yyyy-MM-dd").format(widget.session.timestamp);
-          String dbSession =
-              widget.session.timestamp.toIso8601String().replaceAll(".", "^");
-          String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
-          FB().deleteValue(
-              path:
-                  "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
+            _tickets = Map.fromEntries(_tickets.entries.toList()
+              ..sort((a, b) => b.value.timestamp.compareTo(a.value.timestamp)));
+          });
+
+          _syncDelete(ticket);
         }));
   }
 
@@ -1112,6 +1122,65 @@ class _TicketPageState extends State<TicketPage> {
             child: Text("OK"),
           )
         ]);
+  }
+
+  Future<void> _syncAdd(Ticket ticket) async {
+    setState(() {
+      _isSyncing = true;
+    });
+
+    String dbDate =
+        DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+
+    await FB().addMapToList(
+        path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
+        data: ticket.toJson());
+
+    setState(() {
+      _isSyncing = false;
+    });
+  }
+
+  Future<void> _syncDelete(Ticket ticket) async {
+    setState(() {
+      _isSyncing = true;
+    });
+
+    // delete ticket from database
+    String dbDate = DateFormat("yyyy-MM-dd").format(widget.session.timestamp);
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+    String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
+    FB().deleteValue(
+        path:
+            "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
+
+    setState(() {
+      _isSyncing = false;
+    });
+  }
+
+  Future<void> _syncEdit(Ticket ticket) async {
+    setState(() {
+      _isSyncing = true;
+    });
+
+    String dbDate =
+        DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+    String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
+
+    await FB().editJson(
+        path:
+            "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
+        json: ticket.toJson());
+
+    setState(() {
+      _isSyncing = false;
+    });
   }
 
   @override
