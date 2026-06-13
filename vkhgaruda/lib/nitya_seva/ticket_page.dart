@@ -8,6 +8,7 @@ import 'package:vkhgaruda/home/ticket_settings.dart';
 import 'package:vkhgaruda/nitya_seva/tally_cash.dart';
 import 'package:vkhgaruda/nitya_seva/tally_upi_card.dart';
 import 'package:vkhgaruda/widgets/common_widgets.dart';
+import 'package:vkhpackages/common/file_logger.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class TicketPage extends StatefulWidget {
@@ -31,6 +32,7 @@ class _TicketPageState extends State<TicketPage>
   int _nextFestivalTicketNumber = 1;
   bool _isSyncing = false;
   int _syncOperationCount = 0;
+  late final FileLogger _logger;
 
   // lists
   Map<String, Ticket> _tickets = {};
@@ -42,6 +44,8 @@ class _TicketPageState extends State<TicketPage>
   @override
   initState() {
     super.initState();
+
+    _logger = FileLogger(widget.session.name);
 
     _syncAnimationController = AnimationController(
       vsync: this,
@@ -73,12 +77,15 @@ class _TicketPageState extends State<TicketPage>
                 _tickets = Map.fromEntries(_tickets.entries.toList()
                   ..sort((a, b) =>
                       b.value.timestamp.compareTo(a.value.timestamp)));
+
+                _logger.log("AddTicketServer, ${ticket.toJson()}");
               });
             }
           },
 
           // edit
           edit: () async {
+            _logger.log("EditTicketServer");
             await refresh();
           },
 
@@ -90,6 +97,8 @@ class _TicketPageState extends State<TicketPage>
             setState(() {
               _tickets.remove(key);
             });
+
+            _logger.log("DeleteTicketServer, ${ticket.toJson()}");
           },
 
           // get listeners
@@ -567,6 +576,8 @@ class _TicketPageState extends State<TicketPage>
 
                                               // sync to db
                                               _syncAdd(ticketNew);
+                                              _logger.log(
+                                                  "AddTicketLocal, ${ticketNew.toJson()}");
                                             } else {
                                               // edit
 
@@ -587,6 +598,8 @@ class _TicketPageState extends State<TicketPage>
 
                                               // sync to db
                                               _syncEdit(ticketNew);
+                                              _logger.log(
+                                                  "EditTicketLocal, ${ticketNew.toJson()}");
                                             }
 
                                             // clear all lists
@@ -778,6 +791,7 @@ class _TicketPageState extends State<TicketPage>
           });
 
           _syncDelete(ticket);
+          _logger.log("AddTicketLocal, ${ticket.toJson()}");
         }));
   }
 
