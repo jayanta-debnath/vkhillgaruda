@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-class FileLogger {
-  FileLogger([this.filename]) {
+class LoggerImpl {
+  LoggerImpl([this.filename]) {
     _initialize();
   }
 
@@ -21,6 +21,7 @@ class FileLogger {
 
       _isReady = true;
     } catch (_) {
+      _sink = null;
       _isReady = false;
     }
   }
@@ -48,6 +49,7 @@ class FileLogger {
 
     await flush();
     await _sink?.close();
+    _sink = null;
     _isReady = false;
   }
 }
