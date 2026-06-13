@@ -63,7 +63,7 @@ class Ticket {
     required this.amount,
     required this.mode,
     required this.ticketNumber,
-    this.uploaded = false,
+    required this.uploaded,
     required this.user,
     required this.note,
     required this.seva,

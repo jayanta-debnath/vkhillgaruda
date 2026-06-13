@@ -19,7 +19,8 @@ class TicketPage extends StatefulWidget {
   _TicketPageState createState() => _TicketPageState();
 }
 
-class _TicketPageState extends State<TicketPage> {
+class _TicketPageState extends State<TicketPage>
+    with SingleTickerProviderStateMixin {
   // locals
   final Lock _lock = Lock();
   bool _isLoading = true;
@@ -29,16 +30,23 @@ class _TicketPageState extends State<TicketPage> {
   bool _isAdmin = false;
   int _nextFestivalTicketNumber = 1;
   bool _isSyncing = false;
+  int _syncOperationCount = 0;
 
   // lists
   Map<String, Ticket> _tickets = {};
 
   // controllers, listeners and focus nodes
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
+  late final AnimationController _syncAnimationController;
 
   @override
   initState() {
     super.initState();
+
+    _syncAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
 
     // check if user is admin
     Utils().isAdmin().then((isAdmin) {
@@ -114,8 +122,37 @@ class _TicketPageState extends State<TicketPage> {
     for (var listener in _listeners) {
       listener.cancel();
     }
+    _syncAnimationController.dispose();
 
     super.dispose();
+  }
+
+  void _setSyncing(bool value) {
+    if (!mounted) {
+      return;
+    }
+
+    if (value) {
+      _syncOperationCount++;
+    } else if (_syncOperationCount > 0) {
+      _syncOperationCount--;
+    }
+
+    bool isSyncing = _syncOperationCount > 0;
+    if (_isSyncing == isSyncing) {
+      return;
+    }
+
+    setState(() {
+      _isSyncing = isSyncing;
+    });
+
+    if (isSyncing) {
+      _syncAnimationController.repeat();
+    } else {
+      _syncAnimationController.stop();
+      _syncAnimationController.reset();
+    }
   }
 
   Future<void> refresh({bool? spinner = true}) async {
@@ -1125,47 +1162,41 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   Future<void> _syncAdd(Ticket ticket) async {
-    setState(() {
-      _isSyncing = true;
-    });
+    _setSyncing(true);
 
     String dbDate =
         DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
     String dbSession =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
 
-    await FB().addMapToList(
-        path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
-        data: ticket.toJson());
-
-    setState(() {
-      _isSyncing = false;
-    });
+    try {
+      await FB().addMapToList(
+          path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
+          data: ticket.toJson());
+    } finally {
+      _setSyncing(false);
+    }
   }
 
   Future<void> _syncDelete(Ticket ticket) async {
-    setState(() {
-      _isSyncing = true;
-    });
+    _setSyncing(true);
 
     // delete ticket from database
     String dbDate = DateFormat("yyyy-MM-dd").format(widget.session.timestamp);
     String dbSession =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
     String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
-    FB().deleteValue(
-        path:
-            "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
-
-    setState(() {
-      _isSyncing = false;
-    });
+    try {
+      await FB().deleteValue(
+          path:
+              "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
+    } finally {
+      _setSyncing(false);
+    }
   }
 
   Future<void> _syncEdit(Ticket ticket) async {
-    setState(() {
-      _isSyncing = true;
-    });
+    _setSyncing(true);
 
     String dbDate =
         DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
@@ -1173,14 +1204,14 @@ class _TicketPageState extends State<TicketPage> {
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
     String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
 
-    await FB().editJson(
-        path:
-            "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
-        json: ticket.toJson());
-
-    setState(() {
-      _isSyncing = false;
-    });
+    try {
+      await FB().editJson(
+          path:
+              "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
+          json: ticket.toJson());
+    } finally {
+      _setSyncing(false);
+    }
   }
 
   @override
@@ -1232,40 +1263,14 @@ class _TicketPageState extends State<TicketPage> {
                   },
                 ),
 
-                // lock session
-                if (!_isSessionLocked)
-                  IconButton(
-                    icon: Icon(Icons.lock_open, size: 32),
-                    onPressed: _onLockSession,
+                // sync button
+                IconButton(
+                  icon: RotationTransition(
+                    turns: _syncAnimationController,
+                    child: Icon(Icons.refresh, size: 32),
                   ),
-
-                // unlock session
-                if (_isSessionLocked)
-                  IconButton(
-                    icon: Icon(Icons.lock, size: 32),
-                    onPressed: () async {
-                      String dbdate = DateFormat('yyyy-MM-dd')
-                          .format(widget.session.timestamp);
-                      String key = widget.session.timestamp
-                          .toIso8601String()
-                          .replaceAll(".", "^");
-                      String sessionPath =
-                          "${Const().dbrootGaruda}/NityaSeva/$dbdate/$key";
-                      SessionLock? lockStatus = await Utils().unlockSession(
-                          context: context, sessionPath: sessionPath);
-                      if (lockStatus == null) {
-                        // if unlock failed, return
-                        return;
-                      } else {
-                        widget.session.sessionLock = lockStatus;
-                      }
-
-                      // unlock the session
-                      setState(() {
-                        _isSessionLocked = widget.session.sessionLock!.isLocked;
-                      });
-                    },
-                  ),
+                  onPressed: () {},
+                ),
 
                 // menu button
                 NSWidgetsOld().createPopupMenu([
@@ -1292,6 +1297,42 @@ class _TicketPageState extends State<TicketPage> {
                               builder: (context) => TallyUpiCardPage()),
                         );
                       }),
+
+                  // lock session
+                  if (!_isSessionLocked)
+                    MyPopupMenuItem(
+                        text: "Tally UPI",
+                        icon: Icons.lock_open,
+                        onPressed: _onLockSession),
+
+                  // unlock session
+                  if (_isSessionLocked)
+                    MyPopupMenuItem(
+                        text: "Tally UPI",
+                        icon: Icons.lock,
+                        onPressed: () async {
+                          String dbdate = DateFormat('yyyy-MM-dd')
+                              .format(widget.session.timestamp);
+                          String key = widget.session.timestamp
+                              .toIso8601String()
+                              .replaceAll(".", "^");
+                          String sessionPath =
+                              "${Const().dbrootGaruda}/NityaSeva/$dbdate/$key";
+                          SessionLock? lockStatus = await Utils().unlockSession(
+                              context: context, sessionPath: sessionPath);
+                          if (lockStatus == null) {
+                            // if unlock failed, return
+                            return;
+                          } else {
+                            widget.session.sessionLock = lockStatus;
+                          }
+
+                          // unlock the session
+                          setState(() {
+                            _isSessionLocked =
+                                widget.session.sessionLock!.isLocked;
+                          });
+                        }),
                 ]),
               ],
             ),
