@@ -30,7 +30,7 @@ class _TicketPageState extends State<TicketPage> {
   int _nextFestivalTicketNumber = 1;
 
   // lists
-  final List<Ticket> _tickets = [];
+  Map<String, Ticket> _tickets = {};
 
   // controllers, listeners and focus nodes
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
@@ -57,12 +57,14 @@ class _TicketPageState extends State<TicketPage> {
           add: (data) {
             Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
             setState(() {
-              if (_tickets.indexWhere((element) =>
+              if (_tickets.values.toList().indexWhere((element) =>
                       element.timestamp ==
                       DateTime.parse(ticket['timestamp'])) ==
                   -1) {
-                _tickets.add(Ticket.fromJson(ticket));
-                _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
+                _tickets = Map.fromEntries(_tickets.entries.toList()
+                  ..sort((a, b) =>
+                      b.value.timestamp.compareTo(a.value.timestamp)));
               }
             });
           },
@@ -76,13 +78,15 @@ class _TicketPageState extends State<TicketPage> {
           delete: (data) {
             Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
             print(_tickets);
-            if (_tickets.indexWhere((element) =>
+            if (_tickets.values.toList().indexWhere((element) =>
                     element.timestamp == DateTime.parse(ticket['timestamp'])) !=
                 -1) {
               print("check");
               setState(() {
                 _tickets.remove(Ticket.fromJson(ticket));
-                _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                _tickets = Map.fromEntries(_tickets.entries.toList()
+                  ..sort((a, b) =>
+                      b.value.timestamp.compareTo(a.value.timestamp)));
               });
             }
           },
@@ -145,12 +149,13 @@ class _TicketPageState extends State<TicketPage> {
       _tickets.clear();
       for (var t in ticketsJson) {
         Map<String, dynamic> ticket = Map<String, dynamic>.from(t);
-        _tickets.add(Ticket.fromJson(ticket));
+        _tickets[ticket['timestamp']] = Ticket.fromJson(ticket);
       }
     });
 
     setState(() {
-      _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      _tickets = Map.fromEntries(_tickets.entries.toList()
+        ..sort((a, b) => b.value.timestamp.compareTo(a.value.timestamp)));
       _isLoading = false;
       _isSessionLocked = sessionLock['isLocked'] ?? false;
     });
@@ -176,8 +181,10 @@ class _TicketPageState extends State<TicketPage> {
 
     // lists
     List<String> sevaNames = [];
-    List<Ticket> filteredTickets =
-        _tickets.where((ticket) => ticket.amount == amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((ticket) => ticket.amount == amount)
+        .toList();
 
     // controllers
     TextEditingController ticketNumberController = TextEditingController();
@@ -485,6 +492,8 @@ class _TicketPageState extends State<TicketPage> {
                                               mode: mode,
                                               ticketNumber: int.parse(
                                                   ticketNumberController.text),
+                                              uploaded:
+                                                  ticket?.uploaded ?? false,
                                               user: _username,
                                               note: noteController.text,
                                               seva: sevaName,
@@ -749,8 +758,10 @@ class _TicketPageState extends State<TicketPage> {
 
   Future<int> _getNextTicketNumber(int amount) async {
     int ticketNumber = 0;
-    List<Ticket> filteredTickets =
-        _tickets.where((ticket) => ticket.amount == amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((ticket) => ticket.amount == amount)
+        .toList();
     if (filteredTickets.isEmpty) {
       if (widget.session.name == "Nitya Seva") {
         String nextTicketNumberPath =
@@ -803,8 +814,10 @@ class _TicketPageState extends State<TicketPage> {
 
   List<String> _prevalidateTicket(Ticket ticket) {
     List<String> errors = [];
-    List<Ticket> filteredTickets =
-        _tickets.where((t) => t.amount == ticket.amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((t) => t.amount == ticket.amount)
+        .toList();
 
     // check if ticket number is > 0
     if (ticket.ticketNumber <= 0) {
@@ -1254,8 +1267,8 @@ class _TicketPageState extends State<TicketPage> {
 
                         // list of tickets
                         ...List.generate(_tickets.length, (index) {
-                          return _createTicketTile(
-                              _tickets.length - index, _tickets[index]);
+                          return _createTicketTile(_tickets.length - index,
+                              _tickets.values.toList()[index]);
                         }),
 
                         // leave some space at bottom

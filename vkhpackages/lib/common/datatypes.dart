@@ -53,6 +53,7 @@ class Ticket {
   final int amount;
   final String mode;
   int ticketNumber;
+  bool uploaded;
   final String user;
   final String note;
   final String seva;
@@ -62,6 +63,7 @@ class Ticket {
     required this.amount,
     required this.mode,
     required this.ticketNumber,
+    this.uploaded = false,
     required this.user,
     required this.note,
     required this.seva,
@@ -73,6 +75,7 @@ class Ticket {
       amount: json['amount'],
       mode: json['mode'],
       ticketNumber: json['ticketNumber'],
+      uploaded: json['uploaded'] ?? false,
       user: json['user'],
       note: json['note'],
       seva: json['seva'],
@@ -85,6 +88,7 @@ class Ticket {
       'amount': amount,
       'mode': mode,
       'ticketNumber': ticketNumber,
+      'uploaded': uploaded,
       'user': user,
       'note': note,
       'seva': seva,
@@ -99,14 +103,23 @@ class Ticket {
         amount == other.amount &&
         mode == other.mode &&
         ticketNumber == other.ticketNumber &&
+        uploaded == other.uploaded &&
         user == other.user &&
         note == other.note &&
         seva == other.seva;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(timestamp, amount, mode, ticketNumber, user, note, seva);
+  int get hashCode => Object.hash(
+    timestamp,
+    amount,
+    mode,
+    ticketNumber,
+    uploaded,
+    user,
+    note,
+    seva,
+  );
 }
 
 class Session {
