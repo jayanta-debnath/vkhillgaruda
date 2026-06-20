@@ -28,7 +28,6 @@ class _TicketPageState extends State<TicketPage>
   String _username = "Guest";
   bool _isSessionLocked = false;
   bool _isAdmin = false;
-  bool _isTicketNumEditable = false;
   int _nextFestivalTicketNumber = 1;
   bool _isSyncing = false;
   int _syncOperationCount = 0;
@@ -246,6 +245,8 @@ class _TicketPageState extends State<TicketPage>
     TextEditingController ticketNumberController = TextEditingController();
     TextEditingController noteController =
         TextEditingController(text: ticket == null ? "" : ticket.note);
+    FocusNode ticketNumberFocusNode = FocusNode();
+    bool isTicketNumEditable = false;
 
     // field values
     if (ticket == null) {
@@ -261,7 +262,6 @@ class _TicketPageState extends State<TicketPage>
       }
     }
 
-    _isTicketNumEditable = false;
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -292,18 +292,23 @@ class _TicketPageState extends State<TicketPage>
                               flex: 8,
                               child: TextField(
                                 controller: ticketNumberController,
+                                focusNode: ticketNumberFocusNode,
                                 decoration:
                                     InputDecoration(labelText: "Ticket Number"),
                                 keyboardType: TextInputType.number,
-                                readOnly: _isTicketNumEditable ? false : true,
+                                readOnly: !isTicketNumEditable,
                               ),
                             ),
                             Flexible(
                                 flex: 2,
                                 child: IconButton(
                                     onPressed: () {
-                                      setState(() {
-                                        _isTicketNumEditable = true;
+                                      setDialogState(() {
+                                        isTicketNumEditable = true;
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        ticketNumberFocusNode.requestFocus();
                                       });
                                     },
                                     icon: Icon(Icons.edit)))
