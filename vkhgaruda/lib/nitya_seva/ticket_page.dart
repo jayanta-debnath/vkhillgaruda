@@ -28,6 +28,7 @@ class _TicketPageState extends State<TicketPage>
   String _username = "Guest";
   bool _isSessionLocked = false;
   bool _isAdmin = false;
+  bool _isTicketNumEditable = false;
   int _nextFestivalTicketNumber = 1;
   bool _isSyncing = false;
   int _syncOperationCount = 0;
@@ -260,6 +261,7 @@ class _TicketPageState extends State<TicketPage>
       }
     }
 
+    _isTicketNumEditable = false;
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -284,12 +286,28 @@ class _TicketPageState extends State<TicketPage>
                         SizedBox(height: 32),
 
                         // Ticket number
-                        TextField(
-                          controller: ticketNumberController,
-                          decoration:
-                              InputDecoration(labelText: "Ticket Number"),
-                          keyboardType: TextInputType.number,
-                          readOnly: _isAdmin ? false : true,
+                        Row(
+                          children: [
+                            Flexible(
+                              flex: 8,
+                              child: TextField(
+                                controller: ticketNumberController,
+                                decoration:
+                                    InputDecoration(labelText: "Ticket Number"),
+                                keyboardType: TextInputType.number,
+                                readOnly: _isTicketNumEditable ? false : true,
+                              ),
+                            ),
+                            Flexible(
+                                flex: 2,
+                                child: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isTicketNumEditable = true;
+                                      });
+                                    },
+                                    icon: Icon(Icons.edit)))
+                          ],
                         ),
 
                         // Seva amount label
