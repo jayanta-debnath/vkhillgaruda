@@ -84,31 +84,21 @@ class _TicketPageState extends State<TicketPage>
 
           // edit with data for selective sync
           editWithData: (data) {
-            Map<String, Ticket> receivedTickets = {};
-            List<dynamic> dataListRaw = data as List;
-            for (var dataRaw in dataListRaw) {
-              Ticket ticket =
-                  Utils().convertRawToDatatype(dataRaw, Ticket.fromJson);
-              String key = Utils().convertTimestampToDbKey(ticket.timestamp);
-              receivedTickets[key] = ticket;
-            }
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
 
             // design decision: latest entry wins
-            for (String key in receivedTickets.keys) {
-              if (!_tickets.keys.contains(key)) {
-                // if cloud ticket not found locally, add it.
-                // although this can be considered as an anomaly
-                _tickets[key] = receivedTickets[key]!;
-              } else if (receivedTickets[key]!.lastEdit != null) {
-                DateTime cloudEdit = receivedTickets[key]!.lastEdit!;
-                DateTime? localEdit = _tickets[key]!.lastEdit;
-                if (localEdit == null) {
-                  _tickets[key] = receivedTickets[key]!;
-                } else {
-                  if (cloudEdit.isAfter(localEdit)) {
-                    _tickets[key] = receivedTickets[key]!;
-                  }
-                }
+            if (!_tickets.keys.contains(key)) {
+              // if cloud ticket not found locally, add it.
+              // although this can be considered as an anomaly
+              _tickets[key] = ticket;
+            } else if (ticket.lastEdit != null) {
+              DateTime cloudEdit = ticket.lastEdit!;
+              DateTime? localEdit = _tickets[key]!.lastEdit;
+              if (localEdit == null) {
+                _tickets[key] = ticket;
+              } else if (cloudEdit.isAfter(localEdit)) {
+                _tickets[key] = ticket;
               }
             }
 
