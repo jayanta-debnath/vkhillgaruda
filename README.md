@@ -32,14 +32,10 @@ vkhillgaruda is a collection of Flutter apps built to support seva coordination 
 
 ## Concepts and Techniques
 - Responsive UI
-- Cross-platform app development
 - Shared package architecture
-- Firebase-backed authentication and data sync
 - Push notifications
-- Calendar and event management flows
-- File upload and storage workflows
 - PDF / print-ready report generation
-- Release automation
+- Data synchronization with Last-Write-Win technique
 
 
 ## Pre-requisites
