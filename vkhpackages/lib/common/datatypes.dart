@@ -50,6 +50,7 @@ class FestivalSettings {
 
 class Ticket {
   final DateTime timestamp;
+  final DateTime? lastEdit;
   final int amount;
   final String mode;
   int ticketNumber;
@@ -60,6 +61,7 @@ class Ticket {
 
   Ticket({
     required this.timestamp,
+    this.lastEdit,
     required this.amount,
     required this.mode,
     required this.ticketNumber,
@@ -72,6 +74,7 @@ class Ticket {
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
       timestamp: DateTime.parse(json['timestamp']),
+      lastEdit: DateTime.parse(json['lastEdit'] ?? json['timestamp']),
       amount: json['amount'],
       mode: json['mode'],
       ticketNumber: json['ticketNumber'],
@@ -87,6 +90,7 @@ class Ticket {
   Map<String, dynamic> toJson() {
     return {
       'timestamp': timestamp.toIso8601String(),
+      'lastEdit': lastEdit?.toIso8601String() ?? timestamp.toIso8601String(),
       'amount': amount,
       'mode': mode,
       'ticketNumber': ticketNumber,
@@ -102,6 +106,7 @@ class Ticket {
     if (identical(this, other)) return true;
     if (other is! Ticket) return false;
     return timestamp == other.timestamp &&
+        // no need to include lastEdit field for equality check
         amount == other.amount &&
         mode == other.mode &&
         ticketNumber == other.ticketNumber &&
@@ -114,6 +119,7 @@ class Ticket {
   @override
   int get hashCode => Object.hash(
     timestamp,
+    lastEdit,
     amount,
     mode,
     ticketNumber,

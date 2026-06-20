@@ -79,7 +79,40 @@ class _TicketPageState extends State<TicketPage>
 
           // edit
           edit: () async {
-            await refresh();
+            // do not perform full refresh
+          },
+
+          // edit with data for selective sync
+          editWithData: (data) {
+            Map<String, Ticket> receivedTickets = {};
+            List<dynamic> dataListRaw = data as List;
+            for (var dataRaw in dataListRaw) {
+              Ticket ticket =
+                  Utils().convertRawToDatatype(dataRaw, Ticket.fromJson);
+              String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+              receivedTickets[key] = ticket;
+            }
+
+            // design decision: latest entry wins
+            for (String key in receivedTickets.keys) {
+              if (!_tickets.keys.contains(key)) {
+                // if cloud ticket not found locally, add it.
+                // although this can be considered as an anomaly
+                _tickets[key] = receivedTickets[key]!;
+              } else if (receivedTickets[key]!.lastEdit != null) {
+                DateTime cloudEdit = receivedTickets[key]!.lastEdit!;
+                DateTime? localEdit = _tickets[key]!.lastEdit;
+                if (localEdit == null) {
+                  _tickets[key] = receivedTickets[key]!;
+                } else {
+                  if (cloudEdit.isAfter(localEdit)) {
+                    _tickets[key] = receivedTickets[key]!;
+                  }
+                }
+              }
+            }
+
+            setState(() {});
           },
 
           // delete
@@ -175,7 +208,8 @@ class _TicketPageState extends State<TicketPage>
     // fetch tickets
     String dbpath =
         "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets";
-    Map<String, dynamic> ticketsJson = await FB().getJson(path: dbpath);
+    Map<String, dynamic> ticketsJson =
+        await FB().getJson(path: dbpath, silent: true);
     await _lock.synchronized(() async {
       _tickets.clear();
       for (var t in ticketsJson.values) {
@@ -519,6 +553,7 @@ class _TicketPageState extends State<TicketPage>
                                               timestamp: ticket == null
                                                   ? DateTime.now()
                                                   : ticket.timestamp,
+                                              lastEdit: DateTime.now(),
                                               amount: amount,
                                               mode: mode,
                                               ticketNumber: int.parse(
