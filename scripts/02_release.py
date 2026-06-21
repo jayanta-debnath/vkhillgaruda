@@ -571,15 +571,6 @@ def release(app):
         # Get app prefix by removing 'vkh' from app name
         app_prefix = app[3:]  # Remove first 3 characters
 
-        update = input("Do you want to trigger update via remote config? (y/n)")
-        trigger = false
-        if update == y:
-            trigger = true
-        print(f"Setting {app_prefix}_trigger_update = {trigger}")
-        update_remote_config(
-            f"{app_prefix}_trigger_update", "true", cred_file=cred_file
-        )
-
         print(f"Setting {app_prefix}_version = {version}")
         update_remote_config(f"{app_prefix}_version", version, cred_file=cred_file)
 
@@ -588,12 +579,22 @@ def release(app):
             f"{app_prefix}_version_suffix", version_suffix, cred_file=cred_file
         )
 
-    if branch_name != "main" and reltype == "release":
-        print("Checking out main branch after release")
-        run_command("git checkout main")
-        run_command("git pull")
+        update = input(
+            "Do you want to force the users to update to the new version? (y/n)"
+        )
+        trigger = false
+        if update == y:
+            trigger = true
+        print(f"Setting {app_prefix}_trigger_update = {trigger}")
+        update_remote_config(
+            f"{app_prefix}_trigger_update", "true", cred_file=cred_file
+        )
 
-    print("all operations completed")
+        if branch_name != "main":
+            input("Raise a PR to main branch. Press Enter after PR is merged...")
+            print("Checking out main branch after release")
+            run_command("git checkout main")
+            run_command("git pull")
 
 
 def main():
@@ -629,6 +630,8 @@ def main():
         print("=" * 70)
     else:
         print("\n✅ All operations completed successfully with no warnings!")
+
+    print("all operations completed")
 
 
 if __name__ == "__main__":
