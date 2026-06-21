@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@babel/helpers": "^7.27.6",
-    "eslint": "^10.5.0",
+    "eslint": "^8.57.1",
     "firebase-tools": "^15.12.0"
   }
 }
