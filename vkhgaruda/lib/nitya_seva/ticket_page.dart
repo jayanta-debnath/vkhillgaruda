@@ -201,10 +201,23 @@ class _TicketPageState extends State<TicketPage>
     Map<String, dynamic> ticketsJson =
         await FB().getJson(path: dbpath, silent: true);
     await _lock.synchronized(() async {
-      _tickets.clear();
       for (var t in ticketsJson.values) {
         Ticket ticket = Utils().convertRawToDatatype(t, Ticket.fromJson);
-        _tickets[Utils().convertTimestampToDbKey(ticket.timestamp)] = ticket;
+        // _tickets[Utils().convertTimestampToDbKey(ticket.timestamp)] = ticket;
+        String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+
+        // design decision: latest entry wins
+        if (!_tickets.keys.contains(key)) {
+          _tickets[key] = ticket;
+        } else if (ticket.lastEdit != null) {
+          DateTime cloudEdit = ticket.lastEdit!;
+          DateTime? localEdit = _tickets[key]!.lastEdit;
+          if (localEdit == null) {
+            _tickets[key] = ticket;
+          } else if (cloudEdit.isAfter(localEdit)) {
+            _tickets[key] = ticket;
+          }
+        }
       }
     });
 
