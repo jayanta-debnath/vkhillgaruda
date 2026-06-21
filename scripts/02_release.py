@@ -168,15 +168,11 @@ def update_changelog(app, version):
     log_messages = filtered_log_messages
     log_messages.reverse()
 
-    changelog_file = f"{app}/changelog_{app}.json"
-    print("write changelog")
+    changelog_file = f"{rootdir}/{app}/changelog_{app}.json"
+    print(f"write changelog: {changelog_file}")
     with open(changelog_file, "r") as file:
         changelog = json.load(file)
         if f"{version}" in changelog.keys():
-            effort = changelog[f"{version}"]["effort"]
-            effort = effort.replace("h", "")
-            effort = float(effort) + effort_hr
-            changelog[f"{version}"]["effort"] = f"{effort}h"
             for msg in log_messages:
                 if msg.startswith("feature:"):
                     clean_msg = msg.replace("feature:", "").strip()
@@ -187,8 +183,7 @@ def update_changelog(app, version):
                     if clean_msg not in changelog[f"{version}"]["fixes"]:
                         changelog[f"{version}"]["fixes"].append(clean_msg)
         else:
-            changelog[f"{version}"] = {"effort": "", "features": [], "fixes": []}
-            changelog[f"{version}"]["effort"] = f"{effort_hr}h"
+            changelog[f"{version}"] = {"features": [], "fixes": []}
             for msg in log_messages:
                 if msg.startswith("feature:"):
                     clean_msg = msg.replace("feature:", "").strip()
@@ -213,7 +208,7 @@ def update_changelog(app, version):
         json.dump(changelog, file, indent=4)
 
     print("Testcases refreshing")
-    with open("vkhgaruda/test/nitya_seva.md", "r+") as testspec:
+    with open(f"{rootdir}/vkhgaruda/test/nitya_seva.md", "r+") as testspec:
         content = testspec.read()
         testspec.seek(0)
         testspec.write(content.replace("-[x]", "-[]"))

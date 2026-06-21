@@ -1,4 +1,10 @@
 {
+    "12.0.0": {
+        "features": [
+            "making ticket editable"
+        ],
+        "fixes": []
+    },
     "11.3.0": {
         "effort": "3h",
         "features": [],

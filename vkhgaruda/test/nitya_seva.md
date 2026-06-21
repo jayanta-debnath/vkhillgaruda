@@ -30,3 +30,4 @@
 -[] edit, delete entry
 
 # new features
+-[] making ticket editable
