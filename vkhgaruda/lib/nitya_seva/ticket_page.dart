@@ -19,7 +19,8 @@ class TicketPage extends StatefulWidget {
   _TicketPageState createState() => _TicketPageState();
 }
 
-class _TicketPageState extends State<TicketPage> {
+class _TicketPageState extends State<TicketPage>
+    with SingleTickerProviderStateMixin {
   // locals
   final Lock _lock = Lock();
   bool _isLoading = true;
@@ -28,16 +29,24 @@ class _TicketPageState extends State<TicketPage> {
   bool _isSessionLocked = false;
   bool _isAdmin = false;
   int _nextFestivalTicketNumber = 1;
+  bool _isSyncing = false;
+  int _syncOperationCount = 0;
 
   // lists
-  final List<Ticket> _tickets = [];
+  Map<String, Ticket> _tickets = {};
 
   // controllers, listeners and focus nodes
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
+  late final AnimationController _syncAnimationController;
 
   @override
   initState() {
     super.initState();
+
+    _syncAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
 
     // check if user is admin
     Utils().isAdmin().then((isAdmin) {
@@ -55,36 +64,55 @@ class _TicketPageState extends State<TicketPage> {
         FBCallbacks(
           // add
           add: (data) {
-            Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            setState(() {
-              if (_tickets.indexWhere((element) =>
-                      element.timestamp ==
-                      DateTime.parse(ticket['timestamp'])) ==
-                  -1) {
-                _tickets.add(Ticket.fromJson(ticket));
-                _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-              }
-            });
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+            if (!_tickets.containsKey(key)) {
+              setState(() {
+                _tickets[key] = ticket;
+
+                _tickets = Map.fromEntries(_tickets.entries.toList()
+                  ..sort((a, b) =>
+                      b.value.timestamp.compareTo(a.value.timestamp)));
+              });
+            }
           },
 
           // edit
           edit: () async {
-            await refresh();
+            // do not perform full refresh
+          },
+
+          // edit with data for selective sync
+          editWithData: (data) {
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+
+            // design decision: latest entry wins
+            if (!_tickets.keys.contains(key)) {
+              // if cloud ticket not found locally, add it.
+              // although this can be considered as an anomaly
+              _tickets[key] = ticket;
+            } else if (ticket.lastEdit != null) {
+              DateTime cloudEdit = ticket.lastEdit!;
+              DateTime? localEdit = _tickets[key]!.lastEdit;
+              if (localEdit == null) {
+                _tickets[key] = ticket;
+              } else if (cloudEdit.isAfter(localEdit)) {
+                _tickets[key] = ticket;
+              }
+            }
+
+            setState(() {});
           },
 
           // delete
           delete: (data) {
-            Map<String, dynamic> ticket = Map<String, dynamic>.from(data);
-            print(_tickets);
-            if (_tickets.indexWhere((element) =>
-                    element.timestamp == DateTime.parse(ticket['timestamp'])) !=
-                -1) {
-              print("check");
-              setState(() {
-                _tickets.remove(Ticket.fromJson(ticket));
-                _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-              });
-            }
+            Ticket ticket = Utils().convertRawToDatatype(data, Ticket.fromJson);
+            String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+
+            setState(() {
+              _tickets.remove(key);
+            });
           },
 
           // get listeners
@@ -109,8 +137,37 @@ class _TicketPageState extends State<TicketPage> {
     for (var listener in _listeners) {
       listener.cancel();
     }
+    _syncAnimationController.dispose();
 
     super.dispose();
+  }
+
+  void _setSyncing(bool value) {
+    if (!mounted) {
+      return;
+    }
+
+    if (value) {
+      _syncOperationCount++;
+    } else if (_syncOperationCount > 0) {
+      _syncOperationCount--;
+    }
+
+    bool isSyncing = _syncOperationCount > 0;
+    if (_isSyncing == isSyncing) {
+      return;
+    }
+
+    setState(() {
+      _isSyncing = isSyncing;
+    });
+
+    if (isSyncing) {
+      _syncAnimationController.repeat();
+    } else {
+      _syncAnimationController.stop();
+      _syncAnimationController.reset();
+    }
   }
 
   Future<void> refresh({bool? spinner = true}) async {
@@ -139,18 +196,34 @@ class _TicketPageState extends State<TicketPage> {
     }
 
     // fetch tickets
-    List ticketsJson = await FB().getList(
-        path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets");
+    String dbpath =
+        "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets";
+    Map<String, dynamic> ticketsJson =
+        await FB().getJson(path: dbpath, silent: true);
     await _lock.synchronized(() async {
-      _tickets.clear();
-      for (var t in ticketsJson) {
-        Map<String, dynamic> ticket = Map<String, dynamic>.from(t);
-        _tickets.add(Ticket.fromJson(ticket));
+      for (var t in ticketsJson.values) {
+        Ticket ticket = Utils().convertRawToDatatype(t, Ticket.fromJson);
+        // _tickets[Utils().convertTimestampToDbKey(ticket.timestamp)] = ticket;
+        String key = Utils().convertTimestampToDbKey(ticket.timestamp);
+
+        // design decision: latest entry wins
+        if (!_tickets.keys.contains(key)) {
+          _tickets[key] = ticket;
+        } else if (ticket.lastEdit != null) {
+          DateTime cloudEdit = ticket.lastEdit!;
+          DateTime? localEdit = _tickets[key]!.lastEdit;
+          if (localEdit == null) {
+            _tickets[key] = ticket;
+          } else if (cloudEdit.isAfter(localEdit)) {
+            _tickets[key] = ticket;
+          }
+        }
       }
     });
 
     setState(() {
-      _tickets.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      _tickets = Map.fromEntries(_tickets.entries.toList()
+        ..sort((a, b) => b.value.timestamp.compareTo(a.value.timestamp)));
       _isLoading = false;
       _isSessionLocked = sessionLock['isLocked'] ?? false;
     });
@@ -176,13 +249,17 @@ class _TicketPageState extends State<TicketPage> {
 
     // lists
     List<String> sevaNames = [];
-    List<Ticket> filteredTickets =
-        _tickets.where((ticket) => ticket.amount == amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((ticket) => ticket.amount == amount)
+        .toList();
 
     // controllers
     TextEditingController ticketNumberController = TextEditingController();
     TextEditingController noteController =
         TextEditingController(text: ticket == null ? "" : ticket.note);
+    FocusNode ticketNumberFocusNode = FocusNode();
+    bool isTicketNumEditable = false;
 
     // field values
     if (ticket == null) {
@@ -222,12 +299,33 @@ class _TicketPageState extends State<TicketPage> {
                         SizedBox(height: 32),
 
                         // Ticket number
-                        TextField(
-                          controller: ticketNumberController,
-                          decoration:
-                              InputDecoration(labelText: "Ticket Number"),
-                          keyboardType: TextInputType.number,
-                          readOnly: _isAdmin ? false : true,
+                        Row(
+                          children: [
+                            Flexible(
+                              flex: 8,
+                              child: TextField(
+                                controller: ticketNumberController,
+                                focusNode: ticketNumberFocusNode,
+                                decoration:
+                                    InputDecoration(labelText: "Ticket Number"),
+                                keyboardType: TextInputType.number,
+                                readOnly: !isTicketNumEditable,
+                              ),
+                            ),
+                            Flexible(
+                                flex: 2,
+                                child: IconButton(
+                                    onPressed: () {
+                                      setDialogState(() {
+                                        isTicketNumEditable = true;
+                                      });
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        ticketNumberFocusNode.requestFocus();
+                                      });
+                                    },
+                                    icon: Icon(Icons.edit)))
+                          ],
                         ),
 
                         // Seva amount label
@@ -481,10 +579,13 @@ class _TicketPageState extends State<TicketPage> {
                                               timestamp: ticket == null
                                                   ? DateTime.now()
                                                   : ticket.timestamp,
+                                              lastEdit: DateTime.now(),
                                               amount: amount,
                                               mode: mode,
                                               ticketNumber: int.parse(
                                                   ticketNumberController.text),
+                                              uploaded:
+                                                  ticket?.uploaded ?? false,
                                               user: _username,
                                               note: noteController.text,
                                               seva: sevaName,
@@ -507,38 +608,51 @@ class _TicketPageState extends State<TicketPage> {
                                               }
                                             }
 
-                                            // add ticket to database
-                                            String dbDate = DateFormat(
-                                                    "yyyy-MM-dd")
-                                                .format(
-                                                    widget.session.timestamp)
-                                                .toString();
-                                            String dbSession = widget
-                                                .session.timestamp
-                                                .toIso8601String()
-                                                .replaceAll(".", "^");
-                                            String key = ticketNew.timestamp
-                                                .toIso8601String()
-                                                .replaceAll(".", "^");
                                             if (ticket == null) {
                                               // add
-                                              await FB().addMapToList(
-                                                  path:
-                                                      "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
-                                                  data: ticketNew.toJson());
+
+                                              // UI update
+                                              setState(() {
+                                                String key = Utils()
+                                                    .convertTimestampToDbKey(
+                                                        ticketNew.timestamp);
+                                                _tickets[key] = ticketNew;
+
+                                                _tickets = Map.fromEntries(
+                                                    _tickets.entries.toList()
+                                                      ..sort((a, b) => b
+                                                          .value.timestamp
+                                                          .compareTo(a.value
+                                                              .timestamp)));
+                                              });
+
+                                              // sync to db
+                                              _syncAdd(ticketNew);
                                             } else {
                                               // edit
-                                              await FB().editJson(
-                                                  path:
-                                                      "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
-                                                  json: ticketNew.toJson());
+
+                                              // UI update
+                                              setState(() {
+                                                String key = Utils()
+                                                    .convertTimestampToDbKey(
+                                                        ticket.timestamp);
+                                                _tickets[key] = ticketNew;
+
+                                                _tickets = Map.fromEntries(
+                                                    _tickets.entries.toList()
+                                                      ..sort((a, b) => b
+                                                          .value.timestamp
+                                                          .compareTo(a.value
+                                                              .timestamp)));
+                                              });
+
+                                              // sync to db
+                                              _syncEdit(ticketNew);
                                             }
 
                                             // clear all lists
                                             sevaNames.clear();
                                             filteredTickets.clear();
-
-                                            setState(() {});
                                           });
                                         } finally {
                                           if (mounted) {
@@ -716,19 +830,15 @@ class _TicketPageState extends State<TicketPage> {
         msg: "Are you sure you want to delete this ticket?",
         callbacks: ConfirmationCallbacks(onConfirm: () {
           // delete ticket from list
-          // setState(() {
-          //   _tickets.remove(ticket);
-          // });
+          String key = _tickets.keys.firstWhere((k) => _tickets[k] == ticket);
+          setState(() {
+            _tickets.remove(key);
 
-          // delete ticket from database
-          String dbDate =
-              DateFormat("yyyy-MM-dd").format(widget.session.timestamp);
-          String dbSession =
-              widget.session.timestamp.toIso8601String().replaceAll(".", "^");
-          String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
-          FB().deleteValue(
-              path:
-                  "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
+            _tickets = Map.fromEntries(_tickets.entries.toList()
+              ..sort((a, b) => b.value.timestamp.compareTo(a.value.timestamp)));
+          });
+
+          _syncDelete(ticket);
         }));
   }
 
@@ -749,8 +859,10 @@ class _TicketPageState extends State<TicketPage> {
 
   Future<int> _getNextTicketNumber(int amount) async {
     int ticketNumber = 0;
-    List<Ticket> filteredTickets =
-        _tickets.where((ticket) => ticket.amount == amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((ticket) => ticket.amount == amount)
+        .toList();
     if (filteredTickets.isEmpty) {
       if (widget.session.name == "Nitya Seva") {
         String nextTicketNumberPath =
@@ -803,8 +915,10 @@ class _TicketPageState extends State<TicketPage> {
 
   List<String> _prevalidateTicket(Ticket ticket) {
     List<String> errors = [];
-    List<Ticket> filteredTickets =
-        _tickets.where((t) => t.amount == ticket.amount).toList();
+    List<Ticket> filteredTickets = _tickets.values
+        .toList()
+        .where((t) => t.amount == ticket.amount)
+        .toList();
 
     // check if ticket number is > 0
     if (ticket.ticketNumber <= 0) {
@@ -1101,6 +1215,59 @@ class _TicketPageState extends State<TicketPage> {
         ]);
   }
 
+  Future<void> _syncAdd(Ticket ticket) async {
+    _setSyncing(true);
+
+    String dbDate =
+        DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+
+    try {
+      await FB().addMapToList(
+          path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
+          data: ticket.toJson());
+    } finally {
+      _setSyncing(false);
+    }
+  }
+
+  Future<void> _syncDelete(Ticket ticket) async {
+    _setSyncing(true);
+
+    // delete ticket from database
+    String dbDate = DateFormat("yyyy-MM-dd").format(widget.session.timestamp);
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+    String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
+    try {
+      await FB().deleteValue(
+          path:
+              "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key");
+    } finally {
+      _setSyncing(false);
+    }
+  }
+
+  Future<void> _syncEdit(Ticket ticket) async {
+    _setSyncing(true);
+
+    String dbDate =
+        DateFormat("yyyy-MM-dd").format(widget.session.timestamp).toString();
+    String dbSession =
+        widget.session.timestamp.toIso8601String().replaceAll(".", "^");
+    String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
+
+    try {
+      await FB().editJson(
+          path:
+              "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets/$key",
+          json: ticket.toJson());
+    } finally {
+      _setSyncing(false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -1150,40 +1317,14 @@ class _TicketPageState extends State<TicketPage> {
                   },
                 ),
 
-                // lock session
-                if (!_isSessionLocked)
-                  IconButton(
-                    icon: Icon(Icons.lock_open, size: 32),
-                    onPressed: _onLockSession,
+                // sync button
+                IconButton(
+                  icon: RotationTransition(
+                    turns: _syncAnimationController,
+                    child: Icon(Icons.refresh, size: 32),
                   ),
-
-                // unlock session
-                if (_isSessionLocked)
-                  IconButton(
-                    icon: Icon(Icons.lock, size: 32),
-                    onPressed: () async {
-                      String dbdate = DateFormat('yyyy-MM-dd')
-                          .format(widget.session.timestamp);
-                      String key = widget.session.timestamp
-                          .toIso8601String()
-                          .replaceAll(".", "^");
-                      String sessionPath =
-                          "${Const().dbrootGaruda}/NityaSeva/$dbdate/$key";
-                      SessionLock? lockStatus = await Utils().unlockSession(
-                          context: context, sessionPath: sessionPath);
-                      if (lockStatus == null) {
-                        // if unlock failed, return
-                        return;
-                      } else {
-                        widget.session.sessionLock = lockStatus;
-                      }
-
-                      // unlock the session
-                      setState(() {
-                        _isSessionLocked = widget.session.sessionLock!.isLocked;
-                      });
-                    },
-                  ),
+                  onPressed: refresh,
+                ),
 
                 // menu button
                 NSWidgetsOld().createPopupMenu([
@@ -1210,6 +1351,42 @@ class _TicketPageState extends State<TicketPage> {
                               builder: (context) => TallyUpiCardPage()),
                         );
                       }),
+
+                  // lock session
+                  if (!_isSessionLocked)
+                    MyPopupMenuItem(
+                        text: "Tally UPI",
+                        icon: Icons.lock_open,
+                        onPressed: _onLockSession),
+
+                  // unlock session
+                  if (_isSessionLocked)
+                    MyPopupMenuItem(
+                        text: "Tally UPI",
+                        icon: Icons.lock,
+                        onPressed: () async {
+                          String dbdate = DateFormat('yyyy-MM-dd')
+                              .format(widget.session.timestamp);
+                          String key = widget.session.timestamp
+                              .toIso8601String()
+                              .replaceAll(".", "^");
+                          String sessionPath =
+                              "${Const().dbrootGaruda}/NityaSeva/$dbdate/$key";
+                          SessionLock? lockStatus = await Utils().unlockSession(
+                              context: context, sessionPath: sessionPath);
+                          if (lockStatus == null) {
+                            // if unlock failed, return
+                            return;
+                          } else {
+                            widget.session.sessionLock = lockStatus;
+                          }
+
+                          // unlock the session
+                          setState(() {
+                            _isSessionLocked =
+                                widget.session.sessionLock!.isLocked;
+                          });
+                        }),
                 ]),
               ],
             ),
@@ -1254,8 +1431,8 @@ class _TicketPageState extends State<TicketPage> {
 
                         // list of tickets
                         ...List.generate(_tickets.length, (index) {
-                          return _createTicketTile(
-                              _tickets.length - index, _tickets[index]);
+                          return _createTicketTile(_tickets.length - index,
+                              _tickets.values.toList()[index]);
                         }),
 
                         // leave some space at bottom

@@ -50,18 +50,22 @@ class FestivalSettings {
 
 class Ticket {
   final DateTime timestamp;
+  final DateTime? lastEdit;
   final int amount;
   final String mode;
   int ticketNumber;
+  bool uploaded;
   final String user;
   final String note;
   final String seva;
 
   Ticket({
     required this.timestamp,
+    this.lastEdit,
     required this.amount,
     required this.mode,
     required this.ticketNumber,
+    required this.uploaded,
     required this.user,
     required this.note,
     required this.seva,
@@ -70,9 +74,13 @@ class Ticket {
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
       timestamp: DateTime.parse(json['timestamp']),
+      lastEdit: DateTime.parse(json['lastEdit'] ?? json['timestamp']),
       amount: json['amount'],
       mode: json['mode'],
       ticketNumber: json['ticketNumber'],
+      uploaded:
+          json['uploaded'] ??
+          true, // setting default to true for backward compatibility
       user: json['user'],
       note: json['note'],
       seva: json['seva'],
@@ -82,9 +90,11 @@ class Ticket {
   Map<String, dynamic> toJson() {
     return {
       'timestamp': timestamp.toIso8601String(),
+      'lastEdit': lastEdit?.toIso8601String() ?? timestamp.toIso8601String(),
       'amount': amount,
       'mode': mode,
       'ticketNumber': ticketNumber,
+      'uploaded': uploaded,
       'user': user,
       'note': note,
       'seva': seva,
@@ -96,17 +106,28 @@ class Ticket {
     if (identical(this, other)) return true;
     if (other is! Ticket) return false;
     return timestamp == other.timestamp &&
+        // no need to include lastEdit field for equality check
         amount == other.amount &&
         mode == other.mode &&
         ticketNumber == other.ticketNumber &&
+        uploaded == other.uploaded &&
         user == other.user &&
         note == other.note &&
         seva == other.seva;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(timestamp, amount, mode, ticketNumber, user, note, seva);
+  int get hashCode => Object.hash(
+    timestamp,
+    lastEdit,
+    amount,
+    mode,
+    ticketNumber,
+    uploaded,
+    user,
+    note,
+    seva,
+  );
 }
 
 class Session {

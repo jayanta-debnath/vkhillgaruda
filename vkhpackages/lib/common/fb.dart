@@ -47,6 +47,10 @@ class FB {
 
     listener = dbRef.onChildChanged.listen((event) {
       callbacks.edit();
+
+      if (callbacks.editWithData != null) {
+        callbacks.editWithData!(event.snapshot.value);
+      }
     });
     listeners.add(listener);
 
@@ -584,12 +588,14 @@ class FB {
 class FBCallbacks {
   void Function(dynamic data) add;
   void Function() edit; // full refresh required on edit
+  void Function(dynamic data)? editWithData; // full refresh required on edit
   void Function(dynamic data) delete;
   void Function(List<StreamSubscription<DatabaseEvent>>)? getListeners;
 
   FBCallbacks({
     required this.add,
     required this.edit,
+    this.editWithData,
     required this.delete,
     this.getListeners,
   });

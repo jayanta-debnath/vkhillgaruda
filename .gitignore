@@ -72,3 +72,5 @@ key.properties
 vkhgaruda/web/firebase-messaging-sw.js
 vkhsangeetseva/web/firebase-messaging-sw.js
 garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json
+node_modules
+garuda_keystore.jks

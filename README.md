@@ -1,7 +1,7 @@
-# vkhillseva
+# vkhillgaruda
 Seva App for ISKCON Vaikuntha Hill
 
-> **Disclaimer:** `main` branch is not maintained anymore. Please go to desired release branches to see the latest changes.
+vkhillgaruda is a collection of Flutter apps built to support seva coordination at ISKCON Vaikuntha Hill. Garuda provides the main seva management experience for organizing temple workflows, while SangeetSeva focuses on music-related seva and event participation. Together, the apps share common packages and Firebase-backed services to help teams manage registrations, schedules, communication, and records in a more organized way.
 
 ## Apps
 
@@ -10,6 +10,34 @@ Seva App for ISKCON Vaikuntha Hill
 | [vkhgaruda](vkhgaruda/README.md) | Garuda — the main seva management app |
 | [vkhsangeetseva](vkhsangeetseva/README.md) | SangeetSeva — the music seva app |
 
+# Tech Stack
+
+## UI Framework
+- Flutter
+- Dart
+- Material Design widgets
+
+# Platforms
+- Android
+- Web
+
+## Backend and Cloud
+- Firebase Authentication
+- Firebase Realtime Database
+- Firebase Storage
+- Firebase Remote Config
+- Firebase Cloud Messaging
+- Firebase Hosting
+- Cloud Functions for Firebase
+
+## Concepts and Techniques
+- Responsive UI
+- Shared package architecture
+- Push notifications
+- PDF / print-ready report generation
+- Data synchronization with Last-Write-Win technique
+
+
 ## Pre-requisites
 - Flutter SDK (3.6.0 or higher)
 - Python 3.x (for build scripts)
@@ -17,26 +45,33 @@ Seva App for ISKCON Vaikuntha Hill
 - Firebase CLI (`firebase`)
 - FlutterFire CLI (`flutterfire`)
 
-## Setup
+# How to build
 
-### 1. Clone the Repository
+## Pre-requisites
+
+## 1. Clone the Repository
 ```bash
-git clone https://github.com/jayantadn/vkhillseva.git
-cd vkhillseva
+git clone https://github.com/jayanta-debnath/vkhillgaruda.git
+cd vkhillgaruda
 ```
 
 Add the secrets:
-1. `google-services.json`
-2. `garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json`
+
+1. Copy `google-services.json` for Garuda to:
+   `vkhgaruda/android/app/google-services.json`
+2. Copy `google-services.json` for SangeetSeva to:
+   `vkhsangeetseva/android/app/google-services.json`
+3. Copy the Firebase Admin SDK service account JSON to the repository root:
+   `garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json`
+4. copy `key.properties` for both apps to:
+    `<appfolder>/android`
+   make sure the contents of the file has the right path to key materials
 
 Generate Firebase Dart config files (not committed to git):
 
 ```bash
-# Install CLI tools once (if not already installed)
-npm install -g firebase-tools
-dart pub global activate flutterfire_cli
-
 # Garuda
+firebase login
 cd vkhgaruda
 flutterfire configure --project=garuda-1ba07 --platforms=android,web --out=lib/firebase_options.dart
 
@@ -45,32 +80,13 @@ cd ../vkhsangeetseva
 flutterfire configure --project=garuda-1ba07 --platforms=android,web --out=lib/firebase_options.dart
 ```
 
-If `flutterfire` is not found, ensure Dart pub global binaries are in your PATH.
-
-### 2. Install Dependencies
+## 2. Install Dependencies
 
 ```bash
+cd ../vkhpackages && flutter pub get && cd ..
 cd vkhgaruda && flutter pub get && cd ..
 cd vkhsangeetseva && flutter pub get
 ```
-
-See each app's README for further setup and build instructions.
-
-## Production Release (Using Release Script)
-
-```bash
-# From the root directory
-python 02_release.py
-```
-
-When prompted:
-- Enter `1` for Release build
-- Enter `2` for Test build
-
-The release script will:
-1. ✓ Update changelog from git commits
-2. ✓ Build web and Android versions
-3. ✓ Deploy to Firebase Hosting (if configured)
 
 ## Security Notes
 
@@ -80,7 +96,17 @@ The release script will:
 
 These files are automatically ignored by `.gitignore`
 
-## License
+# Archiecture and Concepts
+
+## data synchronization
+
+1. The tickets page follows a "local first" approach.
+1. Local data entry directly is used to update the UI
+1. Update data to server asynchronously
+1. Incoming "add" data from other devices will be added only when "key" not existing locally
+1. For incoming "edit" data, server data will be given preference
+
+# License
 
 See [LICENSE](LICENSE) file for details.
 
