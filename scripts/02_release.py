@@ -587,9 +587,9 @@ def release(app):
         update = input(
             "Do you want to force the users to update to the new version? (y/n)"
         )
-        trigger = false
+        trigger = "false"
         if update == y:
-            trigger = true
+            trigger = "true"
         print(f"Setting {app_prefix}_trigger_update = {trigger}")
         update_remote_config(
             f"{app_prefix}_trigger_update", "true", cred_file=cred_file
