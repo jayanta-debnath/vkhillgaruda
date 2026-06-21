@@ -475,12 +475,6 @@ def release(app):
             else:
                 run_command(f'git commit -m "release {branch_name}"')
             run_command("git push origin")
-            # disabling merge to main to prevent merge changes due to version change in pubspec
-            if branch_name != "main" and reltype == "release":
-                run_command("git checkout main")
-                run_command("git pull")
-                run_command(f"git merge {branch_name}")
-                run_command("git push origin")
         else:
             print("No changes to commit")
 
@@ -488,13 +482,21 @@ def release(app):
     run_command("flutter clean")
     run_command("flutter pub get")
 
-    # check if build related files are present
+    ############################
+    # build related file paths #
+    ############################
+    cred_file = f"{rootdir}/garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json"
+    key_file = "android/key.properties"
+    firebase_options_file = "lib/firebase_options.dart"
+    google_services_file = "android/app/google-services.json"
+
     files = [
-        f"{rootdir}/garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json",
-        "android/key.properties",
-        "lib/firebase_options.dart",
-        f"android/{app}/google-services.json",
+        cred_file,
+        key_file,
+        firebase_options_file,
+        google_services_file,
     ]
+
     missing_files = [f for f in files if not os.path.isfile(f)]
     if missing_files:
         print("ERROR: The following required files were not found:")
@@ -502,6 +504,9 @@ def release(app):
             print(f"  - {f}")
         sys.exit(1)
 
+    ############################
+    # hosting deployment       #
+    ############################
     if target in ["web", "both"]:
         print("building for web")
         run_command("flutter build web")
@@ -511,7 +516,9 @@ def release(app):
         run_command(deploy_command, retries=2, retry_delay=10)
 
     if reltype == "release":
-        # function deployment
+        ####################################
+        # function deployment              #
+        ####################################
         if has_firebase_functions(app):
             print("deploying firebase functions")
             run_command("firebase deploy --only functions", retries=2, retry_delay=10)
@@ -520,6 +527,9 @@ def release(app):
                 f"Skipping Firebase functions deployment - no functions configured for {app}"
             )
 
+        ####################################
+        # apk deployment                   #
+        ####################################
         if target in ["apk", "both"]:
             # android build
             print("building for android")
@@ -577,9 +587,9 @@ def release(app):
         update = input(
             "Do you want to force the users to update to the new version? (y/n)"
         )
-        trigger = false
-        if update == y:
-            trigger = true
+        trigger = "false"
+        if update == "y":
+            trigger = "true"
         print(f"Setting {app_prefix}_trigger_update = {trigger}")
         update_remote_config(
             f"{app_prefix}_trigger_update", "true", cred_file=cred_file
