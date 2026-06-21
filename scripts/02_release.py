@@ -475,12 +475,6 @@ def release(app):
             else:
                 run_command(f'git commit -m "release {branch_name}"')
             run_command("git push origin")
-            # disabling merge to main to prevent merge changes due to version change in pubspec
-            if branch_name != "main" and reltype == "release":
-                run_command("git checkout main")
-                run_command("git pull")
-                run_command(f"git merge {branch_name}")
-                run_command("git push origin")
         else:
             print("No changes to commit")
 
@@ -493,7 +487,7 @@ def release(app):
         f"{rootdir}/garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json",
         "android/key.properties",
         "lib/firebase_options.dart",
-        f"android/{app}/google-services.json",
+        f"android/app/google-services.json",
     ]
     missing_files = [f for f in files if not os.path.isfile(f)]
     if missing_files:
