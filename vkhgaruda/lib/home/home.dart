@@ -8,6 +8,7 @@ import 'package:vkhgaruda/nitya_seva/nitya_seva.dart';
 import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
 import 'package:vkhgaruda/widgets/launcher_tile.dart';
 import 'package:vkhgaruda/widgets/welcome.dart';
+import 'package:vkhpackages/common/log.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,6 +38,8 @@ class _HomePageState extends State<HomePage> {
 
     _uploadProfileSettings();
     Utils().checkForNewVersion(context, "garuda");
+
+    Log().init("Garuda").then((_) => Log().info(msg: "User logged in"));
 
     refresh();
   }

@@ -36,7 +36,7 @@ vkhillgaruda is a collection of Flutter apps built to support seva coordination 
 - Push notifications
 - PDF / print-ready report generation
 - Data synchronization with Last-Write-Win technique
-
+- Local Database with abstractions for web and mobile
 
 ## Pre-requisites
 - Flutter SDK (3.6.0 or higher)
