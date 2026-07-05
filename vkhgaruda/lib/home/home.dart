@@ -138,6 +138,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = false;
     });
+
+    Toaster().info("Logs have been uploaded successfully");
   }
 
   Future<void> _showPublishLogDialog() async {
