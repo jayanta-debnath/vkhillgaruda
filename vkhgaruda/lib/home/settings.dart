@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vkhgaruda/home/festival_settings_page.dart';
-import 'package:vkhgaruda/home/ticket_settings.dart';
+import 'package:vkhgaruda/nitya_seva/ticket_settings.dart';
 import 'package:vkhgaruda/home/user_management.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 

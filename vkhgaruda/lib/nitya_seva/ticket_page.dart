@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/nitya_seva/session_summary.dart';
-import 'package:vkhgaruda/home/ticket_settings.dart';
+import 'package:vkhgaruda/nitya_seva/ticket_settings.dart';
 import 'package:vkhgaruda/nitya_seva/tally_cash.dart';
 import 'package:vkhgaruda/nitya_seva/tally_upi_card.dart';
 import 'package:vkhgaruda/widgets/common_widgets.dart';
@@ -904,6 +904,8 @@ class _TicketPageState extends State<TicketPage>
     widget.session.sessionLock = await Utils().lockSession(
         context: context, sessionPath: sessionPath, username: _username);
 
+    Logger().info(tag: "Nitya Seva", msg: "Session manually locked");
+
     // lock the UI
     setState(() {
       if (widget.session.sessionLock != null &&
@@ -1112,6 +1114,11 @@ class _TicketPageState extends State<TicketPage>
                   int.tryParse(nextTicketNumberController.text.trim()) ?? 1;
             });
 
+            Logger().info(
+                tag: "Nitya Seva",
+                msg:
+                    "Festival Ticket number at begin of session: $_nextFestivalTicketNumber");
+
             Navigator.pop(context);
           },
           child: Text("OK"),
@@ -1177,6 +1184,9 @@ class _TicketPageState extends State<TicketPage>
         ),
       );
     });
+
+    Logger().info(
+        tag: "Nitya Seva", msg: "Ticket numbers at begin of session: $rows");
 
     Widgets().showResponsiveDialog(
         context: context,

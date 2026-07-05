@@ -220,6 +220,8 @@ class _TicketSettingsState extends State<TicketSettings> {
             }
 
             // push to fb
+            Logger()
+                .info(msg: "Starting ticket numbers edited: $ticketNumbers");
             String ticketNumbersPath =
                 "${Const().dbrootGaruda}/NityaSeva/NextTicketNumbers";
             await FB().setJson(path: ticketNumbersPath, json: ticketNumbers);
