@@ -56,7 +56,12 @@ class Logger {
     DateTime timestamp = DateTime.now();
     int id = timestamp.microsecondsSinceEpoch;
 
-    final entry = LogEntry(timestamp: timestamp, tag: tag, message: msg);
+    final entry = LogEntry(
+      timestamp: timestamp,
+      level: level,
+      tag: tag,
+      message: msg,
+    );
 
     await _store.record(id).put(_db, entry.toJson());
   }

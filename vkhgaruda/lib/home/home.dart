@@ -115,11 +115,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _publishLogs() async {
-    var logs = await Logger().getLogs(DateTime.now());
-    print(logs);
+    setState(() {
+      _isLoading = true;
+    });
+
+    List<LogEntry> logs = await Logger().getLogs(_logDate);
+    List<Map<String, dynamic>> logsJson = logs.map((e) => e.toJson()).toList();
+
+    UserBasics? basics = await Utils().fetchOrGetUserBasics();
+
+    Map<String, dynamic> data = {
+      'username': basics?.name ?? "Unknown",
+      'date': Utils().convertTimestampToDbKey(_logDate),
+      'logs': logsJson
+    };
+
+    String key = Utils().convertTimestampToDbKey(DateTime.now());
+    String dbpath = "${Const().dbrootGaruda}/Logs/$key";
+
+    if (logsJson.isNotEmpty) await FB().setJson(path: dbpath, json: data);
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _showPublishLogDialog() async {
+    _logDate = DateTime.now();
+
     await Widgets().showResponsiveDialog(
         context: context,
         title: "Upload logs",
