@@ -48,18 +48,6 @@ class Logger {
   late Database _db;
   final _store = intMapStoreFactory.store('logs');
 
-  Future<void> init(String app) async {
-    if (kIsWeb) {
-      _db = await databaseFactoryWeb.openDatabase('$app.log');
-    } else {
-      final dir = await getApplicationDocumentsDirectory();
-
-      final dbPath = join(dir.path, '$app.log.db');
-
-      _db = await databaseFactoryIo.openDatabase(dbPath);
-    }
-  }
-
   Future<void> _log({
     required String level,
     String tag = "",
@@ -73,15 +61,57 @@ class Logger {
     await _store.record(id).put(_db, entry.toJson());
   }
 
+  Future<void> error({String tag = "", required String msg}) async {
+    await _log(level: "ERROR", tag: tag, msg: msg);
+  }
+
+  Future<List<LogEntry>> getLogs(DateTime date) async {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.greaterThanOrEquals(
+          'timestamp',
+          Utils().convertTimestampToDbKey(dayStart),
+        ),
+        Filter.lessThanOrEquals(
+          'timestamp',
+          Utils().convertTimestampToDbKey(dayEnd),
+        ),
+      ]),
+      sortOrders: [SortOrder('timestamp')],
+    );
+
+    final records = await _store.find(_db, finder: finder);
+
+    return records
+        .map(
+          (record) => LogEntry.fromJson(
+            record.key.toString(),
+            Map<String, dynamic>.from(record.value),
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> init(String app) async {
+    if (kIsWeb) {
+      _db = await databaseFactoryWeb.openDatabase('$app.log');
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+
+      final dbPath = join(dir.path, '$app.log.db');
+
+      _db = await databaseFactoryIo.openDatabase(dbPath);
+    }
+  }
+
   Future<void> info({String tag = "", required String msg}) async {
     await _log(level: "INFO", tag: tag, msg: msg);
   }
 
   Future<void> warning({String tag = "", required String msg}) async {
     await _log(level: "WARNING", tag: tag, msg: msg);
-  }
-
-  Future<void> error({String tag = "", required String msg}) async {
-    await _log(level: "ERROR", tag: tag, msg: msg);
   }
 }

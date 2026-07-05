@@ -8,8 +8,8 @@ import 'package:vkhgaruda/nitya_seva/nitya_seva.dart';
 import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
 import 'package:vkhgaruda/widgets/launcher_tile.dart';
 import 'package:vkhgaruda/widgets/welcome.dart';
-import 'package:vkhpackages/common/logger.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   bool _isAdmin = false;
   String _username = "";
+  DateTime _logDate = DateTime.now();
 
   // lists
 
@@ -39,7 +40,7 @@ class _HomePageState extends State<HomePage> {
     _uploadProfileSettings();
     Utils().checkForNewVersion(context, "garuda");
 
-    Logger().init("Garuda").then((_) => Logger().info(msg: "User logged in"));
+    _initLogger();
 
     refresh();
   }
@@ -81,6 +82,29 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Widget _createUploadLogDialogContents() {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Select date",
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+        DateHeader(
+          callbacks: DateHeaderCallbacks(onChange: (date) => _logDate = date),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _initLogger() async {
+    final info = await PackageInfo.fromPlatform();
+    await Logger().init(info.appName);
+    Logger().info(msg: "User logged in");
+  }
+
   Future<void> _logout() async {
     await LS().delete("userbasics");
     Utils().resetUserBasics();
@@ -88,6 +112,29 @@ class _HomePageState extends State<HomePage> {
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
       return const Landing(title: "Hare Krishna");
     }));
+  }
+
+  Future<void> _publishLogs() async {
+    var logs = await Logger().getLogs(DateTime.now());
+    print(logs);
+  }
+
+  Future<void> _showPublishLogDialog() async {
+    await Widgets().showResponsiveDialog(
+        context: context,
+        title: "Upload logs",
+        child: _createUploadLogDialogContents(),
+        actions: [
+          TextButton(
+              child: Text("Upload"),
+              onPressed: () async {
+                await _publishLogs();
+
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              })
+        ]);
   }
 
   Future<void> _uploadProfileSettings() async {
@@ -139,19 +186,11 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
 
-              // support
+              // publish logs
               IconButton(
-                icon: Icon(Icons.help),
-                onPressed: () {
-                  Navigator.push(
-                    // ignore: use_build_context_synchronously
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Support(
-                        title: "Support",
-                      ),
-                    ),
-                  );
+                icon: Icon(Icons.publish),
+                onPressed: () async {
+                  await _showPublishLogDialog();
                 },
               ),
             ]),
