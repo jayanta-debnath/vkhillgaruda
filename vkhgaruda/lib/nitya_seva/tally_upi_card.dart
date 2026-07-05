@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhpackages/vkhpackages.dart';
@@ -195,6 +197,9 @@ class _TallyNotesPageState extends State<TallyUpiCardPage> {
                     '1000': int.tryParse(_controller1000.text) ?? 0,
                     '2500': int.tryParse(_controller2500.text) ?? 0,
                   };
+
+                  Logger().info(
+                      tag: "Nitya Seva", msg: "UPI tally being saved: $json");
 
                   // write to db
                   String dbDate =

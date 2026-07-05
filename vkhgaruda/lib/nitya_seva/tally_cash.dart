@@ -165,6 +165,8 @@ class _TallyNotesPageState extends State<TallyCashPage> {
         '10': int.tryParse(_controller10.text) ?? 0,
       };
 
+      Logger().info(tag: "Nitya Seva", msg: "Cash tally being saved: $json");
+
       // write to db
       String dbDate = DateFormat("yyyy-MM-dd").format(_timestampSlot!);
       String dbSession = _timestampSlot!.toIso8601String().replaceAll(".", "^");

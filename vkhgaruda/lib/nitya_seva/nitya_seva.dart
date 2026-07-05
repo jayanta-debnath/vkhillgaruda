@@ -163,6 +163,10 @@ class _NityaSevaState extends State<NityaSeva> {
               if (errors.isEmpty || ret == 'Proceed') {
                 _lastCallbackInvoked = DateTime.now();
 
+                Logger().info(
+                    tag: "Nitya Seva",
+                    msg: "New session being created: ${newSession.toJson()}");
+
                 await FB().addMapToList(
                   path: "${Const().dbrootGaruda}/NityaSeva/$dbDate",
                   child: "Settings",
@@ -174,12 +178,14 @@ class _NityaSevaState extends State<NityaSeva> {
                 String path = "${Const().dbrootGaruda}/NityaSeva/OpenSessions";
                 String data =
                     newSession.timestamp.toIso8601String().replaceAll(".", "^");
+
                 if (await FB().pathExists(path)) {
                   await FB().addToList(listpath: path, data: data);
                 } else {
                   await FB().setValue(path: path, value: [data]);
                 }
               }
+
               if (errors.isEmpty) {
                 _postValidation(newSession);
               }
@@ -193,6 +199,9 @@ class _NityaSevaState extends State<NityaSeva> {
                 }
               });
 
+              Logger().info(
+                  msg:
+                      "Session being edited. Old session data: ${session.toJson()} ${newSession.toJson()}");
               _lastCallbackInvoked = DateTime.now();
               String dbTimestamp =
                   session.timestamp.toIso8601String().replaceAll(".", "^");
@@ -305,6 +314,10 @@ class _NityaSevaState extends State<NityaSeva> {
           openSessionsNew.add(element);
         }
       }
+
+      Logger().info(
+          tag: "Nitya Seva",
+          msg: "Sessions being Autolocked: $openSessionsNew");
       if (openSessionsNew.isNotEmpty) {
         FB().setValue(path: dbpath, value: openSessionsNew);
       } else {
@@ -373,6 +386,11 @@ class _NityaSevaState extends State<NityaSeva> {
                                   setState(() {
                                     _sessions.remove(session);
                                   });
+
+                                  Logger().info(
+                                      tag: "Nitya Seva",
+                                      msg:
+                                          "Session being deleted: ${session.toJson()}");
 
                                   // delete in server
                                   String dbTimestamp = session.timestamp
@@ -475,6 +493,9 @@ class _NityaSevaState extends State<NityaSeva> {
         if (ret == 'Edit') {
           _addEditSession(session: session);
         } else if (ret == 'Delete') {
+          Logger().info(
+              tag: "Nitya Seva", msg: "Session deleted: ${session.toJson()}");
+
           // delete locally
           setState(() {
             _sessions.remove(session);

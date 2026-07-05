@@ -760,6 +760,12 @@ class _LadduState extends State<LadduMain> {
       _isSessionClosed = false;
 
       String timestamp = DateTime.now().toIso8601String().replaceAll(".", "^");
+
+      Logger().info(
+          tag: "Laddu",
+          msg:
+              "New laddu session being created: ${Const().dbrootGaruda}/LadduSeva/$timestamp}");
+
       await FB().setJson(
           json: {"dummyKey": "NewSession"},
           path: "${Const().dbrootGaruda}/LadduSeva/$timestamp");

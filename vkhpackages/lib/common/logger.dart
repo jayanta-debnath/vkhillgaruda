@@ -35,15 +35,15 @@ class LogEntry {
   }
 }
 
-class Log {
+class Logger {
   // Private named constructor
-  Log._internal() {
+  Logger._internal() {
     // Initialization logic here
   }
 
-  static final Log _instance = Log._internal();
+  static final Logger _instance = Logger._internal();
 
-  factory Log() => _instance;
+  factory Logger() => _instance;
 
   late Database _db;
   final _store = intMapStoreFactory.store('logs');

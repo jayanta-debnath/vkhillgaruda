@@ -247,6 +247,11 @@ class _LadduSettingsState extends State<LadduSettings> {
           : int.parse(_controllersOtherSeva[i].text);
     }
 
+    Logger().info(
+        tag: "Laddu",
+        msg:
+            "Laddu entries being saved: pushpanjali - $_pushpanjaliTickets, $_otherSevaTickets");
+
     FB().setValue(
         path:
             "${Const().dbrootGaruda}/Settings/LadduDistribution/LadduPackMultiplier/Pushpanjali",

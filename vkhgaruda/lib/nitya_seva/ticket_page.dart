@@ -1223,6 +1223,10 @@ class _TicketPageState extends State<TicketPage>
     String dbSession =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
 
+    Logger().info(
+        tag: "Nitya Seva",
+        msg: "Ticket being added (sync): ${ticket.toJson()}");
+
     try {
       await FB().addMapToList(
           path: "${Const().dbrootGaruda}/NityaSeva/$dbDate/$dbSession/Tickets",
@@ -1240,6 +1244,11 @@ class _TicketPageState extends State<TicketPage>
     String dbSession =
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
     String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
+
+    Logger().info(
+        tag: "Nitya Seva",
+        msg: "Ticket being deleted (sync): ${ticket.toJson()}");
+
     try {
       await FB().deleteValue(
           path:
@@ -1258,6 +1267,9 @@ class _TicketPageState extends State<TicketPage>
         widget.session.timestamp.toIso8601String().replaceAll(".", "^");
     String key = ticket.timestamp.toIso8601String().replaceAll(".", "^");
 
+    Logger().info(
+        tag: "Nitya Seva",
+        msg: "Ticket being edited (sync): ${ticket.toJson()}");
     try {
       await FB().editJson(
           path:
