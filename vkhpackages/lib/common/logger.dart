@@ -8,20 +8,20 @@ import 'package:vkhpackages/common/utils.dart';
 class LogEntry {
   final DateTime timestamp;
   final String? level;
-  final String? tag;
+  final String tag;
   final String message;
 
   LogEntry({
     required this.timestamp,
     this.level,
-    this.tag,
+    required this.tag,
     required this.message,
   });
 
   Map<String, dynamic> toJson() => {
     'timestamp': Utils().convertTimestampToDbKey(timestamp),
     'level': level ?? "INFO",
-    'tag': tag ?? "",
+    'tag': tag,
     'message': message,
   };
 

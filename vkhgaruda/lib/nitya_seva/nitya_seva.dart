@@ -200,6 +200,7 @@ class _NityaSevaState extends State<NityaSeva> {
               });
 
               Logger().info(
+                  tag: "Nitya Seva",
                   msg:
                       "Session being edited. Old session data: ${session.toJson()} ${newSession.toJson()}");
               _lastCallbackInvoked = DateTime.now();
