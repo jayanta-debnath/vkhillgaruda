@@ -134,7 +134,7 @@ class _HarinaamSettingsState extends State<HarinaamSettings> {
     TextEditingController saleValueController = TextEditingController();
 
     String selectedColorHex =
-        Utils().getRandomDarkColor().value.toRadixString(16).padLeft(8, '0');
+        Utils().getRandomDarkColor().toARGB32().toRadixString(16).padLeft(8, '0');
 
     final formKey = GlobalKey<FormState>();
 

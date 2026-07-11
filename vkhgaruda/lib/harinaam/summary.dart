@@ -368,7 +368,7 @@ class _SummaryState extends State<Summary> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
+              Theme.of(context).primaryColor.withValues(alpha: 0.1),
               Theme.of(context).colorScheme.surface,
             ],
             begin: Alignment.topLeft,
@@ -388,11 +388,11 @@ class _SummaryState extends State<Summary> {
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .primaryColor
-                        .withOpacity(0.9), // Dark background
+                        .withValues(alpha: 0.9), // Dark background
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -425,13 +425,13 @@ class _SummaryState extends State<Summary> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color:
-                              Theme.of(context).primaryColor.withOpacity(0.3),
+                              Theme.of(context).primaryColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -538,13 +538,13 @@ class _SummaryState extends State<Summary> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color:
-                              Theme.of(context).primaryColor.withOpacity(0.3),
+                              Theme.of(context).primaryColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -596,11 +596,11 @@ class _SummaryState extends State<Summary> {
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .primaryColor
-                        .withOpacity(0.9), // Dark background
+                        .withValues(alpha: 0.9), // Dark background
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -632,7 +632,7 @@ class _SummaryState extends State<Summary> {
                 decoration: BoxDecoration(
                   color: Theme.of(context)
                       .primaryColor
-                      .withOpacity(0.9), // Dark background
+                      .withValues(alpha: 0.9), // Dark background
                   borderRadius: BorderRadius.circular(4), // Sharp edges
                 ),
                 child: Text(
