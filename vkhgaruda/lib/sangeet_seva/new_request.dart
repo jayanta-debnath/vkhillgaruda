@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:vkhgaruda/sangeet_seva/add_event.dart';
 import 'package:vkhgaruda/sangeet_seva/add_profile.dart';
 import 'package:vkhgaruda/sangeet_seva/add_settings.dart';
+import 'package:vkhpackages/vkhpackages.dart';
 
 class NewRequest extends StatefulWidget {
   final String title;
@@ -18,6 +19,7 @@ class NewRequest extends StatefulWidget {
 
 class _NewRequestState extends State<NewRequest> {
   // scalars
+  bool _isAdmin = false;
 
   // lists
 
@@ -45,6 +47,13 @@ class _NewRequestState extends State<NewRequest> {
     setState(() {});
 
     // access control
+    _isAdmin = await Utils().isAdmin();
+    if (!_isAdmin) {
+      if (mounted) {
+        Toaster().error("Access Denied");
+        Navigator.pop(context);
+      }
+    }
 
     setState(() {});
   }
@@ -59,7 +68,7 @@ class _NewRequestState extends State<NewRequest> {
             bottom: const TabBar(
               tabs: [
                 Tab(text: 'Profile'),
-                Tab(text: 'Event'),
+                Tab(text: 'Events'),
                 Tab(text: 'Settings'),
               ],
             ),

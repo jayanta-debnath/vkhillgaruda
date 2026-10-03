@@ -35,6 +35,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
 
   // scalars
   final Lock _lock = Lock();
+  bool _isAdmin = false;
   bool _isLoading = true;
   int _pendingRequests = 0;
   DateTime _lastCallbackInvoked = DateTime.now();
@@ -139,6 +140,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
     });
 
     // access control
+    _isAdmin = await Utils().isAdmin();
 
     // perform async operations here
     _pendingRequests = await _getPendingRequestsCount();
@@ -217,28 +219,29 @@ class _SangeetSevaState extends State<SangeetSeva> {
               ),
 
               // settings
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {
-                  Widgets().showResponsiveDialog(
-                      context: context,
-                      title: "Settings",
-                      child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Advisory(
-                                  title: "Advisory settings",
-                                  splashImage: widget.splashImage,
+              if (_isAdmin)
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () {
+                    Widgets().showResponsiveDialog(
+                        context: context,
+                        title: "Settings",
+                        child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Advisory(
+                                    title: "Advisory settings",
+                                    splashImage: widget.splashImage,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          child: Text("Advisory settings")),
-                      actions: []);
-                },
-              ),
+                              );
+                            },
+                            child: Text("Advisory settings")),
+                        actions: []);
+                  },
+                ),
             ],
           ),
           body: RefreshIndicator(
@@ -265,28 +268,29 @@ class _SangeetSevaState extends State<SangeetSeva> {
                             child: Center(
                                 child: Column(children: [
                               // new request
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Stack(children: [
-                                  Widgets().createImageButton(
-                                      context: context,
-                                      image:
-                                          "assets/images/SangeetSeva/AddRequest.png",
-                                      imageOnRight: true,
-                                      text: "Add new request",
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => NewRequest(
-                                              title: "Add new request",
+                              if (_isAdmin)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(children: [
+                                    Widgets().createImageButton(
+                                        context: context,
+                                        image:
+                                            "assets/images/SangeetSeva/AddRequest.png",
+                                        imageOnRight: true,
+                                        text: "Add new request",
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => NewRequest(
+                                                title: "Add new request",
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                      fixedWidth: 250),
-                                ]),
-                              ),
+                                          );
+                                        },
+                                        fixedWidth: 250),
+                                  ]),
+                                ),
 
                               // register event
                               Padding(

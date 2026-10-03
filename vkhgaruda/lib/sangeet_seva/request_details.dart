@@ -30,6 +30,7 @@ class RequestDetails extends StatefulWidget {
 class _RequestDetailsState extends State<RequestDetails> {
   // scalars
   final Lock _lock = Lock();
+  bool _isAdmin = false;
   bool _isLoading = true;
   PerformerProfile? _eventRequester;
 
@@ -61,6 +62,7 @@ class _RequestDetailsState extends State<RequestDetails> {
     });
 
     // perform async operations here
+    _isAdmin = await Utils().isAdmin();
     _eventRequester = await SSUtils()
         .getPerformerProfile(widget.eventRecord.eventRequesterMobile);
 
@@ -284,15 +286,16 @@ class _RequestDetailsState extends State<RequestDetails> {
               title: Text(widget.title),
               actions: [
                 // reject button
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    _showActionDialog("Reject");
-                  },
-                ),
+                if (_isAdmin)
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      _showActionDialog("Reject");
+                    },
+                  ),
 
                 // approve button
-                if (widget.pendingRequest != null)
+                if (_isAdmin && widget.pendingRequest != null)
                   IconButton(
                     icon: Icon(Icons.check),
                     onPressed: () {

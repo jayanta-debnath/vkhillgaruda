@@ -21,6 +21,7 @@ class PendingRequests extends StatefulWidget {
 class _PendingRequestsState extends State<PendingRequests> {
   // scalars
   final Lock _lock = Lock();
+  bool _isAdmin = false;
   bool _isLoading = true;
   DateTime _lastCallbackInvoked = DateTime.now();
 
@@ -101,6 +102,7 @@ class _PendingRequestsState extends State<PendingRequests> {
     });
 
     // perform async operations here
+    _isAdmin = await Utils().isAdmin();
 
     await _lock.synchronized(() async {
       // fetch pending requests
