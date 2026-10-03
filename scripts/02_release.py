@@ -163,7 +163,7 @@ def update_changelog(app, version):
     filtered_log_messages = []
     for log_message in log_messages:
         first_line = log_message.split("\n")[0]
-        if first_line.startswith("feature:") or first_line.startswith("fix:"):
+        if first_line.startswith("feature:") or first_line.startswith("feat:") or first_line.startswith("fix:"):
             filtered_log_messages.append(log_message)
     log_messages = filtered_log_messages
     log_messages.reverse()
@@ -174,8 +174,10 @@ def update_changelog(app, version):
         changelog = json.load(file)
         if f"{version}" in changelog.keys():
             for msg in log_messages:
-                if msg.startswith("feature:"):
-                    clean_msg = msg.replace("feature:", "").strip()
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
                     if clean_msg not in changelog[f"{version}"]["features"]:
                         changelog[f"{version}"]["features"].append(clean_msg)
                 elif msg.startswith("fix:"):
@@ -185,8 +187,10 @@ def update_changelog(app, version):
         else:
             changelog[f"{version}"] = {"features": [], "fixes": []}
             for msg in log_messages:
-                if msg.startswith("feature:"):
-                    clean_msg = msg.replace("feature:", "").strip()
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
                     changelog[f"{version}"]["features"].append(clean_msg)
                 elif msg.startswith("fix:"):
                     clean_msg = msg.replace("fix:", "").strip()

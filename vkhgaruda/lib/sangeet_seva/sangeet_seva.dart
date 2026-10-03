@@ -272,9 +272,10 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                       context: context,
                                       image:
                                           "assets/images/SangeetSeva/AddRequest.png",
+                                      imageOnRight: true,
                                       text: "Add new request",
                                       onPressed: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => AddRequest(
