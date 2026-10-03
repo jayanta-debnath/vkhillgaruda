@@ -4,7 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/add_request.dart';
+import 'package:vkhgaruda/sangeet_seva/new_request.dart';
 import 'package:vkhgaruda/sangeet_seva/advisory.dart';
 import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
@@ -278,7 +278,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => AddRequest(
+                                            builder: (context) => NewRequest(
                                               title: "Add new request",
                                             ),
                                           ),
