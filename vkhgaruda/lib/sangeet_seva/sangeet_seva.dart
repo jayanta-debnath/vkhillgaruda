@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/add_request.dart';
 import 'package:vkhgaruda/sangeet_seva/advisory.dart';
 import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
@@ -263,6 +264,29 @@ class _SangeetSevaState extends State<SangeetSeva> {
                             context: context,
                             child: Center(
                                 child: Column(children: [
+                              // new request
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Stack(children: [
+                                  Widgets().createImageButton(
+                                      context: context,
+                                      image:
+                                          "assets/images/SangeetSeva/AddRequest.png",
+                                      text: "Add new request",
+                                      onPressed: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddRequest(
+                                              title: "Add new request",
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      fixedWidth: 250),
+                                ]),
+                              ),
+
                               // register event
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -270,7 +294,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                   Widgets().createImageButton(
                                       context: context,
                                       image:
-                                          "assets/images/LauncherIcons/Register.png",
+                                          "assets/images/SangeetSeva/PendingRequests.png",
                                       text: "View pending requests",
                                       onPressed: () {
                                         Navigator.pushReplacement(
@@ -336,7 +360,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                     },
                                     text: "View registered events",
                                     image:
-                                        "assets/images/LauncherIcons/RegisteredEvents.png",
+                                        "assets/images/SangeetSeva/RegisteredEvents.png",
                                     context: context,
                                     imageOnRight: true,
                                     fixedWidth: 250),
