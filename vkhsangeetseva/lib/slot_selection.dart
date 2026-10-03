@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
-import 'package:vkhsangeetseva/profile.dart';
-import 'package:vkhsangeetseva/registration.dart';
 import 'package:vkhsangeetseva/event_details.dart';
+import 'package:vkhsangeetseva/profile_page.dart';
 import 'package:vkhsangeetseva/widgets/next_avl_slot.dart';
 
 class SlotSelection extends StatefulWidget {
@@ -70,7 +68,7 @@ class _SlotSelectionState extends State<SlotSelection> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Profile(
+          builder: (context) => ProfilePage(
             title: "Performer Profile",
             self: true,
           ),

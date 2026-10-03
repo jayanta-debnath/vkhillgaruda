@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhsangeetseva/home.dart';
-import 'package:vkhsangeetseva/profile.dart';
+import 'package:vkhsangeetseva/profile_page.dart';
 
 class EventDetails extends StatefulWidget {
   final String title;
@@ -148,7 +148,7 @@ class _EventDetailsState extends State<EventDetails> {
           context,
           MaterialPageRoute(
             builder: (context) {
-              return Profile(
+              return ProfilePage(
                 title: "Profile",
                 self: true,
                 onProfileSaved: (user) {
@@ -1114,7 +1114,7 @@ class _EventDetailsState extends State<EventDetails> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => Profile(
+                                builder: (context) => ProfilePage(
                                   title: "Profile",
                                   self: true,
                                   onProfileSaved: (user) {

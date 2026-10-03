@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:vkhsangeetseva/profile.dart';
+import 'package:vkhsangeetseva/profile_page.dart';
 import 'package:vkhsangeetseva/event_details.dart';
 
 class Registration extends StatefulWidget {
@@ -78,7 +78,7 @@ class _RegistrationState extends State<Registration> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Profile(
+          builder: (context) => ProfilePage(
             title: "Performer Profile",
             self: true,
           ),

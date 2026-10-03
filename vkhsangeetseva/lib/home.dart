@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhsangeetseva/notification_page.dart';
-import 'package:vkhsangeetseva/profile.dart';
+import 'package:vkhsangeetseva/profile_page.dart';
 import 'package:vkhsangeetseva/registered_events.dart';
 import 'package:vkhsangeetseva/slot_selection.dart';
 
@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => Profile(
+              builder: (context) => ProfilePage(
                 title: "Create Profile",
                 icon: widget.icon,
                 self: true,
@@ -266,7 +266,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Profile(
+                      builder: (context) => ProfilePage(
                         title: "Profile",
                         self: true,
                         fcmToken: _fcmToken,
