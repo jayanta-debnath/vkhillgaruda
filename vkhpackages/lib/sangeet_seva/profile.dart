@@ -152,6 +152,119 @@ class ProfileState extends State<Profile> {
     });
   }
 
+  Future<void> save() async {
+    // validation if user already exists
+    String dbpath =
+        "${Const().dbrootSangeetSeva}/Users/${_mobileController.text}";
+    bool exists = await FB().pathExists(dbpath);
+    if (exists && (widget.self != null && !widget.self!)) {
+      await _handleExistingUser(context);
+    } else {
+      if (_userDetailsOld == null) {
+        // new user
+        await _save(goback: true);
+      } else {
+        // edit user
+        await _save(goback: false);
+      }
+    }
+  }
+
+  Future<void> _save({bool goback = true}) async {
+    // validation of form
+    if (!_formKey.currentState!.validate()) {
+      Toaster().error('There are errors in the form');
+      return;
+    }
+
+    // validation for profile photo
+    if (_profilePicUrl.isEmpty) {
+      Toaster().error('Please upload your profile picture');
+      return;
+    }
+
+    // validation of performance links
+    if (widget.self != null && widget.self == true) {
+      if ((_youtubeLinks.isEmpty || _youtubeLinks[0].isEmpty) &&
+          (_audioClips.isEmpty || _audioClips[0].isEmpty)) {
+        Toaster().error(
+          'Please enter at least one youtube link or upload one audio clip',
+        );
+        return;
+      }
+    }
+
+    // validation for sangeet experience
+    if (_exp.isEmpty) {
+      Toaster().error('Please enter your sangeet sadhana details');
+      return;
+    }
+
+    // no abrupt returns after this point
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Convert name to title case
+    String name = _nameController.text;
+    setState(() {
+      _nameController.text = name
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+
+      _nameController.text = _nameController.text.trim();
+    });
+
+    // create user details object
+    PerformerProfile? details;
+    details = PerformerProfile(
+      salutation: _salutation,
+      name: _nameController.text,
+      mobile: _mobileController.text,
+      profilePicUrl: _profilePicUrl,
+      exps: _exp,
+      credentials: _credController.text,
+      youtubeUrls: _youtubeLinks.where((link) => link.isNotEmpty).toList(),
+      audioClipUrls: _audioClips.where((link) => link.isNotEmpty).toList(),
+      referrals: [],
+      friendMobile: widget.friendMobile,
+      fcmToken: widget.fcmToken ?? "",
+    );
+
+    // write to database
+    await Utils().setUserDetails(details);
+
+    // update old details
+    _userDetailsOld = details;
+
+    // Write to local storage
+    if (widget.self != null && widget.self == true) {
+      UserBasics basics = UserBasics(
+        name: details.name,
+        mobile: details.mobile,
+      );
+      await LS().write("userbasics", jsonEncode(basics));
+    }
+
+    // invoke the callback
+    if (widget.onProfileSaved != null) {
+      widget.onProfileSaved!(details);
+    }
+
+    Toaster().info('Profile saved');
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (goback == true && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   Widget _createAudioClipTile(int index) {
     String title = _getFileNameFromUrl(_audioClips[index]);
 
@@ -393,7 +506,7 @@ class ProfileState extends State<Profile> {
                 child: Text('Overwrite'),
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  await _save();
+                  await save();
                 },
               ),
           ],
@@ -481,101 +594,6 @@ class ProfileState extends State<Profile> {
     setState(() {
       _isLoading = false;
     });
-  }
-
-  Future<void> _save({bool goback = true}) async {
-    // validation of form
-    if (!_formKey.currentState!.validate()) {
-      Toaster().error('There are errors in the form');
-      return;
-    }
-
-    // validation for profile photo
-    if (_profilePicUrl.isEmpty) {
-      Toaster().error('Please upload your profile picture');
-      return;
-    }
-
-    // validation of performance links
-    if (widget.self != null && widget.self == true) {
-      if ((_youtubeLinks.isEmpty || _youtubeLinks[0].isEmpty) &&
-          (_audioClips.isEmpty || _audioClips[0].isEmpty)) {
-        Toaster().error(
-          'Please enter at least one youtube link or upload one audio clip',
-        );
-        return;
-      }
-    }
-
-    // validation for sangeet experience
-    if (_exp.isEmpty) {
-      Toaster().error('Please enter your sangeet sadhana details');
-      return;
-    }
-
-    // no abrupt returns after this point
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Convert name to title case
-    String name = _nameController.text;
-    setState(() {
-      _nameController.text = name
-          .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
-          .join(' ');
-
-      _nameController.text = _nameController.text.trim();
-    });
-
-    // create user details object
-    PerformerProfile? details;
-    details = PerformerProfile(
-      salutation: _salutation,
-      name: _nameController.text,
-      mobile: _mobileController.text,
-      profilePicUrl: _profilePicUrl,
-      exps: _exp,
-      credentials: _credController.text,
-      youtubeUrls: _youtubeLinks.where((link) => link.isNotEmpty).toList(),
-      audioClipUrls: _audioClips.where((link) => link.isNotEmpty).toList(),
-      referrals: [],
-      friendMobile: widget.friendMobile,
-      fcmToken: widget.fcmToken ?? "",
-    );
-
-    // write to database
-    await Utils().setUserDetails(details);
-
-    // update old details
-    _userDetailsOld = details;
-
-    // Write to local storage
-    if (widget.self != null && widget.self == true) {
-      UserBasics basics = UserBasics(
-        name: details.name,
-        mobile: details.mobile,
-      );
-      await LS().write("userbasics", jsonEncode(basics));
-    }
-
-    // invoke the callback
-    if (widget.onProfileSaved != null) {
-      widget.onProfileSaved!(details);
-    }
-
-    Toaster().info('Profile saved');
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (goback == true && mounted) {
-      Navigator.of(context).pop();
-    }
   }
 
   Future<void> _showDialogSangeetExp(BuildContext context) async {
@@ -1022,28 +1040,6 @@ class ProfileState extends State<Profile> {
                         ...List.generate(_audioClips.length, (index) {
                           return _createAudioClipTile(index);
                         }),
-
-                        IconButton(
-                          icon: Icon(Icons.save),
-                          onPressed: () async {
-                            // validation if user already exists
-                            String dbpath =
-                                "${Const().dbrootSangeetSeva}/Users/${_mobileController.text}";
-                            bool exists = await FB().pathExists(dbpath);
-                            if (exists &&
-                                (widget.self != null && !widget.self!)) {
-                              await _handleExistingUser(context);
-                            } else {
-                              if (_userDetailsOld == null) {
-                                // new user
-                                await _save(goback: true);
-                              } else {
-                                // edit user
-                                await _save(goback: false);
-                              }
-                            }
-                          },
-                        ),
                       ],
                     ),
                   ),

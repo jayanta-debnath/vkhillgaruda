@@ -13,16 +13,17 @@ class ProfilePage extends StatefulWidget {
   final Function(PerformerProfile user)? onProfileSaved;
   final String? friendMobile;
   final String? fcmToken;
+  final String? splashImage;
 
-  const ProfilePage({
-    super.key,
-    required this.self,
-    required this.title,
-    this.onProfileSaved,
-    this.icon,
-    this.friendMobile,
-    this.fcmToken,
-  });
+  const ProfilePage(
+      {super.key,
+      required this.self,
+      required this.title,
+      this.onProfileSaved,
+      this.icon,
+      this.friendMobile,
+      this.fcmToken,
+      this.splashImage});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -31,6 +32,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   // scalars
+  final GlobalKey<ProfileState> _keyProfile = GlobalKey<ProfileState>();
+  bool _isLoading = true;
 
   // lists
 
@@ -49,11 +52,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> refresh() async {
-    setState(() {});
+    setState(() {
+      _isLoading = true;
+    });
+
+    await _keyProfile.currentState?.refresh();
 
     // perform async operations here
 
-    setState(() {});
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -61,7 +70,14 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        actions: [],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () async {
+              _keyProfile.currentState?.save();
+            },
+          )
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: refresh,
@@ -69,9 +85,15 @@ class _ProfilePageState extends State<ProfilePage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Profile(
-              self: widget.self,
-            ),
+            child: Stack(children: [
+              Profile(
+                key: _keyProfile,
+                self: widget.self,
+              ),
+
+              // circular progress indicator
+              // if (_isLoading) Center(child: CircularProgressIndicator()),
+            ]),
           ),
         ),
       ),
