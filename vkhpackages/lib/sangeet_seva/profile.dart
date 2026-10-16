@@ -44,6 +44,7 @@ class ProfileState extends State<Profile> {
   PerformerProfile? _userDetailsOld;
   String _profilePicUrl = '';
   late String _salutation;
+  bool _isAdmin = false;
 
   // lists
   List<SangeetExp> _exp = [];
@@ -88,10 +89,12 @@ class ProfileState extends State<Profile> {
       _isLoading = true;
     });
 
+    _isAdmin = await Utils().isAdmin();
+
     await _lock.synchronized(() async {
       // perform your work here
       // fetch form values
-      if (widget.self != null && widget.self == true) {
+      if (_isAdmin || (widget.self != null && widget.self == true)) {
         await Utils().fetchUserBasics();
         UserBasics? basics = Utils().getUserBasics();
         if (basics != null) {

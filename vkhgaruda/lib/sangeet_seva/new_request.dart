@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:vkhgaruda/sangeet_seva/add_event.dart';
-import 'package:vkhgaruda/sangeet_seva/add_profile.dart';
+import 'package:vkhgaruda/sangeet_seva/profile_page.dart';
 import 'package:vkhgaruda/sangeet_seva/add_settings.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
@@ -20,6 +20,8 @@ class NewRequest extends StatefulWidget {
 class _NewRequestState extends State<NewRequest> {
   // scalars
   bool _isAdmin = false;
+  final GlobalKey<ProfilePageState> _keyProfilePage =
+      GlobalKey<ProfilePageState>();
 
   // lists
 
@@ -55,6 +57,8 @@ class _NewRequestState extends State<NewRequest> {
       }
     }
 
+    _keyProfilePage.currentState?.refresh();
+
     setState(() {});
   }
 
@@ -65,6 +69,13 @@ class _NewRequestState extends State<NewRequest> {
         child: Scaffold(
           appBar: AppBar(
             title: Text(widget.title),
+            actions: [
+              IconButton(
+                  icon: Icon(Icons.save),
+                  onPressed: () async {
+                    await _keyProfilePage.currentState?.save();
+                  })
+            ],
             bottom: const TabBar(
               tabs: [
                 Tab(text: 'Profile'),
@@ -73,9 +84,9 @@ class _NewRequestState extends State<NewRequest> {
               ],
             ),
           ),
-          body: const TabBarView(
+          body: TabBarView(
             children: [
-              ProfilePage(),
+              ProfilePage(key: _keyProfilePage),
               EventPage(),
               SettingsPage(),
             ],

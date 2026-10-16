@@ -195,6 +195,30 @@ class _HomePageState extends State<HomePage> {
                                     }
                                   })),
 
+                              // Sangeet Seva
+                              LauncherTile(
+                                  image: 'assets/images/Logo/SangeetSeva.png',
+                                  title: "Sangeet\nSeva",
+                                  callback:
+                                      LauncherTileCallback(onClick: () async {
+                                    bool perm = await Utils()
+                                        .checkPermission("Sangeet Seva");
+                                    if (perm) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SangeetSeva(
+                                                  title: "Sangeet Seva",
+                                                  splashImage:
+                                                      'assets/images/Logo/SangeetSeva.png',
+                                                )),
+                                      );
+                                    } else {
+                                      Toaster().error("Access Denied");
+                                    }
+                                  })),
+
                               // Harinaam Mantapa
                               LauncherTile(
                                   image:
@@ -213,30 +237,6 @@ class _HomePageState extends State<HomePage> {
                                                   title: "Harinaam Mantapa",
                                                   splashImage:
                                                       'assets/images/LauncherIcons/Harinaam.png',
-                                                )),
-                                      );
-                                    } else {
-                                      Toaster().error("Access Denied");
-                                    }
-                                  })),
-
-                              // Sangeet Seva
-                              LauncherTile(
-                                  image: 'assets/images/Logo/SangeetSeva.png',
-                                  title: "Sangeet\nSeva",
-                                  callback:
-                                      LauncherTileCallback(onClick: () async {
-                                    bool perm = await Utils()
-                                        .checkPermission("Sangeet Seva");
-                                    if (perm) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const SangeetSeva(
-                                                  title: "Sangeet Seva",
-                                                  splashImage:
-                                                      'assets/images/Logo/SangeetSeva.png',
                                                 )),
                                       );
                                     } else {

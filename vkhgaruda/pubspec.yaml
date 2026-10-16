@@ -52,6 +52,9 @@ dependencies:
   share_plus: any
   package_info_plus: ^9.0.0
   firebase_messaging: ^15.2.10
+  fast_image_resizer: ^0.0.2
+  file_picker: ^10.1.2
+  image_picker: ^1.2.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
