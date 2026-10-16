@@ -31,7 +31,6 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   // scalars
-  bool _isLoading = true;
 
   // lists
 
@@ -50,43 +49,32 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> refresh() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() {});
 
     // perform async operations here
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            title: Text(widget.title),
-            actions: [],
-          ),
-          body: RefreshIndicator(
-            onRefresh: refresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Profile(
-                  self: widget.self,
-                ),
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [],
+      ),
+      body: RefreshIndicator(
+        onRefresh: refresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Profile(
+              self: widget.self,
             ),
           ),
         ),
-
-        // circular progress indicator
-        if (_isLoading) LoadingOverlay(image: widget.icon)
-      ],
+      ),
     );
   }
 }
