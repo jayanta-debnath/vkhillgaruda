@@ -8,7 +8,7 @@ import 'package:vkhgaruda/sangeet_seva/new_request.dart';
 import 'package:vkhgaruda/sangeet_seva/advisory.dart';
 import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
-import 'package:vkhgaruda/sangeet_seva/profiles.dart';
+import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
 import 'package:vkhgaruda/sangeet_seva/registered_events.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
@@ -193,7 +193,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Profiles(
+                      builder: (context) => ProfileList(
                         title: 'Performer Profiles',
                         icon: widget.splashImage,
                       ),

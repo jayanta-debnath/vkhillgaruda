@@ -100,8 +100,11 @@ class _ProfileDetailsState extends State<ProfileDetails> {
                                 Center(
                                   child: SizedBox(
                                       width: 150,
-                                      child: Image.network(
-                                          widget.userdetails.profilePicUrl)),
+                                      child: widget
+                                              .userdetails.profilePicUrl.isEmpty
+                                          ? null
+                                          : Image.network(widget
+                                              .userdetails.profilePicUrl)),
                                 ),
                               ],
                             )),

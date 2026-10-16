@@ -5,18 +5,18 @@ import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_details.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
-class Profiles extends StatefulWidget {
+class ProfileList extends StatefulWidget {
   final String title;
   final String? icon;
 
-  const Profiles({super.key, required this.title, this.icon});
+  const ProfileList({super.key, required this.title, this.icon});
 
   @override
   // ignore: library_private_types_in_public_api
-  _ProfilesState createState() => _ProfilesState();
+  _ProfileListState createState() => _ProfileListState();
 }
 
-class _ProfilesState extends State<Profiles> {
+class _ProfileListState extends State<ProfileList> {
   // scalars
   final Lock _lock = Lock();
   bool _isLoading = true;
@@ -93,7 +93,9 @@ class _ProfilesState extends State<Profiles> {
                     )));
       },
       leading: CircleAvatar(
-        backgroundImage: NetworkImage(member.profilePicUrl),
+        backgroundImage: (member.profilePicUrl.isEmpty
+            ? null
+            : NetworkImage(member.profilePicUrl)),
       ),
       title: Text("${member.salutation} ${member.name}"),
       subtitle: SingleChildScrollView(
