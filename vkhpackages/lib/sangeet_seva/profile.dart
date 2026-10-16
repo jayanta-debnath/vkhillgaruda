@@ -155,7 +155,12 @@ class ProfileState extends State<Profile> {
     });
   }
 
-  Future<void> save() async {
+  Future<void> save({bool? goback}) async {
+    if (_mobileController.text.isEmpty || _nameController.text.isEmpty) {
+      Toaster().error("Please enter name and mobile number");
+      return;
+    }
+
     // validation if user already exists
     String dbpath =
         "${Const().dbrootSangeetSeva}/Users/${_mobileController.text}";
@@ -165,10 +170,10 @@ class ProfileState extends State<Profile> {
     } else {
       if (_userDetailsOld == null) {
         // new user
-        await _save(goback: true);
+        await _save(goback: goback ?? true);
       } else {
         // edit user
-        await _save(goback: false);
+        await _save(goback: goback ?? false);
       }
     }
   }
@@ -181,27 +186,21 @@ class ProfileState extends State<Profile> {
     }
 
     // validation for profile photo
-    if (_profilePicUrl.isEmpty) {
-      Toaster().error('Please upload your profile picture');
-      return;
-    }
+    // if (_profilePicUrl.isEmpty) {
+    //   Toaster().error('Please upload your profile picture');
+    //   return;
+    // }
 
     // validation of performance links
-    if (widget.self != null && widget.self == true) {
-      if ((_youtubeLinks.isEmpty || _youtubeLinks[0].isEmpty) &&
-          (_audioClips.isEmpty || _audioClips[0].isEmpty)) {
-        Toaster().error(
-          'Please enter at least one youtube link or upload one audio clip',
-        );
-        return;
-      }
-    }
-
-    // validation for sangeet experience
-    if (_exp.isEmpty) {
-      Toaster().error('Please enter your sangeet sadhana details');
-      return;
-    }
+    // if (widget.self != null && widget.self == true) {
+    //   if ((_youtubeLinks.isEmpty || _youtubeLinks[0].isEmpty) &&
+    //       (_audioClips.isEmpty || _audioClips[0].isEmpty)) {
+    //     Toaster().error(
+    //       'Please enter at least one youtube link or upload one audio clip',
+    //     );
+    //     return;
+    //   }
+    // }
 
     // no abrupt returns after this point
     setState(() {
@@ -481,7 +480,7 @@ class ProfileState extends State<Profile> {
                 ),
                 Text('Credentials: ${userDetails.credentials}'),
                 SizedBox(height: 4),
-                if (!isFriend)
+                if (!isFriend && !_isAdmin)
                   Text(
                     'You do not have permission to edit this profile.',
                     style: TextStyle(color: Colors.red),
@@ -504,12 +503,12 @@ class ProfileState extends State<Profile> {
                 widget.onProfileSaved!(userDetails);
               },
             ),
-            if (isFriend)
+            if (isFriend || _isAdmin)
               TextButton(
                 child: Text('Overwrite'),
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  await save();
+                  await _save(goback: false);
                 },
               ),
           ],
@@ -519,7 +518,7 @@ class ProfileState extends State<Profile> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    if (widget.self != null && widget.self == false) {
+    if (!_isAdmin && (widget.self != null && widget.self == false)) {
       Toaster().error('You cannot change other\'s profile picture');
       return;
     }
@@ -944,9 +943,9 @@ class ProfileState extends State<Profile> {
                           hintText: "e.g. MA in music",
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Field cannot be empty';
-                          }
+                          // if (value == null || value.isEmpty) {
+                          //   return 'Field cannot be empty';
+                          // }
                           return null;
                         },
                       ),

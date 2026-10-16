@@ -41,7 +41,7 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> save() async {
-    await _keyProfile.currentState?.save();
+    await _keyProfile.currentState?.save(goback: false);
   }
 
   @override
