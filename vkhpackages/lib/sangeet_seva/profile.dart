@@ -120,36 +120,33 @@ class ProfileState extends State<Profile> {
         _userDetailsOld = widget.oldUserDetails;
       }
 
-      await _lock.synchronized(() async {
-        // perform sync operations here
-        if (widget.self != null && widget.self == true) {
-          UserBasics? basics = Utils().getUserBasics();
-          if (basics != null) {
-            _nameController.text = basics.name;
-            _mobileController.text = basics.mobile;
-          }
+      if (widget.self != null && widget.self == true) {
+        UserBasics? basics = Utils().getUserBasics();
+        if (basics != null) {
+          _nameController.text = basics.name;
+          _mobileController.text = basics.mobile;
         }
+      }
 
-        if (_userDetailsOld != null) {
-          _salutation = _userDetailsOld!.salutation;
-          _nameController.text = _userDetailsOld!.name;
-          _mobileController.text = _userDetailsOld!.mobile;
-          _profilePicUrl = _userDetailsOld!.profilePicUrl;
-          _credController.text = _userDetailsOld!.credentials;
-          _exp = _userDetailsOld!.exps;
-          _youtubeLinks = _userDetailsOld!.youtubeUrls;
-          _audioClips = _userDetailsOld!.audioClipUrls;
-        }
+      if (_userDetailsOld != null) {
+        _salutation = _userDetailsOld!.salutation;
+        _nameController.text = _userDetailsOld!.name;
+        _mobileController.text = _userDetailsOld!.mobile;
+        _profilePicUrl = _userDetailsOld!.profilePicUrl;
+        _credController.text = _userDetailsOld!.credentials;
+        _exp = _userDetailsOld!.exps;
+        _youtubeLinks = _userDetailsOld!.youtubeUrls;
+        _audioClips = _userDetailsOld!.audioClipUrls;
+      }
 
-        // hack: facilitate browse button always for audio clips
-        if (_audioClips.isEmpty || _audioClips.last.isNotEmpty) {
-          _audioClips.add("");
-        }
-      });
+      // hack: facilitate browse button always for audio clips
+      if (_audioClips.isEmpty || _audioClips.last.isNotEmpty) {
+        _audioClips.add("");
+      }
+    });
 
-      setState(() {
-        _isLoading = false;
-      });
+    setState(() {
+      _isLoading = false;
     });
   }
 
