@@ -173,28 +173,72 @@ class _SlotSelectionState extends State<SlotSelection> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Next available slot:"),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  // select date and time
+                                  Column(
                                     children: [
-                                      NextAvlSlot(key: _nextavlslotKey),
-                                      // const SizedBox(width: 10),
-                                      // IconButton(
-                                      //     onPressed: () {
-                                      //       Navigator.push(
-                                      //         context,
-                                      //         MaterialPageRoute(
-                                      //           builder: (context) =>
-                                      //               Registration(
-                                      //             title: "Event Registration",
-                                      //           ),
-                                      //         ),
-                                      //       );
-                                      //     },
-                                      //     icon: Icon(Icons.calendar_month))
+                                      // date row
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Text(
+                                                "Date",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineSmall,
+                                              )),
+                                          Expanded(
+                                              flex: 4,
+                                              child: Text("25 Oct 2026")),
+                                          Expanded(
+                                              flex: 1,
+                                              child: IconButton(
+                                                  onPressed: () {},
+                                                  icon: Icon(Icons
+                                                      .calendar_month_outlined))),
+                                        ],
+                                      ),
+
+                                      // time row
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Text(
+                                                "Time",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineSmall,
+                                              )),
+                                          Expanded(
+                                              flex: 2,
+                                              child: Row(
+                                                children: [
+                                                  Text("17:30"),
+                                                  IconButton(
+                                                      onPressed: () {},
+                                                      icon: Icon(
+                                                          Icons.access_time))
+                                                ],
+                                              )),
+                                          Expanded(flex: 1, child: Text("to")),
+                                          Expanded(
+                                              flex: 2,
+                                              child: Row(
+                                                children: [
+                                                  Text("18:30"),
+                                                  IconButton(
+                                                      onPressed: () {},
+                                                      icon: Icon(
+                                                          Icons.access_time))
+                                                ],
+                                              ))
+                                        ],
+                                      )
                                     ],
                                   ),
+
+                                  // button to go to next page
                                   const SizedBox(height: 10),
                                   Align(
                                     alignment: Alignment.center,
