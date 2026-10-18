@@ -101,6 +101,22 @@ class _SlotSelectionState extends State<SlotSelection> {
       return;
     }
 
+    // validate if end time is greater than start time
+    if (_timeEnd.compareTo(_timeStart) < 0) {
+      Toaster().error("End time should be greater than start time");
+      return;
+    }
+
+    // validate if end time is greater than start time by 30 mins
+    int minutesSinceMidnight(TimeOfDay time) => time.hour * 60 + time.minute;
+    final difference =
+        (minutesSinceMidnight(_timeEnd) - minutesSinceMidnight(_timeStart))
+            .abs();
+    if (difference < 30) {
+      Toaster().error("Event duration should be at least 30 mins");
+      return;
+    }
+
     // go to next page
     if (mounted) {
       Navigator.push(
