@@ -192,7 +192,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                                     .headlineSmall,
                                               )),
                                           Expanded(
-                                            flex: 4,
+                                            flex: 3,
                                             child: Text(
                                                 DateFormat("EEE, dd MMM yyyy")
                                                     .format(_date)),
@@ -219,64 +219,69 @@ class _SlotSelectionState extends State<SlotSelection> {
                                         ],
                                       ),
 
-                                      // time row
+                                      // start time row
+                                      Row(children: [
+                                        Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              "Start Time",
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineSmall,
+                                            )),
+                                        Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                                _timeStart.format(context))),
+                                        Expanded(
+                                          flex: 1,
+                                          child: IconButton(
+                                              onPressed: () async {
+                                                _timeStart =
+                                                    await showTimePicker(
+                                                          context: context,
+                                                          initialTime:
+                                                              _timeStart,
+                                                        ) ??
+                                                        _timeStart;
+
+                                                setState(() {});
+                                              },
+                                              icon: Icon(Icons.access_time)),
+                                        ),
+                                      ]),
+
+                                      // end time row
                                       Row(
                                         children: [
                                           Expanded(
-                                              flex: 1,
+                                              flex: 2,
                                               child: Text(
-                                                "Time",
+                                                "End Time",
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .headlineSmall,
                                               )),
                                           Expanded(
-                                              flex: 2,
-                                              child: Row(
-                                                children: [
-                                                  Text(_timeStart
-                                                      .format(context)),
-                                                  IconButton(
-                                                      onPressed: () async {
-                                                        _timeStart =
-                                                            await showTimePicker(
-                                                                  context:
-                                                                      context,
-                                                                  initialTime:
-                                                                      _timeStart,
-                                                                ) ??
-                                                                _timeStart;
-
-                                                        setState(() {});
-                                                      },
-                                                      icon: Icon(
-                                                          Icons.access_time))
-                                                ],
-                                              )),
-                                          Expanded(flex: 1, child: Text("to")),
+                                              flex: 3,
+                                              child: Text(
+                                                  _timeEnd.format(context))),
                                           Expanded(
-                                              flex: 2,
-                                              child: Row(
-                                                children: [
-                                                  Text(
-                                                      _timeEnd.format(context)),
-                                                  IconButton(
-                                                      onPressed: () async {
-                                                        _timeEnd =
-                                                            await showTimePicker(
-                                                                  context:
-                                                                      context,
-                                                                  initialTime:
-                                                                      _timeStart,
-                                                                ) ??
-                                                                _timeEnd;
+                                            flex: 1,
+                                            child: IconButton(
+                                                onPressed: () async {
+                                                  _timeEnd =
+                                                      await showTimePicker(
+                                                            context: context,
+                                                            initialTime:
+                                                                _timeEnd,
+                                                          ) ??
+                                                          _timeEnd;
 
-                                                        setState(() {});
-                                                      },
-                                                      icon: Icon(
-                                                          Icons.access_time)),
-                                                ],
-                                              ))
+                                                  setState(() {});
+                                                },
+                                                icon: Icon(Icons.access_time)),
+                                          ),
                                         ],
                                       )
                                     ],
