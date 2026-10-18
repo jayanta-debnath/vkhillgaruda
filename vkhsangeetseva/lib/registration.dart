@@ -227,18 +227,6 @@ class _RegistrationState extends State<Registration> {
                       Map<String, dynamic>.from(requestRaw);
                   String mobile = requestMap['path'].split('/').last;
                   UserBasics? basics = Utils().getUserBasics();
-                  if (basics != null && mobile == basics.mobile) {
-                    String dbpath = requestMap['path'];
-                    var eventRaw = await FB().getValue(path: dbpath);
-                    EventRecord event = Utils()
-                        .convertRawToDatatype(eventRaw, EventRecord.fromJson);
-                    if (event.date == _selectedDate &&
-                        event.slot.from == slot.from &&
-                        event.slot.to == slot.to) {
-                      Toaster().error("You already requested this slot");
-                      return;
-                    }
-                  }
                 }
 
                 // check if slot is in the past
@@ -262,7 +250,7 @@ class _RegistrationState extends State<Registration> {
                     builder: (context) => EventDetails(
                       title: widget.title,
                       selectedDate: _selectedDate,
-                      slot: slot,
+                      eventStart: DateTime.parse(slot.from),
                     ),
                   ),
                 );

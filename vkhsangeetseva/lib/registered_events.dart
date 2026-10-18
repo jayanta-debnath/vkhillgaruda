@@ -113,7 +113,6 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
               MaterialPageRoute(
                 builder: (context) => EventDetails(
                   selectedDate: event.date,
-                  slot: event.slot,
                   title: "Event details",
                   icon: widget.splashImage,
                   oldEvent: event,
@@ -129,7 +128,6 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
               MaterialPageRoute(
                 builder: (context) => EventDetails(
                   selectedDate: event.date,
-                  slot: event.slot,
                   title: "Event details",
                   icon: widget.splashImage,
                   oldEvent: event,

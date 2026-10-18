@@ -10,20 +10,16 @@ class EventDetails extends StatefulWidget {
   final String title;
   final String? icon;
   final DateTime selectedDate;
-  final Slot slot;
   final EventRecord? oldEvent;
   final bool? readOnly;
-  final DateTime?
-      eventStart; // actual event start time. sometimes in between the slot time
-  final DateTime?
-      eventEnd; // actual event end time. sometimes in between the slot time
+  final DateTime? eventStart;
+  final DateTime? eventEnd;
 
   const EventDetails({
     super.key,
     required this.title,
     this.icon,
     required this.selectedDate,
-    required this.slot,
     this.oldEvent,
     this.readOnly,
     this.eventStart,
@@ -59,19 +55,20 @@ class _EventDetailsState extends State<EventDetails> {
     super.initState();
 
     // set the event start and end time
-    _eventStart = Time().convertStringToTime(
-      widget.selectedDate,
-      widget.slot.from,
-    );
-    _eventEnd = Time().convertStringToTime(
-      widget.selectedDate,
-      widget.slot.to,
-    );
+    if (widget.eventStart != null) {
+      _eventStart = widget.eventStart!;
+    } else if (widget.oldEvent != null) {
+      _eventStart = widget.oldEvent!.eventStart;
+    } else {
+      _eventStart = DateTime.now();
+    }
 
-    if (widget.oldEvent != null &&
-        widget.oldEvent!.status == "Approved" &&
-        widget.oldEvent!.date.isAfter(DateTime.now())) {
-      _showAdvisory();
+    if (widget.eventEnd != null) {
+      _eventEnd = widget.eventEnd!;
+    } else if (widget.oldEvent != null) {
+      _eventEnd = widget.oldEvent!.eventEnd;
+    } else {
+      _eventEnd = DateTime.now();
     }
 
     refresh();
@@ -129,8 +126,9 @@ class _EventDetailsState extends State<EventDetails> {
     EventRecord? performanceRequest;
     if (widget.oldEvent != null) {
       String dbdate = DateFormat("yyyy-MM-dd").format(widget.oldEvent!.date);
+      String slotName = DateFormat("HH_mm").format(widget.oldEvent!.eventStart);
       String dbpath =
-          "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/${widget.oldEvent!.slot.name}";
+          "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
       Map<String, dynamic> data = await FB().getJson(path: dbpath);
       performanceRequest =
           Utils().convertRawToDatatype(data, EventRecord.fromJson);
@@ -333,7 +331,7 @@ class _EventDetailsState extends State<EventDetails> {
     } else {
       mobile = basics.mobile;
       String dbdate = DateFormat("yyyy-MM-dd").format(widget.selectedDate);
-      String slotName = widget.slot.name;
+      String slotName = DateFormat("HH_mm").format(_eventStart);
       dbpath = "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
       await FB().deleteValue(
         path: dbpath,
@@ -351,32 +349,6 @@ class _EventDetailsState extends State<EventDetails> {
       listpath: "${Const().dbrootSangeetSeva}/PendingRequests",
       index: indexP,
     );
-
-    // mark available slot
-    String dbdate = DateFormat("yyyy-MM-dd").format(widget.selectedDate);
-    Map<String, dynamic> slots = await FB().getJson(
-      path: "${Const().dbrootSangeetSeva}/Slots/$dbdate",
-      silent: true,
-    );
-    String slotKey = "";
-    for (var slot in slots.entries) {
-      Slot s = Utils().convertRawToDatatype(slot.value, Slot.fromJson);
-      if (widget.slot.from == s.from && widget.slot.to == s.to) {
-        slotKey = slot.key;
-        break;
-      }
-    }
-    if (slotKey.isNotEmpty) {
-      Slot slotToUpdate = Utils().convertRawToDatatype(
-        slots[slotKey],
-        Slot.fromJson,
-      );
-      slotToUpdate.avl = true;
-      await FB().setJson(
-        path: "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotKey",
-        json: slotToUpdate.toJson(),
-      );
-    }
 
     // show success message
     Toaster().info("Event deleted successfully");
@@ -422,15 +394,9 @@ class _EventDetailsState extends State<EventDetails> {
       return;
     }
 
-    // show advisory
-    if (widget.oldEvent == null) {
-      await _showAdvisory();
-    }
-
     // populate the data structure
     EventRecord performanceRequest = EventRecord(
       date: widget.selectedDate,
-      slot: widget.slot,
       eventStart: _eventStart,
       eventEnd: _eventEnd,
       eventRequesterMobile: _requester!.mobile,
@@ -445,14 +411,14 @@ class _EventDetailsState extends State<EventDetails> {
     UserBasics? basics = Utils().getUserBasics();
     String mobile = "";
     String dbdate = DateFormat("yyyy-MM-dd").format(performanceRequest.date);
+    String slotName = DateFormat("HH_mm").format(performanceRequest.eventStart);
     if (basics == null) {
       Toaster().error("Cant access user data");
       return;
     } else {
       mobile = basics.mobile;
       FB().setJson(
-        path:
-            "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/${performanceRequest.slot.name}",
+        path: "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
         json: performanceRequest.toJson(),
       );
     }
@@ -479,7 +445,7 @@ class _EventDetailsState extends State<EventDetails> {
         listpath: "${Const().dbrootSangeetSeva}/PendingRequests",
         data: {
           "path":
-              "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/${performanceRequest.slot.name}",
+              "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
         },
       );
     }
@@ -942,74 +908,6 @@ class _EventDetailsState extends State<EventDetails> {
     );
   }
 
-  Future<void> _showAdvisory() async {
-    String dbpath = "${Const().dbrootSangeetSeva}/Settings/Advisory";
-    List advisoriesRaw = await FB().getList(path: dbpath);
-    List<String> advisories = [];
-    for (var advisoryRaw in advisoriesRaw) {
-      String advisory = advisoryRaw as String;
-      advisories.add(advisory);
-    }
-    bool checkboxState = false;
-
-    // local storage key for "do not show this message again"
-    String str = "DNSAdv";
-    str += widget.selectedDate.toIso8601String();
-    str += widget.slot.name;
-    String? dns = await LS().read(str);
-    if (dns != null) {
-      return;
-    }
-
-    if (advisories.isNotEmpty) {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Standard advisory'),
-          content: SingleChildScrollView(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              ...advisories.asMap().entries.map((entry) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Text('${entry.key + 1}. ${entry.value}'),
-                  )),
-            ]),
-          ),
-          actions: [
-            Row(
-              children: [
-                StatefulBuilder(
-                  builder: (context, setState) => Checkbox(
-                    value: checkboxState,
-                    onChanged: (value) {
-                      setState(() {
-                        checkboxState = value!;
-                      });
-                    },
-                  ),
-                ),
-                const Text("Do not show this again"),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-
-                if (checkboxState) {
-                  LS().write(
-                    str,
-                    "true",
-                  );
-                }
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -1018,14 +916,6 @@ class _EventDetailsState extends State<EventDetails> {
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
-              // advisory button
-              IconButton(
-                icon: Icon(Icons.info_outline),
-                onPressed: () async {
-                  await _showAdvisory();
-                },
-              ),
-
               // delete button
               if (widget.oldEvent != null && widget.readOnly == null)
                 IconButton(
