@@ -40,6 +40,11 @@ class MyApp extends StatelessWidget {
       title: 'Sangeet Seva',
       theme: themeSangeetSeva,
       home: home,
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('en', 'GB'),
+        Locale('en', 'IN'),
+      ],
     );
   }
 }

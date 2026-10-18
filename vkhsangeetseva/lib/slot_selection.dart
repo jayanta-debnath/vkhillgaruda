@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhsangeetseva/event_details.dart';
@@ -23,6 +24,9 @@ class _SlotSelectionState extends State<SlotSelection> {
   bool _isLoading = true;
   final GlobalKey<NextAvlSlotState> _nextavlslotKey =
       GlobalKey<NextAvlSlotState>();
+  DateTime _date = DateTime.now();
+  TimeOfDay _timeStart = TimeOfDay.now();
+  TimeOfDay _timeEnd = TimeOfDay.now();
 
   // lists
 
@@ -188,12 +192,28 @@ class _SlotSelectionState extends State<SlotSelection> {
                                                     .headlineSmall,
                                               )),
                                           Expanded(
-                                              flex: 4,
-                                              child: Text("25 Oct 2026")),
+                                            flex: 4,
+                                            child: Text(
+                                                DateFormat("EEE, dd MMM yyyy")
+                                                    .format(_date)),
+                                          ),
                                           Expanded(
                                               flex: 1,
                                               child: IconButton(
-                                                  onPressed: () {},
+                                                  onPressed: () async {
+                                                    _date = await showDatePicker(
+                                                            context: context,
+                                                            locale:
+                                                                const Locale(
+                                                                    'en', 'GB'),
+                                                            firstDate: _date,
+                                                            lastDate: _date.add(
+                                                                Duration(
+                                                                    days:
+                                                                        365))) ??
+                                                        _date;
+                                                    setState(() {});
+                                                  },
                                                   icon: Icon(Icons
                                                       .calendar_month_outlined))),
                                         ],
@@ -214,9 +234,21 @@ class _SlotSelectionState extends State<SlotSelection> {
                                               flex: 2,
                                               child: Row(
                                                 children: [
-                                                  Text("17:30"),
+                                                  Text(_timeStart
+                                                      .format(context)),
                                                   IconButton(
-                                                      onPressed: () {},
+                                                      onPressed: () async {
+                                                        _timeStart =
+                                                            await showTimePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialTime:
+                                                                      _timeStart,
+                                                                ) ??
+                                                                _timeStart;
+
+                                                        setState(() {});
+                                                      },
                                                       icon: Icon(
                                                           Icons.access_time))
                                                 ],
@@ -226,11 +258,23 @@ class _SlotSelectionState extends State<SlotSelection> {
                                               flex: 2,
                                               child: Row(
                                                 children: [
-                                                  Text("18:30"),
+                                                  Text(
+                                                      _timeEnd.format(context)),
                                                   IconButton(
-                                                      onPressed: () {},
+                                                      onPressed: () async {
+                                                        _timeEnd =
+                                                            await showTimePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialTime:
+                                                                      _timeStart,
+                                                                ) ??
+                                                                _timeEnd;
+
+                                                        setState(() {});
+                                                      },
                                                       icon: Icon(
-                                                          Icons.access_time))
+                                                          Icons.access_time)),
                                                 ],
                                               ))
                                         ],
