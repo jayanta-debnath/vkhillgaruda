@@ -286,8 +286,8 @@ class _CalendarSlotsState extends State<CalendarSlots> {
                   EventRecord event = Utils()
                       .convertRawToDatatype(eventRaw, EventRecord.fromJson);
 
-                  if (event.slot.from == slot.from &&
-                      event.slot.to == slot.to) {
+                  if (event.eventStart == DateTime.parse(slot.from) &&
+                      event.eventEnd == DateTime.parse(slot.to)) {
                     bookedEvent = event;
                     break;
                   }

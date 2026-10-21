@@ -88,10 +88,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                 EventRecord event = Utils()
                     .convertRawToDatatype(eventRaw, EventRecord.fromJson);
 
-                _events.removeWhere((EventRecord element) =>
-                    element.date == event.date &&
-                    element.slot.from == event.slot.from &&
-                    element.slot.to == event.slot.to);
+                Widgets().showMessage(context, "Delete event not implemented");
               });
             }
           },

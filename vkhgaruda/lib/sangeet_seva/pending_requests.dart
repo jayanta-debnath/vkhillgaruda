@@ -228,7 +228,8 @@ class _PendingRequestsState extends State<PendingRequests> {
                         String mobile = event.eventRequesterMobile;
                         String date =
                             DateFormat("yyyy-MM-dd").format(event.date);
-                        String slot = event.slot.name;
+                        String slot =
+                            DateFormat("HH_mm").format(event.eventStart);
                         String path =
                             "${Const().dbrootSangeetSeva}/Events/$mobile/$date/$slot";
                         Map<String, dynamic> pendingRequest = {

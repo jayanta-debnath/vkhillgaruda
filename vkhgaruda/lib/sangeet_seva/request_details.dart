@@ -90,7 +90,8 @@ class _RequestDetailsState extends State<RequestDetails> {
         // delete from booked events
         String dbdate =
             DateFormat("yyyy-MM-dd").format(widget.eventRecord.date);
-        String slotName = widget.eventRecord.slot.name;
+        String slotName =
+            DateFormat("HH_mm").format(widget.eventRecord.eventStart);
         String bookedEventPath =
             "${Const().dbrootSangeetSeva}/BookedEvents/$dbdate";
         String eventPath =
@@ -109,14 +110,13 @@ class _RequestDetailsState extends State<RequestDetails> {
         // change status of event
         widget.eventRecord.status = "Rejected";
         widget.eventRecord.noteTemple = _noteController.text;
-        widget.eventRecord.slot.avl = true;
         await FB().setJson(path: eventPath, json: widget.eventRecord.toJson());
 
         // mark the availability of the slot
-        String slotPath =
-            "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotName";
-        await FB()
-            .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
+        // String slotPath =
+        //     "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotName";
+        // await FB()
+        //     .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
 
         _notifyUser(widget.eventRecord.status);
       }
@@ -143,7 +143,6 @@ class _RequestDetailsState extends State<RequestDetails> {
 
       if (action == "Approve") {
         // mark the availability of the slot
-        widget.eventRecord.slot.avl = false;
         String dbdate =
             DateFormat("yyyy-MM-dd").format(widget.eventRecord.date);
         String dbpath = "${Const().dbrootSangeetSeva}/Slots/$dbdate";
@@ -151,13 +150,9 @@ class _RequestDetailsState extends State<RequestDetails> {
           List slotsRaw = await FB().getList(path: dbpath);
           String dbpathNew =
               "${Const().dbrootSangeetSeva}/Slots/$dbdate/Slot${slotsRaw.length + 1}";
-          await FB()
-              .setJson(path: dbpathNew, json: widget.eventRecord.slot.toJson());
         } else {
           if (Utils().isDateWeekend(widget.eventRecord.date)) {
-            await FB().setJson(path: dbpath, json: {
-              widget.eventRecord.slot.name: widget.eventRecord.slot.toJson()
-            });
+            await FB().setJson(path: dbpath, json: {});
           } else {
             Toaster().error("Invalid slot");
           }
