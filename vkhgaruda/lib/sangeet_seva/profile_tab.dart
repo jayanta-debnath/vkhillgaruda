@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/sangeet_seva/profile.dart';
+import 'package:vkhpackages/vkhpackages.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class ProfileTab extends StatefulWidget {
+  final PerformerProfile? profileData;
+
+  const ProfileTab({this.profileData, super.key});
 
   @override
-  State<ProfilePage> createState() => ProfilePageState();
+  State<ProfileTab> createState() => ProfileTabState();
 }
 
 // hint: put the global key as a member of the calling class
 // instantiate this class with a global key
-// final GlobalKey<ProfilePageState> _keySummary = GlobalKey<ProfilePageState>();
+// final GlobalKey<ProfileTabState> _keySummary = GlobalKey<ProfileTabState>();
 
-class ProfilePageState extends State<ProfilePage> {
+class ProfileTabState extends State<ProfileTab> {
   final Lock _lock = Lock();
   final GlobalKey<ProfileState> _keyProfile = GlobalKey<ProfileState>();
 
@@ -50,15 +53,11 @@ class ProfilePageState extends State<ProfilePage> {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Stack(children: [
-          Profile(
-            key: _keyProfile,
-            self: false,
-          ),
-
-          // circular progress indicator
-          // if (_isLoading) Center(child: CircularProgressIndicator()),
-        ]),
+        child: Profile(
+          key: _keyProfile,
+          self: false,
+          oldUserDetails: widget.profileData,
+        ),
       ),
     );
   }

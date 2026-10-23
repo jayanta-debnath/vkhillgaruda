@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:fast_image_resizer/fast_image_resizer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +16,7 @@ class Profile extends StatefulWidget {
   final PerformerProfile? oldUserDetails;
   final String? fcmToken;
   final String? splashImage;
+  final String? mobile;
 
   const Profile({
     super.key,
@@ -26,6 +26,7 @@ class Profile extends StatefulWidget {
     this.oldUserDetails,
     this.fcmToken,
     this.splashImage,
+    this.mobile,
   });
 
   @override
@@ -94,7 +95,7 @@ class ProfileState extends State<Profile> {
     await _lock.synchronized(() async {
       // perform your work here
       // fetch form values
-      if (_isAdmin || (widget.self != null && widget.self == true)) {
+      if (widget.self != null && widget.self == true) {
         await Utils().fetchUserBasics();
         UserBasics? basics = Utils().getUserBasics();
         if (basics != null) {
@@ -123,6 +124,8 @@ class ProfileState extends State<Profile> {
         }
       } else if (widget.oldUserDetails != null) {
         _userDetailsOld = widget.oldUserDetails;
+      } else if (widget.mobile != null) {
+        _userDetailsOld = await SSUtils().getPerformerProfile(widget.mobile!);
       }
 
       if (widget.self != null && widget.self == true) {
@@ -860,8 +863,6 @@ class ProfileState extends State<Profile> {
                             ),
                   ),
                 ),
-                if (_profilePicUrl.isEmpty)
-                  Center(child: Text("Upload your profile picture")),
 
                 // salutation
                 SizedBox(height: 10),

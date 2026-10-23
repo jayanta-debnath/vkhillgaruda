@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' hide Notification;
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
-import 'package:vkhgaruda/sangeet_seva/profile_details.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class RequestDetails extends StatefulWidget {
@@ -332,15 +331,16 @@ class _RequestDetailsState extends State<RequestDetails> {
                               children: [
                                 ListTile(
                                   onTap: () async {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProfileDetails(
-                                            title: "Profile",
-                                            icon: widget.icon,
-                                            userdetails: _eventRequester!),
-                                      ),
-                                    );
+                                    // Navigator.push(
+                                    //   context,
+                                    //   MaterialPageRoute(
+                                    //     builder: (context) =>
+                                    //     ProfileDetails(
+                                    //         title: "Profile",
+                                    //         icon: widget.icon,
+                                    //         userdetails: _eventRequester!),
+                                    //   ),
+                                    // );
                                   },
                                   leading: _eventRequester == null
                                       ? Text("")

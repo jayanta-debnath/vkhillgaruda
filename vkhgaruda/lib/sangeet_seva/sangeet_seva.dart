@@ -4,8 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/new_request.dart';
-import 'package:vkhgaruda/sangeet_seva/advisory.dart';
+import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
@@ -217,31 +216,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
                   );
                 },
               ),
-
-              // settings
-              if (_isAdmin)
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () {
-                    Widgets().showResponsiveDialog(
-                        context: context,
-                        title: "Settings",
-                        child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Advisory(
-                                    title: "Advisory settings",
-                                    splashImage: widget.splashImage,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Text("Advisory settings")),
-                        actions: []);
-                  },
-                ),
             ],
           ),
           body: RefreshIndicator(
@@ -282,7 +256,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => NewRequest(
+                                              builder: (context) => RecordPage(
                                                 title: "Add new request",
                                               ),
                                             ),

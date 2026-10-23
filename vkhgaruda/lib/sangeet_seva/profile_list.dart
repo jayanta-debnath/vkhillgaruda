@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/profile_details.dart';
+import 'package:vkhgaruda/sangeet_seva/profile_tab.dart';
+import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class ProfileList extends StatefulWidget {
@@ -87,9 +88,9 @@ class _ProfileListState extends State<ProfileList> {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => ProfileDetails(
-                      title: "Profile details",
-                      userdetails: _performers[index],
+                builder: (context) => RecordPage(
+                      title: _performers[index].name,
+                      profileData: _performers[index],
                     )));
       },
       leading: CircleAvatar(
@@ -131,7 +132,6 @@ class _ProfileListState extends State<ProfileList> {
 
   Widget _createSupporterCard(int indexSupporter) {
     Map<int, Performer> memberMap = _supporters[indexSupporter];
-    int indexPerformer = memberMap.keys.first;
     Performer member = memberMap.values.first;
     return ListTile(
       title: Text("${member.salutation} ${member.name}"),
@@ -141,32 +141,6 @@ class _ProfileListState extends State<ProfileList> {
           Icon(Icons.workspace_premium, size: 16),
           SizedBox(width: 5),
           Text(member.specialization),
-
-          // referred by
-          SizedBox(width: 10),
-          Icon(Icons.person, size: 16),
-          SizedBox(width: 5),
-          Text("Referred by: "),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProfileDetails(
-                    title: "Profile details",
-                    userdetails: _performers[indexPerformer],
-                  ),
-                ),
-              );
-            },
-            child: Text(
-              _performers[indexPerformer].name,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
         ],
       ),
     );

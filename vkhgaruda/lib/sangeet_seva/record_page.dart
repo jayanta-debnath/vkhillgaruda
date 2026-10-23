@@ -2,26 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:vkhgaruda/sangeet_seva/add_event.dart';
-import 'package:vkhgaruda/sangeet_seva/profile_page.dart';
+import 'package:vkhgaruda/sangeet_seva/profile_tab.dart';
 import 'package:vkhgaruda/sangeet_seva/add_settings.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
-class NewRequest extends StatefulWidget {
+class RecordPage extends StatefulWidget {
   final String title;
   final String? splashImage;
+  final PerformerProfile? profileData;
 
-  const NewRequest({super.key, required this.title, this.splashImage});
+  const RecordPage(
+      {super.key, required this.title, this.splashImage, this.profileData});
 
   @override
   // ignore: library_private_types_in_public_api
-  _NewRequestState createState() => _NewRequestState();
+  _RecordPageState createState() => _RecordPageState();
 }
 
-class _NewRequestState extends State<NewRequest> {
+class _RecordPageState extends State<RecordPage> {
   // scalars
   bool _isAdmin = false;
-  final GlobalKey<ProfilePageState> _keyProfilePage =
-      GlobalKey<ProfilePageState>();
+  final GlobalKey<ProfileTabState> _keyProfileTab =
+      GlobalKey<ProfileTabState>();
 
   // lists
 
@@ -57,7 +59,7 @@ class _NewRequestState extends State<NewRequest> {
       }
     }
 
-    _keyProfilePage.currentState?.refresh();
+    _keyProfileTab.currentState?.refresh();
 
     setState(() {});
   }
@@ -73,7 +75,7 @@ class _NewRequestState extends State<NewRequest> {
               IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () async {
-                    await _keyProfilePage.currentState?.save();
+                    await _keyProfileTab.currentState?.save();
                   })
             ],
             bottom: const TabBar(
@@ -86,7 +88,10 @@ class _NewRequestState extends State<NewRequest> {
           ),
           body: TabBarView(
             children: [
-              ProfilePage(key: _keyProfilePage),
+              ProfileTab(
+                key: _keyProfileTab,
+                profileData: widget.profileData,
+              ),
               EventPage(),
               SettingsPage(),
             ],
