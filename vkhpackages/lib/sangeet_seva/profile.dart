@@ -824,241 +824,234 @@ class ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Stack(
-        children: [
-          if (!_isLoading)
-            Column(
-              children: [
-                // leave some space at top
-                SizedBox(height: 10),
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // leave some space at top
+              SizedBox(height: 10),
 
-                // picture
-                SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    width: _imagesize,
-                    height: _imagesize,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                    ),
-                    child:
-                        _profilePicUrl.isEmpty
-                            ? TextButton(
-                              onPressed: _pickAndUploadImage,
-                              child: Text("Upload"),
-                            )
-                            : ClipRRect(
-                              child: GestureDetector(
-                                onTap: _pickAndUploadImage,
-                                child: Image.network(
-                                  _profilePicUrl,
-                                  fit: BoxFit.cover,
-                                  width: _imagesize,
-                                  height: _imagesize,
-                                ),
+              // picture
+              SizedBox(height: 10),
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: _imagesize,
+                  height: _imagesize,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                  ),
+                  child:
+                      _profilePicUrl.isEmpty
+                          ? TextButton(
+                            onPressed: _pickAndUploadImage,
+                            child: Text("Upload"),
+                          )
+                          : ClipRRect(
+                            child: GestureDetector(
+                              onTap: _pickAndUploadImage,
+                              child: Image.network(
+                                _profilePicUrl,
+                                fit: BoxFit.cover,
+                                width: _imagesize,
+                                height: _imagesize,
                               ),
                             ),
+                          ),
+                ),
+              ),
+
+              // salutation
+              SizedBox(height: 10),
+              Widgets().createTopLevelCard(
+                context: context,
+                title: "Basic details",
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Salutation',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                          ),
+                          border: OutlineInputBorder(),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _salutation,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _salutation = newValue!;
+                              });
+                            },
+                            items:
+                                SSConst().salutations
+                                    .map<DropdownMenuItem<String>>((
+                                      String value,
+                                    ) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    })
+                                    .toList(),
+                          ),
+                        ),
+                      ),
+
+                      // name
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full name',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Name cannot be empty';
+                          }
+                          if (value.length < 3) {
+                            return 'Please enter full name';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // mobile
+                      TextFormField(
+                        controller: _mobileController,
+                        decoration: const InputDecoration(labelText: 'Mobile'),
+                        readOnly: widget.self ?? false,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Mobile number cannot be empty';
+                          }
+                          if (value.length != 10) {
+                            return 'Please enter 10 digit mobile number';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // Sangeet credentials
+                      TextFormField(
+                        controller: _credController,
+                        decoration: const InputDecoration(
+                          labelText: 'Sangeet academic details',
+                          hintText: "e.g. MA in music",
+                        ),
+                        validator: (value) {
+                          // if (value == null || value.isEmpty) {
+                          //   return 'Field cannot be empty';
+                          // }
+                          return null;
+                        },
+                      ),
+                    ],
                   ),
                 ),
+              ),
 
-                // salutation
-                SizedBox(height: 10),
+              // sangeet exp details
+              Widgets().createTopLevelCard(
+                context: context,
+                title: "Sangeet sadhana details",
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...List.generate(_exp.length, (index) {
+                            return _createSangeetSadhanaTile(index);
+                          }),
+                        ],
+                      ),
+                    ),
+
+                    // button for sangeet exp
+                    SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () async {
+                        await _showDialogSangeetExp(context);
+
+                        if (_userDetailsOld != null) {
+                          await _save(goback: false);
+                        }
+                      },
+                      child: Text(
+                        _exp.isEmpty
+                            ? "Add sangeet sadhana details"
+                            : "Add more ...",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // youtube links
+              if (_isAdmin || (widget.self != null && widget.self == true))
                 Widgets().createTopLevelCard(
                   context: context,
-                  title: "Basic details",
+                  title: "Performance details",
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Salutation',
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _salutation,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _salutation = newValue!;
-                                });
-                              },
-                              items:
-                                  SSConst().salutations
-                                      .map<DropdownMenuItem<String>>((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      })
-                                      .toList(),
-                            ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...List.generate(_youtubeLinks.length, (index) {
+                                return _createYoutubeTile(index);
+                              }),
+                            ],
                           ),
                         ),
 
-                        // name
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Full name',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Name cannot be empty';
+                        // button for adding youtube link
+                        SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () async {
+                            await _showDialogYoutube(context);
+
+                            if (_userDetailsOld != null) {
+                              await _save(goback: false);
                             }
-                            if (value.length < 3) {
-                              return 'Please enter full name';
-                            }
-                            return null;
                           },
+                          child: Text(
+                            _youtubeLinks.isEmpty
+                                ? "Add youtube link"
+                                : "Add more youtube links",
+                          ),
                         ),
 
-                        // mobile
-                        TextFormField(
-                          controller: _mobileController,
-                          decoration: const InputDecoration(
-                            labelText: 'Mobile',
-                          ),
-                          readOnly: widget.self ?? false,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Mobile number cannot be empty';
-                            }
-                            if (value.length != 10) {
-                              return 'Please enter 10 digit mobile number';
-                            }
-                            return null;
-                          },
+                        // upload audio clip
+                        SizedBox(height: 20),
+                        Text(
+                          (_youtubeLinks.isEmpty && _audioClips.isEmpty)
+                              ? "Upload audio clip of your performance"
+                              : "Upload audio clip (optional)",
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-
-                        // Sangeet credentials
-                        TextFormField(
-                          controller: _credController,
-                          decoration: const InputDecoration(
-                            labelText: 'Sangeet academic details',
-                            hintText: "e.g. MA in music",
-                          ),
-                          validator: (value) {
-                            // if (value == null || value.isEmpty) {
-                            //   return 'Field cannot be empty';
-                            // }
-                            return null;
-                          },
-                        ),
+                        SizedBox(height: 10),
+                        ...List.generate(_audioClips.length, (index) {
+                          return _createAudioClipTile(index);
+                        }),
                       ],
                     ),
                   ),
                 ),
 
-                // sangeet exp details
-                Widgets().createTopLevelCard(
-                  context: context,
-                  title: "Sangeet sadhana details",
-                  child: Column(
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ...List.generate(_exp.length, (index) {
-                              return _createSangeetSadhanaTile(index);
-                            }),
-                          ],
-                        ),
-                      ),
-
-                      // button for sangeet exp
-                      SizedBox(height: 20),
-                      TextButton(
-                        onPressed: () async {
-                          await _showDialogSangeetExp(context);
-
-                          if (_userDetailsOld != null) {
-                            await _save(goback: false);
-                          }
-                        },
-                        child: Text(
-                          _exp.isEmpty
-                              ? "Add sangeet sadhana details"
-                              : "Add more ...",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // youtube links
-                if (_isAdmin || (widget.self != null && widget.self == true))
-                  Widgets().createTopLevelCard(
-                    context: context,
-                    title: "Performance details",
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ...List.generate(_youtubeLinks.length, (index) {
-                                  return _createYoutubeTile(index);
-                                }),
-                              ],
-                            ),
-                          ),
-
-                          // button for adding youtube link
-                          SizedBox(height: 20),
-                          TextButton(
-                            onPressed: () async {
-                              await _showDialogYoutube(context);
-
-                              if (_userDetailsOld != null) {
-                                await _save(goback: false);
-                              }
-                            },
-                            child: Text(
-                              _youtubeLinks.isEmpty
-                                  ? "Add youtube link"
-                                  : "Add more youtube links",
-                            ),
-                          ),
-
-                          // upload audio clip
-                          SizedBox(height: 20),
-                          Text(
-                            (_youtubeLinks.isEmpty && _audioClips.isEmpty)
-                                ? "Upload audio clip of your performance"
-                                : "Upload audio clip (optional)",
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          SizedBox(height: 10),
-                          ...List.generate(_audioClips.length, (index) {
-                            return _createAudioClipTile(index);
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // leave some space at bottom
-                SizedBox(height: 100),
-              ],
-            ),
-
-          if (_isLoading) Center(child: CircularProgressIndicator()),
-        ],
-      ),
-    );
+              // leave some space at bottom
+              SizedBox(height: 100),
+            ],
+          ),
+        );
   }
 }

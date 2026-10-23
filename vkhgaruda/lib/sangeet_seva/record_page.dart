@@ -24,6 +24,9 @@ class _RecordPageState extends State<RecordPage> {
   bool _isAdmin = false;
   final GlobalKey<ProfileTabState> _keyProfileTab =
       GlobalKey<ProfileTabState>();
+  final GlobalKey<EventsTabState> _keyEventsTab = GlobalKey<EventsTabState>();
+  // final GlobalKey<SettingsTabState> _keySettingsTab =
+  //     GlobalKey<SettingsTabState>();
 
   // lists
 
@@ -60,6 +63,7 @@ class _RecordPageState extends State<RecordPage> {
     }
 
     _keyProfileTab.currentState?.refresh();
+    _keyEventsTab.currentState?.refresh();
 
     setState(() {});
   }
@@ -93,6 +97,7 @@ class _RecordPageState extends State<RecordPage> {
                 profileData: widget.profileData,
               ),
               EventsTab(
+                key: _keyEventsTab,
                 profileData: widget.profileData,
               ),
               SettingsTab(),

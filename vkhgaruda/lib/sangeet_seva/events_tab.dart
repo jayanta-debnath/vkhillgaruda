@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/sangeet_seva/profile.dart';
 import 'package:vkhpackages/vkhpackages.dart';
@@ -18,7 +19,7 @@ class EventsTab extends StatefulWidget {
 
 class EventsTabState extends State<EventsTab> {
   final Lock _lock = Lock();
-  final GlobalKey<ProfileState> _keyProfile = GlobalKey<ProfileState>();
+  bool _isLoading = false;
 
   // lists
   final List<EventRecord> _events = [];
@@ -41,15 +42,30 @@ class EventsTabState extends State<EventsTab> {
   }
 
   Future<void> refresh() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // access control
+
     await _lock.synchronized(() async {
-      // perform your work here
-      setState(() {});
+      // your code here
+
+      // read database and populate data
+      String dbdate = DateFormat("yyyy-MM-dd").format(DateTime.now());
+      String dbpath = "${Const().dbrootGaruda}/Deepotsava/Sales/$dbdate";
+
+      // refresh all child widgets
+
+      // listen for database events
+    });
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
-  Future<void> save() async {
-    await _keyProfile.currentState?.save(goback: false);
-  }
+  Future<void> save() async {}
 
   Widget _createEventTile(int index) {
     return Placeholder();
@@ -57,34 +73,39 @@ class EventsTabState extends State<EventsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            // some space at top
-            SizedBox(
-              height: 10,
-            ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: _events.length + 3,
+              itemBuilder: (BuildContext context, int index) {
+                // leave some space on top
+                if (index == 0) {
+                  return SizedBox(
+                    height: 10,
+                  );
+                }
 
-            ElevatedButton(onPressed: () {}, child: Text("+ Add new event")),
-            SizedBox(
-              height: 10,
-            ),
+                // the button
+                if (index == 1) {
+                  return Align(
+                    alignment: Alignment.center,
+                    child: ElevatedButton(
+                        onPressed: () {}, child: Text("+ Add new event")),
+                  );
+                }
 
-            ListView.builder(
-                itemCount: _events.length,
-                itemBuilder: (BuildContext context, int index) =>
-                    _createEventTile(index)),
+                // leave some space at the bottom
+                if (index == _events.length + 2) {
+                  return SizedBox(
+                    height: 100,
+                  );
+                }
 
-            // leave some gap at bottom for scrolling
-            SizedBox(
-              height: 100,
-            )
-          ],
-        ),
-      ),
+                // the actual list widgets
+                _createEventTile(index + 2);
+              }),
     );
   }
 }
