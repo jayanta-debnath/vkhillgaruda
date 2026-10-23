@@ -34,7 +34,7 @@ class EventRecord {
   final List<Performer> performers;
   final int guests;
   final List<String> songs;
-  String status;
+  String status; // Pending, Approved, Rejected
   final String notePerformer;
   String noteTemple;
 
@@ -153,7 +153,7 @@ class PerformerProfile {
   final String salutation;
   final String name;
   final String mobile;
-  final String profilePicUrl;
+  final String? profilePicUrl;
   final String credentials;
   final List<SangeetExp> exps;
   final List<String> youtubeUrls;
@@ -166,7 +166,7 @@ class PerformerProfile {
     required this.salutation,
     required this.name,
     required this.mobile,
-    required this.profilePicUrl,
+    this.profilePicUrl,
     required this.credentials,
     required this.exps,
     required this.youtubeUrls,

@@ -175,7 +175,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
       return const SizedBox();
     }
     String performer = _mainPerformers[mobile]!.name;
-    String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl;
+    String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl ?? "";
 
     return Card(
         child: ListTile(

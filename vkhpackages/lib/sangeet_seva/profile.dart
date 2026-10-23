@@ -140,7 +140,7 @@ class ProfileState extends State<Profile> {
         _salutation = _userDetailsOld!.salutation;
         _nameController.text = _userDetailsOld!.name;
         _mobileController.text = _userDetailsOld!.mobile;
-        _profilePicUrl = _userDetailsOld!.profilePicUrl;
+        _profilePicUrl = _userDetailsOld!.profilePicUrl ?? "";
         _credController.text = _userDetailsOld!.credentials;
         _exp = _userDetailsOld!.exps;
         _youtubeLinks = _userDetailsOld!.youtubeUrls;

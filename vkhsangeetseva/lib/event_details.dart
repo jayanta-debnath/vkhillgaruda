@@ -1019,7 +1019,7 @@ class _EventDetailsState extends State<EventDetails> {
                           },
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(
-                              _requester!.profilePicUrl,
+                              _requester!.profilePicUrl ?? "",
                             ),
                           ),
                           title: Text(

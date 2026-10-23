@@ -94,9 +94,10 @@ class _ProfileListState extends State<ProfileList> {
                     )));
       },
       leading: CircleAvatar(
-        backgroundImage: (member.profilePicUrl.isEmpty
-            ? null
-            : NetworkImage(member.profilePicUrl)),
+        backgroundImage:
+            (member.profilePicUrl == null || member.profilePicUrl!.isEmpty
+                ? null
+                : NetworkImage(member.profilePicUrl!)),
       ),
       title: Text("${member.salutation} ${member.name}"),
       subtitle: SingleChildScrollView(

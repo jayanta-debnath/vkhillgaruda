@@ -52,8 +52,24 @@ class EventsTabState extends State<EventsTab> {
       // your code here
 
       // read database and populate data
-      String dbdate = DateFormat("yyyy-MM-dd").format(DateTime.now());
-      String dbpath = "${Const().dbrootGaruda}/Deepotsava/Sales/$dbdate";
+      if (widget.profileData != null) {
+        _events.clear();
+        String dbpath =
+            "${Const().dbrootSangeetSeva}/Events/${widget.profileData!.mobile}";
+
+        Map<String, dynamic> json = await FB().getJson(path: dbpath);
+
+        // loop through dates
+        for (Map json2Raw in json.values) {
+          Map<String, dynamic> json2 = Map<String, dynamic>.from(json2Raw);
+
+          // loop through time
+          for (var json3Raw in json2.values) {
+            Map<String, dynamic> json3 = Map<String, dynamic>.from(json3Raw);
+            _events.add(EventRecord.fromJson(json3));
+          }
+        }
+      }
 
       // refresh all child widgets
 
@@ -68,7 +84,37 @@ class EventsTabState extends State<EventsTab> {
   Future<void> save() async {}
 
   Widget _createEventTile(int index) {
-    return Placeholder();
+    if (widget.profileData == null) {
+      return SizedBox();
+    }
+
+    ImageProvider image;
+    if (widget.profileData!.profilePicUrl == null ||
+        widget.profileData!.profilePicUrl!.isEmpty) {
+      image = const AssetImage("assets/images/Logo/SangeetSeva.png");
+    } else {
+      image = NetworkImage(widget.profileData!.profilePicUrl!);
+    }
+
+    Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
+    if (_events[index].status == "Approved") {
+      statusIcon = Icon(Icons.check_circle, color: Colors.green);
+    } else if (_events[index].status == "Rejected") {
+      statusIcon = Icon(Icons.cancel_outlined, color: Colors.red);
+    }
+
+    return Widgets().createTopLevelCard(
+      context: context,
+      child: ListTileCompact(
+        leading: CircleAvatar(
+          backgroundImage: image,
+        ),
+        title: Text(DateFormat("EEE, dd MMM yyyy").format(_events[index].date)),
+        subtitle: Text(
+            "${DateFormat("HH:mm").format(_events[index].eventStart)} to ${DateFormat("HH:mm").format(_events[index].eventEnd)}"),
+        trailing: statusIcon,
+      ),
+    );
   }
 
   @override
@@ -104,7 +150,7 @@ class EventsTabState extends State<EventsTab> {
                 }
 
                 // the actual list widgets
-                _createEventTile(index + 2);
+                return _createEventTile(index - 2);
               }),
     );
   }

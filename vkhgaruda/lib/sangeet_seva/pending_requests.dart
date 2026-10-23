@@ -169,7 +169,8 @@ class _PendingRequestsState extends State<PendingRequests> {
     String performer =
         _mainPerformers[pendingRequest.eventRequesterMobile]!.name;
     String profilePicUrl =
-        _mainPerformers[pendingRequest.eventRequesterMobile]!.profilePicUrl;
+        _mainPerformers[pendingRequest.eventRequesterMobile]!.profilePicUrl ??
+            "";
 
     return Widgets().createTopLevelCard(
         context: context,
