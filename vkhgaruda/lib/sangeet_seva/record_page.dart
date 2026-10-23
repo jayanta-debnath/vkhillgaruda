@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:vkhgaruda/sangeet_seva/add_event.dart';
+import 'package:vkhgaruda/sangeet_seva/events_tab.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_tab.dart';
-import 'package:vkhgaruda/sangeet_seva/add_settings.dart';
+import 'package:vkhgaruda/sangeet_seva/settings_tab.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class RecordPage extends StatefulWidget {
@@ -92,8 +92,10 @@ class _RecordPageState extends State<RecordPage> {
                 key: _keyProfileTab,
                 profileData: widget.profileData,
               ),
-              EventPage(),
-              SettingsPage(),
+              EventsTab(
+                profileData: widget.profileData,
+              ),
+              SettingsTab(),
             ],
           ),
         ));
