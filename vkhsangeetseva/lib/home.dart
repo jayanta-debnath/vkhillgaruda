@@ -7,7 +7,7 @@ import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhsangeetseva/notification_page.dart';
 import 'package:vkhsangeetseva/profile_page.dart';
 import 'package:vkhsangeetseva/registered_events.dart';
-import 'package:vkhsangeetseva/slot_selection.dart';
+import 'package:vkhpackages/sangeet_seva/slot_selection.dart';
 
 // Top-level function for handling background messages
 @pragma('vm:entry-point')

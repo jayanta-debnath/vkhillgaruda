@@ -4,9 +4,9 @@ import 'package:vkhpackages/sangeet_seva/profile.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class TabProfile extends StatefulWidget {
-  final PerformerProfile? profileData;
+  final PerformerProfile? profile;
 
-  const TabProfile({this.profileData, super.key});
+  const TabProfile({this.profile, super.key});
 
   @override
   State<TabProfile> createState() => TabProfileState();
@@ -36,6 +36,10 @@ class TabProfileState extends State<TabProfile> {
     super.dispose();
   }
 
+  PerformerProfile? getPerformerProfile() {
+    return _keyProfile.currentState?.getPerformerProfile();
+  }
+
   Future<void> refresh() async {
     await _lock.synchronized(() async {
       // perform your work here
@@ -56,7 +60,7 @@ class TabProfileState extends State<TabProfile> {
         child: Profile(
           key: _keyProfile,
           self: false,
-          oldUserDetails: widget.profileData,
+          oldUserDetails: widget.profile,
         ),
       ),
     );

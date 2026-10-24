@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhpackages/sangeet_seva/profile.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class TabEvents extends StatefulWidget {
-  final PerformerProfile? profileData;
+  final PerformerProfile? profile;
 
-  const TabEvents({this.profileData, super.key});
+  const TabEvents({this.profile, super.key});
 
   @override
   State<TabEvents> createState() => TabEventsState();
@@ -52,10 +51,10 @@ class TabEventsState extends State<TabEvents> {
       // your code here
 
       // read database and populate data
-      if (widget.profileData != null) {
+      if (widget.profile != null) {
         _events.clear();
         String dbpath =
-            "${Const().dbrootSangeetSeva}/Events/${widget.profileData!.mobile}";
+            "${Const().dbrootSangeetSeva}/Events/${widget.profile!.mobile}";
 
         Map<String, dynamic> json = await FB().getJson(path: dbpath);
 
@@ -84,16 +83,16 @@ class TabEventsState extends State<TabEvents> {
   Future<void> save() async {}
 
   Widget _createEventTile(int index) {
-    if (widget.profileData == null) {
+    if (widget.profile == null) {
       return SizedBox();
     }
 
     ImageProvider image;
-    if (widget.profileData!.profilePicUrl == null ||
-        widget.profileData!.profilePicUrl!.isEmpty) {
+    if (widget.profile!.profilePicUrl == null ||
+        widget.profile!.profilePicUrl!.isEmpty) {
       image = const AssetImage("assets/images/Logo/SangeetSeva.png");
     } else {
-      image = NetworkImage(widget.profileData!.profilePicUrl!);
+      image = NetworkImage(widget.profile!.profilePicUrl!);
     }
 
     Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
@@ -117,41 +116,55 @@ class TabEventsState extends State<TabEvents> {
     );
   }
 
+  void _onAddNewEvent() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SlotSelection(
+                title: "Event Registration",
+                profile: widget.profile!,
+              )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _events.length + 3,
-              itemBuilder: (BuildContext context, int index) {
-                // leave some space on top
-                if (index == 0) {
-                  return SizedBox(
-                    height: 10,
-                  );
-                }
+    return (widget.profile != null)
+        ? Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _events.length + 3,
+                    itemBuilder: (BuildContext context, int index) {
+                      // leave some space on top
+                      if (index == 0) {
+                        return SizedBox(
+                          height: 10,
+                        );
+                      }
 
-                // the button
-                if (index == 1) {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton(
-                        onPressed: () {}, child: Text("+ Add new event")),
-                  );
-                }
+                      // the button
+                      if (index == 1) {
+                        return Align(
+                          alignment: Alignment.center,
+                          child: ElevatedButton(
+                              onPressed: _onAddNewEvent,
+                              child: Text("+ Add new event")),
+                        );
+                      }
 
-                // leave some space at the bottom
-                if (index == _events.length + 2) {
-                  return SizedBox(
-                    height: 100,
-                  );
-                }
+                      // leave some space at the bottom
+                      if (index == _events.length + 2) {
+                        return SizedBox(
+                          height: 100,
+                        );
+                      }
 
-                // the actual list widgets
-                return _createEventTile(index - 2);
-              }),
-    );
+                      // the actual list widgets
+                      return _createEventTile(index - 2);
+                    }),
+          )
+        : Center(child: Text("Profile not set "));
   }
 }

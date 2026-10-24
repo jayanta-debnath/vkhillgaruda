@@ -30,3 +30,4 @@ export 'sangeet_seva/ssconst.dart';
 export 'sangeet_seva/ssutils.dart';
 export 'sangeet_seva/sswelcome.dart';
 export 'sangeet_seva/profile.dart';
+export 'sangeet_seva/slot_selection.dart';

@@ -90,7 +90,7 @@ class _ProfileListState extends State<ProfileList> {
             MaterialPageRoute(
                 builder: (context) => RecordPage(
                       title: _performers[index].name,
-                      profileData: _performers[index],
+                      profile: _performers[index],
                     )));
       },
       leading: CircleAvatar(

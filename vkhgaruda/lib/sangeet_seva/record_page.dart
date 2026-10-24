@@ -9,10 +9,10 @@ import 'package:vkhpackages/vkhpackages.dart';
 class RecordPage extends StatefulWidget {
   final String title;
   final String? splashImage;
-  final PerformerProfile? profileData;
+  final PerformerProfile? profile;
 
   const RecordPage(
-      {super.key, required this.title, this.splashImage, this.profileData});
+      {super.key, required this.title, this.splashImage, this.profile});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -27,6 +27,8 @@ class _RecordPageState extends State<RecordPage> {
   final GlobalKey<TabEventsState> _keyTabEvents = GlobalKey<TabEventsState>();
   // final GlobalKey<TabSettingsState> _keyTabSettings =
   //     GlobalKey<TabSettingsState>();
+  PerformerProfile? _profile;
+  int _currentTabIndex = 0;
 
   // lists
 
@@ -35,6 +37,12 @@ class _RecordPageState extends State<RecordPage> {
   @override
   initState() {
     super.initState();
+
+    if (widget.profile != null) {
+      _profile = widget.profile;
+    } else {
+      _profile = _keyTabProfile.currentState?.getPerformerProfile();
+    }
 
     refresh();
   }
@@ -80,25 +88,39 @@ class _RecordPageState extends State<RecordPage> {
                   icon: Icon(Icons.save),
                   onPressed: () async {
                     await _keyTabProfile.currentState?.save();
+                    _profile =
+                        _keyTabProfile.currentState?.getPerformerProfile();
+                    _keyTabEvents.currentState?.refresh();
                   })
             ],
-            bottom: const TabBar(
+            bottom: TabBar(
               tabs: [
                 Tab(text: 'Profile'),
                 Tab(text: 'Events'),
                 Tab(text: 'Settings'),
               ],
+              onTap: (index) async {
+                // Save the previous tab's data before switching
+                if (_currentTabIndex == 0) {
+                  await _keyTabProfile.currentState?.save();
+                  _profile = _keyTabProfile.currentState?.getPerformerProfile();
+                  await _keyTabEvents.currentState?.refresh();
+                }
+                setState(() {
+                  _currentTabIndex = index;
+                });
+              },
             ),
           ),
           body: TabBarView(
             children: [
               TabProfile(
                 key: _keyTabProfile,
-                profileData: widget.profileData,
+                profile: _profile,
               ),
               TabEvents(
                 key: _keyTabEvents,
-                profileData: widget.profileData,
+                profile: _profile,
               ),
               TabSettings(),
             ],

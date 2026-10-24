@@ -46,6 +46,7 @@ class ProfileState extends State<Profile> {
   String _profilePicUrl = '';
   late String _salutation;
   bool _isAdmin = false;
+  PerformerProfile? _savedProfile;
 
   // lists
   List<SangeetExp> _exp = [];
@@ -83,6 +84,10 @@ class ProfileState extends State<Profile> {
     _formKey.currentState?.dispose();
 
     super.dispose();
+  }
+
+  PerformerProfile? getPerformerProfile() {
+    return _savedProfile;
   }
 
   Future<void> refresh() async {
@@ -254,6 +259,8 @@ class ProfileState extends State<Profile> {
       );
       await LS().write("userbasics", jsonEncode(basics));
     }
+
+    _savedProfile = details;
 
     // invoke the callback
     if (widget.onProfileSaved != null) {
