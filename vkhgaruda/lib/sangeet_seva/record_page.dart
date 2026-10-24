@@ -76,6 +76,15 @@ class _RecordPageState extends State<RecordPage> {
     setState(() {});
   }
 
+  Future<void> _save() async {
+    await _keyTabProfile.currentState?.save();
+    _profile = _keyTabProfile.currentState?.getPerformerProfile();
+    if (_profile != null) {
+      _keyTabEvents.currentState?.setProfile(_profile!);
+      await _keyTabEvents.currentState?.refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -87,10 +96,7 @@ class _RecordPageState extends State<RecordPage> {
               IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () async {
-                    await _keyTabProfile.currentState?.save();
-                    _profile =
-                        _keyTabProfile.currentState?.getPerformerProfile();
-                    _keyTabEvents.currentState?.refresh();
+                    await _save();
                   })
             ],
             bottom: TabBar(
@@ -102,9 +108,7 @@ class _RecordPageState extends State<RecordPage> {
               onTap: (index) async {
                 // Save the previous tab's data before switching
                 if (_currentTabIndex == 0) {
-                  await _keyTabProfile.currentState?.save();
-                  _profile = _keyTabProfile.currentState?.getPerformerProfile();
-                  await _keyTabEvents.currentState?.refresh();
+                  await _save();
                 }
                 setState(() {
                   _currentTabIndex = index;

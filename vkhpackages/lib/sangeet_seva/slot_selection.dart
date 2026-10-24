@@ -53,32 +53,6 @@ class _SlotSelectionState extends State<SlotSelection> {
 
     // perform async operations here
 
-    // check if profile is set
-    await Utils().fetchUserBasics();
-    UserBasics? basics = Utils().getUserBasics();
-    if (basics == null) {
-      Toaster().error("Invalid user");
-      return;
-    }
-    PerformerProfile? profile = await SSUtils().getPerformerProfile(
-      basics.mobile,
-    );
-    if (profile == null) {
-      await Widgets().showMessage(
-        context,
-        "Profile not set. Please set your profile first.",
-      );
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ProfilePage(
-      //       title: "Performer Profile",
-      //       self: true,
-      //     ),
-      //   ),
-      // );
-    }
-
     await _lock.synchronized(() async {
       // fetch form values
 

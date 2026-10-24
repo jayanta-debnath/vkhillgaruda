@@ -19,6 +19,7 @@ class TabEvents extends StatefulWidget {
 class TabEventsState extends State<TabEvents> {
   final Lock _lock = Lock();
   bool _isLoading = false;
+  PerformerProfile? _profile;
 
   // lists
   final List<EventRecord> _events = [];
@@ -26,6 +27,8 @@ class TabEventsState extends State<TabEvents> {
   @override
   void initState() {
     super.initState();
+
+    _profile = widget.profile;
 
     refresh();
   }
@@ -51,10 +54,10 @@ class TabEventsState extends State<TabEvents> {
       // your code here
 
       // read database and populate data
-      if (widget.profile != null) {
+      if (_profile != null) {
         _events.clear();
         String dbpath =
-            "${Const().dbrootSangeetSeva}/Events/${widget.profile!.mobile}";
+            "${Const().dbrootSangeetSeva}/Events/${_profile!.mobile}";
 
         Map<String, dynamic> json = await FB().getJson(path: dbpath);
 
@@ -80,19 +83,22 @@ class TabEventsState extends State<TabEvents> {
     });
   }
 
-  Future<void> save() async {}
+  void setProfile(PerformerProfile profile) {
+    setState(() {
+      _profile = profile;
+    });
+  }
 
   Widget _createEventTile(int index) {
-    if (widget.profile == null) {
+    if (_profile == null) {
       return SizedBox();
     }
 
     ImageProvider image;
-    if (widget.profile!.profilePicUrl == null ||
-        widget.profile!.profilePicUrl!.isEmpty) {
+    if (_profile!.profilePicUrl == null || _profile!.profilePicUrl!.isEmpty) {
       image = const AssetImage("assets/images/Logo/SangeetSeva.png");
     } else {
-      image = NetworkImage(widget.profile!.profilePicUrl!);
+      image = NetworkImage(_profile!.profilePicUrl!);
     }
 
     Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
@@ -122,14 +128,14 @@ class TabEventsState extends State<TabEvents> {
       MaterialPageRoute(
           builder: (context) => SlotSelection(
                 title: "Event Registration",
-                profile: widget.profile!,
+                profile: _profile!,
               )),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return (widget.profile != null)
+    return (_profile != null)
         ? Padding(
             padding: const EdgeInsets.all(8.0),
             child: _isLoading

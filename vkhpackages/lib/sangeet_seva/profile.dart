@@ -260,6 +260,7 @@ class ProfileState extends State<Profile> {
       await LS().write("userbasics", jsonEncode(basics));
     }
 
+    // propage profile details upwards
     _savedProfile = details;
 
     // invoke the callback
@@ -475,56 +476,58 @@ class ProfileState extends State<Profile> {
     }
 
     // show dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('User already exists'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Mobile: ${_mobileController.text}'),
-                Text(
-                  'Name: ${userDetails.salutation == "Others" ? "" : userDetails.salutation} ${userDetails.name}',
-                ),
-                Text('Credentials: ${userDetails.credentials}'),
-                SizedBox(height: 4),
-                if (!isFriend && !_isAdmin)
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('User already exists'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Mobile: ${_mobileController.text}'),
                   Text(
-                    'You do not have permission to edit this profile.',
-                    style: TextStyle(color: Colors.red),
+                    'Name: ${userDetails.salutation == "Others" ? "" : userDetails.salutation} ${userDetails.name}',
                   ),
-              ],
+                  Text('Credentials: ${userDetails.credentials}'),
+                  SizedBox(height: 4),
+                  if (!isFriend && !_isAdmin)
+                    Text(
+                      'You do not have permission to edit this profile.',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Use existing'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                widget.onProfileSaved!(userDetails);
-              },
-            ),
-            if (isFriend || _isAdmin)
+            actions: [
               TextButton(
-                child: Text('Overwrite'),
-                onPressed: () async {
+                child: Text('Cancel'),
+                onPressed: () {
                   Navigator.of(context).pop();
-                  await _save(goback: false);
                 },
               ),
-          ],
-        );
-      },
-    );
+              TextButton(
+                child: Text('Use existing'),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  widget.onProfileSaved!(userDetails);
+                },
+              ),
+              if (isFriend || _isAdmin)
+                TextButton(
+                  child: Text('Overwrite'),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await _save(goback: false);
+                  },
+                ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   Future<void> _pickAndUploadImage() async {
