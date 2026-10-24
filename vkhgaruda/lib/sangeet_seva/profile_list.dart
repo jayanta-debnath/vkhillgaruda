@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/profile_tab.dart';
+import 'package:vkhgaruda/sangeet_seva/tab_profile.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 

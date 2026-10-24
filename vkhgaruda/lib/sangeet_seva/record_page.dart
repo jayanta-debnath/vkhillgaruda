@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:vkhgaruda/sangeet_seva/events_tab.dart';
-import 'package:vkhgaruda/sangeet_seva/profile_tab.dart';
-import 'package:vkhgaruda/sangeet_seva/settings_tab.dart';
+import 'package:vkhgaruda/sangeet_seva/tab_events.dart';
+import 'package:vkhgaruda/sangeet_seva/tab_profile.dart';
+import 'package:vkhgaruda/sangeet_seva/tab_settings.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class RecordPage extends StatefulWidget {
@@ -22,11 +22,11 @@ class RecordPage extends StatefulWidget {
 class _RecordPageState extends State<RecordPage> {
   // scalars
   bool _isAdmin = false;
-  final GlobalKey<ProfileTabState> _keyProfileTab =
-      GlobalKey<ProfileTabState>();
-  final GlobalKey<EventsTabState> _keyEventsTab = GlobalKey<EventsTabState>();
-  // final GlobalKey<SettingsTabState> _keySettingsTab =
-  //     GlobalKey<SettingsTabState>();
+  final GlobalKey<TabProfileState> _keyTabProfile =
+      GlobalKey<TabProfileState>();
+  final GlobalKey<TabEventsState> _keyTabEvents = GlobalKey<TabEventsState>();
+  // final GlobalKey<TabSettingsState> _keyTabSettings =
+  //     GlobalKey<TabSettingsState>();
 
   // lists
 
@@ -62,8 +62,8 @@ class _RecordPageState extends State<RecordPage> {
       }
     }
 
-    _keyProfileTab.currentState?.refresh();
-    _keyEventsTab.currentState?.refresh();
+    _keyTabProfile.currentState?.refresh();
+    _keyTabEvents.currentState?.refresh();
 
     setState(() {});
   }
@@ -79,7 +79,7 @@ class _RecordPageState extends State<RecordPage> {
               IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () async {
-                    await _keyProfileTab.currentState?.save();
+                    await _keyTabProfile.currentState?.save();
                   })
             ],
             bottom: const TabBar(
@@ -92,15 +92,15 @@ class _RecordPageState extends State<RecordPage> {
           ),
           body: TabBarView(
             children: [
-              ProfileTab(
-                key: _keyProfileTab,
+              TabProfile(
+                key: _keyTabProfile,
                 profileData: widget.profileData,
               ),
-              EventsTab(
-                key: _keyEventsTab,
+              TabEvents(
+                key: _keyTabEvents,
                 profileData: widget.profileData,
               ),
-              SettingsTab(),
+              TabSettings(),
             ],
           ),
         ));

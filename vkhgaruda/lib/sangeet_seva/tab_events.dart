@@ -4,20 +4,20 @@ import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/sangeet_seva/profile.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
-class EventsTab extends StatefulWidget {
+class TabEvents extends StatefulWidget {
   final PerformerProfile? profileData;
 
-  const EventsTab({this.profileData, super.key});
+  const TabEvents({this.profileData, super.key});
 
   @override
-  State<EventsTab> createState() => EventsTabState();
+  State<TabEvents> createState() => TabEventsState();
 }
 
 // hint: put the global key as a member of the calling class
 // instantiate this class with a global key
-// final GlobalKey<EventsTabState> _keySummary = GlobalKey<EventsTabState>();
+// final GlobalKey<TabEventsState> _keySummary = GlobalKey<TabEventsState>();
 
-class EventsTabState extends State<EventsTab> {
+class TabEventsState extends State<TabEvents> {
   final Lock _lock = Lock();
   bool _isLoading = false;
 
