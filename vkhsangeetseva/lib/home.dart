@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
   late FirebaseMessaging _firebaseMessaging;
   String _fcmToken = "";
   int _newNotificationCount = 0;
+  PerformerProfile? _profile;
 
   // lists and maps
   final List<NotificationEntry> _notifications = [];
@@ -122,9 +123,8 @@ class _HomePageState extends State<HomePage> {
     UserBasics? basics = Utils().getUserBasics();
     if (basics != null) {
       {
-        PerformerProfile? profile =
-            await SSUtils().getPerformerProfile(basics.mobile);
-        if (profile == null) {
+        _profile = await SSUtils().getPerformerProfile(basics.mobile);
+        if (_profile == null) {
           await Widgets().showMessage(context,
               "No profile found for this mobile. You will be redirected to create a profile.");
 
@@ -336,14 +336,19 @@ class _HomePageState extends State<HomePage> {
                                         "assets/images/LauncherIcons/Register.png",
                                     text: "Register for an event",
                                     onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SlotSelection(
-                                            title: "Event Registration",
+                                      if (_profile != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SlotSelection(
+                                              title: "Event Registration",
+                                              profile: _profile!,
+                                            ),
                                           ),
-                                        ),
-                                      );
+                                        );
+                                      } else {
+                                        Toaster().error("Profile not set");
+                                      }
                                     },
                                     fixedWidth: 250),
                               ),

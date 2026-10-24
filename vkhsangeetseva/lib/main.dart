@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:vkhpackages/sangeet_seva/event_details.dart';
 import 'package:vkhsangeetseva/notification_page.dart';
-import 'package:vkhpackages/sangeet_seva/slot_selection.dart';
 import 'firebase_options.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhsangeetseva/home.dart';
