@@ -91,6 +91,10 @@ class ProfileState extends State<Profile> {
   }
 
   Future<void> refresh() async {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -271,12 +275,14 @@ class ProfileState extends State<Profile> {
     }
 
     Toaster().info('Profile saved');
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
 
-    if (goback == true && mounted) {
-      Navigator.of(context).pop();
+      if (goback == true) {
+        Navigator.of(context).pop();
+      }
     }
   }
 

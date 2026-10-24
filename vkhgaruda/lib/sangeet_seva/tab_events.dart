@@ -44,6 +44,10 @@ class TabEventsState extends State<TabEvents> {
   }
 
   Future<void> refresh() async {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
