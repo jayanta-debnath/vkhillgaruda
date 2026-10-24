@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
-import 'package:vkhsangeetseva/event_details.dart';
+import 'package:vkhpackages/sangeet_seva/event_details.dart';
 
 class RegisteredEvents extends StatefulWidget {
   final String title;

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:vkhsangeetseva/event_details.dart';
+import 'package:vkhpackages/sangeet_seva/event_details.dart';
 import 'package:vkhsangeetseva/profile_page.dart';
 
 class Registration extends StatefulWidget {

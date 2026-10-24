@@ -174,7 +174,9 @@ class ProfileState extends State<Profile> {
         "${Const().dbrootSangeetSeva}/Users/${_mobileController.text}";
     bool exists = await FB().pathExists(dbpath);
     if (exists && (widget.self != null && !widget.self!)) {
-      await _handleExistingUser(context);
+      if (mounted) {
+        await _handleExistingUser(context);
+      }
     } else {
       if (_userDetailsOld == null) {
         // new user

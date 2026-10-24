@@ -92,18 +92,19 @@ class _SlotSelectionState extends State<SlotSelection> {
 
     // go to next page
     if (mounted) {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder:
-      //         (context) => EventDetails(
-      //           title: widget.title,
-      //           selectedDate: _date,
-      //           eventStart: _toDateTime(_timeStart),
-      //           eventEnd: _toDateTime(_timeEnd),
-      //         ),
-      //   ),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => EventDetails(
+                title: widget.title,
+                selectedDate: _date,
+                eventStart: _toDateTime(_timeStart),
+                eventEnd: _toDateTime(_timeEnd),
+                profile: widget.profile,
+              ),
+        ),
+      );
     }
   }
 

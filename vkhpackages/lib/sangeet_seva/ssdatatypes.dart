@@ -60,9 +60,12 @@ class EventRecord {
       noteTemple: json['noteTemple'] as String,
       eventStart: DateTime.parse(json['eventStart'] as String),
       eventEnd: DateTime.parse(json['eventEnd'] as String),
-      songs: List.generate(json['songs'].length, (index) {
-        return json['songs'][index];
-      }),
+      songs:
+          (json['songs'] == null || json['songs'].length == 0)
+              ? []
+              : List.generate(json['songs'].length, (index) {
+                return json['songs'][index];
+              }),
       status: json['status'] as String,
       guests: json['guests'],
       performers:

@@ -3,8 +3,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhpackages/vkhpackages.dart';
-import 'package:vkhsangeetseva/home.dart';
-import 'package:vkhsangeetseva/profile_page.dart';
 
 class EventDetails extends StatefulWidget {
   final String title;
@@ -14,6 +12,7 @@ class EventDetails extends StatefulWidget {
   final bool? readOnly;
   final DateTime? eventStart;
   final DateTime? eventEnd;
+  final PerformerProfile profile;
 
   const EventDetails({
     super.key,
@@ -24,6 +23,7 @@ class EventDetails extends StatefulWidget {
     this.readOnly,
     this.eventStart,
     this.eventEnd,
+    required this.profile,
   });
 
   @override
@@ -34,8 +34,7 @@ class EventDetails extends StatefulWidget {
 class _EventDetailsState extends State<EventDetails> {
   // scalars
   bool _isLoading = true;
-  PerformerProfile? _requester;
-  final _minSongs = 3;
+  PerformerProfile? _mainPerformer;
   late DateTime _eventStart;
   late DateTime _eventEnd;
 
@@ -71,6 +70,8 @@ class _EventDetailsState extends State<EventDetails> {
       _eventEnd = DateTime.now();
     }
 
+    _mainPerformer = widget.profile;
+
     refresh();
   }
 
@@ -97,8 +98,7 @@ class _EventDetailsState extends State<EventDetails> {
     // perform async operations here
 
     // fetch form values
-    await Utils().fetchUserBasics();
-    String mobile = Utils().getUserBasics()!.mobile;
+    String mobile = _mainPerformer!.mobile;
     bool userExists = await FB().pathExists(
       "${Const().dbrootSangeetSeva}/Users/$mobile",
     );
@@ -130,8 +130,10 @@ class _EventDetailsState extends State<EventDetails> {
       String dbpath =
           "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
       Map<String, dynamic> data = await FB().getJson(path: dbpath);
-      performanceRequest =
-          Utils().convertRawToDatatype(data, EventRecord.fromJson);
+      performanceRequest = Utils().convertRawToDatatype(
+        data,
+        EventRecord.fromJson,
+      );
     }
 
     // refresh all child widgets
@@ -141,35 +143,20 @@ class _EventDetailsState extends State<EventDetails> {
     setState(() {
       _isLoading = false;
 
-      if (userdetailsJson.isEmpty) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return ProfilePage(
-                title: "Profile",
-                self: true,
-                onProfileSaved: (user) {
-                  setState(() {
-                    _requester = user;
-                  });
-                },
-              );
-            },
-          ),
-        );
-      } else {
-        _requester = PerformerProfile.fromJson(userdetailsJson);
+      if (userdetailsJson.isNotEmpty) {
+        _mainPerformer = PerformerProfile.fromJson(userdetailsJson);
       }
 
       // write fcm token if not set
       FirebaseMessaging.instance.getToken().then((fcmToken) {
-        if (_requester != null &&
-            (_requester!.fcmToken.isEmpty ||
-                _requester!.fcmToken != (fcmToken ?? ""))) {
+        if (_mainPerformer != null &&
+            (_mainPerformer!.fcmToken.isEmpty ||
+                _mainPerformer!.fcmToken != (fcmToken ?? ""))) {
           String dbpath = "${Const().dbrootSangeetSeva}/Users/$mobile/fcmToken";
           FB().setValue(
-              path: dbpath, value: fcmToken ?? ""); // no need to await
+            path: dbpath,
+            value: fcmToken ?? "",
+          ); // no need to await
         }
       });
 
@@ -186,10 +173,13 @@ class _EventDetailsState extends State<EventDetails> {
         }
       }
       Performer self = Performer(
-          salutation:
-              _requester!.salutation == "Others" ? "" : _requester!.salutation,
-          name: _requester!.name,
-          specialization: "Vocalist");
+        salutation:
+            _mainPerformer!.salutation == "Others"
+                ? ""
+                : _mainPerformer!.salutation,
+        name: _mainPerformer!.name,
+        specialization: "Vocalist",
+      );
       if (_performers.isEmpty) {
         _performers.add(self);
       }
@@ -209,43 +199,47 @@ class _EventDetailsState extends State<EventDetails> {
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       title: Text(title),
-      subtitle: (raga.isEmpty && tala.isEmpty)
-          ? null
-          : Row(
-              children: [
-                Text("raga: $raga"),
-                SizedBox(width: 10),
-                Text("tala: $tala"),
-              ],
-            ),
-      trailing: widget.readOnly != null
-          ? null
-          : Widgets().createContextMenu(
-              items: ["Edit", "Delete"],
-              onPressed: (
-                String action,
-              ) async {
-                switch (action) {
-                  case "Edit":
-                    await _showAddSongDialog(context: context, index: index);
-                    if (widget.oldEvent != null) {
-                      _onSubmit(goback: false);
-                    }
-                    break;
-                  case "Delete":
-                    Widgets().showConfirmDialog(
-                        context, "Are you sure to delete the song?", "Delete",
-                        () async {
-                      setState(() {
-                        _songs.removeAt(index);
-                      });
+      subtitle:
+          (raga.isEmpty && tala.isEmpty)
+              ? null
+              : Row(
+                children: [
+                  Text("raga: $raga"),
+                  SizedBox(width: 10),
+                  Text("tala: $tala"),
+                ],
+              ),
+      trailing:
+          widget.readOnly != null
+              ? null
+              : Widgets().createContextMenu(
+                items: ["Edit", "Delete"],
+                onPressed: (String action) async {
+                  switch (action) {
+                    case "Edit":
+                      await _showAddSongDialog(context: context, index: index);
                       if (widget.oldEvent != null) {
                         _onSubmit(goback: false);
                       }
-                    });
-                    break;
-                }
-              }),
+                      break;
+                    case "Delete":
+                      Widgets().showConfirmDialog(
+                        context,
+                        "Are you sure to delete the song?",
+                        "Delete",
+                        () async {
+                          setState(() {
+                            _songs.removeAt(index);
+                          });
+                          if (widget.oldEvent != null) {
+                            _onSubmit(goback: false);
+                          }
+                        },
+                      );
+                      break;
+                  }
+                },
+              ),
     );
   }
 
@@ -278,37 +272,40 @@ class _EventDetailsState extends State<EventDetails> {
           ],
         ),
       ),
-      trailing: widget.readOnly != null
-          ? null
-          : Widgets().createContextMenu(
-              items: ["Edit", "Remove"],
-              onPressed: (
-                String action,
-              ) async {
-                switch (action) {
-                  case "Edit":
-                    await _showAddPerformerDialog(
-                      context: context,
-                      oldUser: member,
-                    );
-                    if (widget.oldEvent != null) {
-                      _onSubmit(goback: false);
-                    }
-                    break;
-                  case "Remove":
-                    Widgets().showConfirmDialog(
-                        context, "Are you sure to remove performer?", "Remove",
-                        () async {
-                      setState(() {
-                        _performers.removeAt(index);
-                      });
+      trailing:
+          widget.readOnly != null
+              ? null
+              : Widgets().createContextMenu(
+                items: ["Edit", "Remove"],
+                onPressed: (String action) async {
+                  switch (action) {
+                    case "Edit":
+                      await _showAddPerformerDialog(
+                        context: context,
+                        oldUser: member,
+                      );
                       if (widget.oldEvent != null) {
                         _onSubmit(goback: false);
                       }
-                    });
-                    break;
-                }
-              }),
+                      break;
+                    case "Remove":
+                      Widgets().showConfirmDialog(
+                        context,
+                        "Are you sure to remove performer?",
+                        "Remove",
+                        () async {
+                          setState(() {
+                            _performers.removeAt(index);
+                          });
+                          if (widget.oldEvent != null) {
+                            _onSubmit(goback: false);
+                          }
+                        },
+                      );
+                      break;
+                  }
+                },
+              ),
     );
   }
 
@@ -322,21 +319,13 @@ class _EventDetailsState extends State<EventDetails> {
     }
 
     // delete from events
-    UserBasics? basics = Utils().getUserBasics();
-    String mobile = "";
+    String mobile = _mainPerformer!.mobile;
     String dbpath = "";
-    if (basics == null) {
-      Toaster().error("Cant access user data");
-      return;
-    } else {
-      mobile = basics.mobile;
-      String dbdate = DateFormat("yyyy-MM-dd").format(widget.selectedDate);
-      String slotName = DateFormat("HH_mm").format(_eventStart);
-      dbpath = "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
-      await FB().deleteValue(
-        path: dbpath,
-      );
-    }
+
+    String dbdate = DateFormat("yyyy-MM-dd").format(widget.selectedDate);
+    String slotName = DateFormat("HH_mm").format(_eventStart);
+    dbpath = "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
+    await FB().deleteValue(path: dbpath);
 
     // delete from pending requests
     List pendingEvents = await FB().getList(
@@ -354,14 +343,17 @@ class _EventDetailsState extends State<EventDetails> {
     Toaster().info("Event deleted successfully");
 
     // go to homepage
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return HomePage(title: "Hare Krishna");
-        },
-      ),
-    );
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) {
+    //       return HomePage(title: "Hare Krishna");
+    //     },
+    //   ),
+    // );
   }
 
   Future<void> _onSubmit({bool goback = true}) async {
@@ -388,18 +380,12 @@ class _EventDetailsState extends State<EventDetails> {
       return;
     }
 
-    // validate list of songs
-    if (_songs.length < _minSongs) {
-      Toaster().error("Please enter at least $_minSongs songs");
-      return;
-    }
-
     // populate the data structure
     EventRecord performanceRequest = EventRecord(
       date: widget.selectedDate,
       eventStart: _eventStart,
       eventEnd: _eventEnd,
-      eventRequesterMobile: _requester!.mobile,
+      eventRequesterMobile: _mainPerformer!.mobile,
       performers: _performers,
       guests: _guests,
       songs: _songs,
@@ -408,36 +394,32 @@ class _EventDetailsState extends State<EventDetails> {
     );
 
     // save to firebase
-    UserBasics? basics = Utils().getUserBasics();
     String mobile = "";
     String dbdate = DateFormat("yyyy-MM-dd").format(performanceRequest.date);
     String slotName = DateFormat("HH_mm").format(performanceRequest.eventStart);
-    if (basics == null) {
-      Toaster().error("Cant access user data");
-      return;
-    } else {
-      mobile = basics.mobile;
-      FB().setJson(
-        path: "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
-        json: performanceRequest.toJson(),
-      );
-    }
+
+    mobile = _mainPerformer!.mobile;
+    FB().setJson(
+      path: "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
+      json: performanceRequest.toJson(),
+    );
 
     // update referrals
     String dbpath = "${Const().dbrootSangeetSeva}/Users/$mobile/referrals";
     List<dynamic> existingReferrals = await FB().getList(path: dbpath);
     final List<Performer> referrals = [];
-    // Add performers to referrals, skipping the one whose name matches _requester!.name
-    referrals.addAll(
-      _performers.where((p) => p.name != _requester!.name),
-    );
+    // Add performers to referrals, skipping the one whose name matches _mainPerformer!.name
+    referrals.addAll(_performers.where((p) => p.name != _mainPerformer!.name));
     for (var referral in referrals) {
       if (!existingReferrals.contains(referral)) {
         existingReferrals.add(referral);
       }
     }
-    await FB()
-        .setList(path: dbpath, list: referrals, toJson: (p) => p.toJson());
+    await FB().setList(
+      path: dbpath,
+      list: referrals,
+      toJson: (p) => p.toJson(),
+    );
 
     // add to pending requests
     if (widget.oldEvent == null || widget.oldEvent!.status != "Pending") {
@@ -464,9 +446,10 @@ class _EventDetailsState extends State<EventDetails> {
       String startTime = DateFormat("h:mm a").format(_eventStart);
       String endTime = DateFormat("h:mm a").format(_eventEnd);
       Utils().sendNotificationToTopic(
-          topic: Const().fcmTopicSSCoordinators,
-          title: "New event request",
-          body: "Event request for $date [$startTime - $endTime]");
+        topic: Const().fcmTopicSSCoordinators,
+        title: "New event request",
+        body: "Event request for $date [$startTime - $endTime]",
+      );
     } else {
       // edit
       Toaster().info("Saved");
@@ -474,20 +457,21 @@ class _EventDetailsState extends State<EventDetails> {
 
     // go to homepage
     if (goback) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return HomePage(title: "Hare Krishna");
-          },
-        ),
-      );
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) {
+      //       return HomePage(title: "Hare Krishna");
+      //     },
+      //   ),
+      // );
     }
   }
 
-  Future<void> _showAddGuestDialog({
-    required BuildContext context,
-  }) async {
+  Future<void> _showAddGuestDialog({required BuildContext context}) async {
     FocusNode focusNode = FocusNode();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     int guests = _guests;
@@ -498,56 +482,59 @@ class _EventDetailsState extends State<EventDetails> {
     });
 
     await Widgets().showResponsiveDialog(
-        context: context,
-        title: "Number of guests",
-        child: Form(
-            key: formKey,
-            child: TextFormField(
-              focusNode: focusNode,
-              keyboardType: TextInputType.number,
-              initialValue: guests.toString(),
-              onChanged: (value) {
-                guests = int.parse(value);
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Please enter a valid number";
-                }
-                if (int.tryParse(value) == null) {
-                  return "Please enter a valid number";
-                }
-                if (RegExp(
-                  r'[!@#$%^&*(),.?":{}|<>]',
-                ).hasMatch(value)) {
-                  return "Special characters not allowed";
-                }
-                if (int.parse(value) < 0) {
-                  return "Number of guests can't be negative";
-                }
-                return null;
-              },
-            )),
-        actions: [
-          // ok button
-          ElevatedButton(
-              onPressed: () {
-                if (!formKey.currentState!.validate()) {
-                  return;
-                }
+      context: context,
+      title: "Number of guests",
+      child: Form(
+        key: formKey,
+        child: TextFormField(
+          focusNode: focusNode,
+          keyboardType: TextInputType.number,
+          initialValue: guests.toString(),
+          onChanged: (value) {
+            guests = int.parse(value);
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter a valid number";
+            }
+            if (int.tryParse(value) == null) {
+              return "Please enter a valid number";
+            }
+            if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+              return "Special characters not allowed";
+            }
+            if (int.parse(value) < 0) {
+              return "Number of guests can't be negative";
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        // ok button
+        ElevatedButton(
+          onPressed: () {
+            if (!formKey.currentState!.validate()) {
+              return;
+            }
 
-                setState(() {
-                  _guests = guests;
-                });
+            setState(() {
+              _guests = guests;
+            });
 
-                Navigator.pop(context);
+            Navigator.pop(context);
 
-                if (_guests + _performers.length > 10) {
-                  Widgets().showMessage(context,
-                      "Nominal charges for prasadam will apply for more than 10 members");
-                }
-              },
-              child: Text("OK"))
-        ]);
+            if (_guests + _performers.length > 10) {
+              Widgets().showMessage(
+                context,
+                "Nominal charges for prasadam will apply for more than 10 members",
+              );
+            }
+          },
+          child: Text("OK"),
+        ),
+      ],
+    );
   }
 
   Future<void> _showAddNoteDialog(BuildContext context) async {
@@ -558,34 +545,37 @@ class _EventDetailsState extends State<EventDetails> {
     });
 
     await Widgets().showResponsiveDialog(
-        context: context,
-        title: "Add note for performer",
-        child: Column(
-          children: [
-            TextField(
-              focusNode: focusNode,
-              maxLines: 3,
-              controller: _noteController,
-              decoration: InputDecoration(
-                hintText: "Enter your note here",
-                border: OutlineInputBorder(),
-              ),
+      context: context,
+      title: "Add note for performer",
+      child: Column(
+        children: [
+          TextField(
+            focusNode: focusNode,
+            maxLines: 3,
+            controller: _noteController,
+            decoration: InputDecoration(
+              hintText: "Enter your note here",
+              border: OutlineInputBorder(),
             ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {});
-            },
-            child: Text("Save"),
           ),
-        ]);
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            setState(() {});
+          },
+          child: Text("Save"),
+        ),
+      ],
+    );
   }
 
-  Future<void> _showAddSongDialog(
-      {required BuildContext context, int? index}) async {
+  Future<void> _showAddSongDialog({
+    required BuildContext context,
+    int? index,
+  }) async {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     _titleController.clear();
 
@@ -622,9 +612,7 @@ class _EventDetailsState extends State<EventDetails> {
                   if (value == null || value.isEmpty || value.length < 3) {
                     return "Please enter a valid name";
                   }
-                  if (RegExp(
-                    r'[0-9!@#$%^&*(),.?":{}|<>]',
-                  ).hasMatch(value)) {
+                  if (RegExp(r'[0-9!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
                     return "Special characters are not allowed";
                   }
                   return null;
@@ -739,22 +727,24 @@ class _EventDetailsState extends State<EventDetails> {
                   flex: salutationFlex,
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: "Salutation"),
-                    value: salutation.isNotEmpty
-                        ? salutation
-                        : SSConst().salutations.first,
-                    items: SSConst().salutations.map((salutation) {
-                      return DropdownMenuItem<String>(
-                        value: salutation,
-                        child: Text(salutation),
-                      );
-                    }).toList(),
+                    value:
+                        salutation.isNotEmpty
+                            ? salutation
+                            : SSConst().salutations.first,
+                    items:
+                        SSConst().salutations.map((salutation) {
+                          return DropdownMenuItem<String>(
+                            value: salutation,
+                            child: Text(salutation),
+                          );
+                        }).toList(),
                     onChanged:
-                        performerNameController.text == _requester?.name &&
-                                salutation == _requester?.salutation
+                        performerNameController.text == _mainPerformer?.name &&
+                                salutation == _mainPerformer?.salutation
                             ? null
                             : (value) {
-                                salutation = value!;
-                              },
+                              salutation = value!;
+                            },
                     validator: (value) {
                       if (value == null ||
                           value.isEmpty ||
@@ -777,7 +767,6 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
 
                 SizedBox(width: 10), // Add some spacing between the widgets
-
                 // name
                 Expanded(
                   flex: 10 - salutationFlex, // Remaining space after salutation
@@ -785,8 +774,8 @@ class _EventDetailsState extends State<EventDetails> {
                     controller: performerNameController,
                     focusNode: focusNode,
                     readOnly:
-                        performerNameController.text == _requester?.name &&
-                                salutation == _requester?.salutation
+                        performerNameController.text == _mainPerformer?.name &&
+                                salutation == _mainPerformer?.salutation
                             ? true
                             : false,
                     decoration: InputDecoration(labelText: "Name"),
@@ -803,8 +792,9 @@ class _EventDetailsState extends State<EventDetails> {
                         return "Numbers and special characters are not allowed";
                       }
                       if (oldUser == null &&
-                          _performers
-                              .any((performer) => performer.name == value)) {
+                          _performers.any(
+                            (performer) => performer.name == value,
+                          )) {
                         return "Performer already exists";
                       }
 
@@ -824,15 +814,15 @@ class _EventDetailsState extends State<EventDetails> {
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(labelText: "Specialization"),
                       value: specialization,
-                      items: [
-                        "Vocalist",
-                        ...SSConst().instrumentSkills,
-                      ].map((specialization) {
-                        return DropdownMenuItem<String>(
-                          value: specialization,
-                          child: Text(specialization),
-                        );
-                      }).toList(),
+                      items:
+                          ["Vocalist", ...SSConst().instrumentSkills].map((
+                            specialization,
+                          ) {
+                            return DropdownMenuItem<String>(
+                              value: specialization,
+                              child: Text(specialization),
+                            );
+                          }).toList(),
                       onChanged: (value) {
                         setState(() {
                           specialization = value!;
@@ -850,8 +840,9 @@ class _EventDetailsState extends State<EventDetails> {
                     if (specialization == "Other")
                       TextFormField(
                         controller: otherController,
-                        decoration:
-                            InputDecoration(labelText: "Other specialization"),
+                        decoration: InputDecoration(
+                          labelText: "Other specialization",
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return "Please enter a specialization";
@@ -886,9 +877,10 @@ class _EventDetailsState extends State<EventDetails> {
             Performer user = Performer(
               salutation: salutation,
               name: performerNameController.text,
-              specialization: specialization == "Other"
-                  ? otherSpecialization
-                  : specialization,
+              specialization:
+                  specialization == "Other"
+                      ? otherSpecialization
+                      : specialization,
             );
 
             setState(() {
@@ -947,13 +939,17 @@ class _EventDetailsState extends State<EventDetails> {
                     if (widget.oldEvent != null &&
                         widget.oldEvent!.status == "Approved")
                       Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 1, horizontal: 5),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 1,
+                          horizontal: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: Colors.green.shade700, width: 2),
+                            color: Colors.green.shade700,
+                            width: 2,
+                          ),
                         ),
                         child: Text(
                           "Approved",
@@ -995,48 +991,25 @@ class _EventDetailsState extends State<EventDetails> {
                     SizedBox(height: 10),
 
                     // event requester
-                    if (_requester != null)
+                    if (_mainPerformer != null)
                       Widgets().createTopLevelCard(
                         context: context,
                         title: "Event requester",
                         child: ListTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProfilePage(
-                                  title: "Profile",
-                                  self: true,
-                                  onProfileSaved: (user) {
-                                    setState(() {
-                                      _requester = user;
-                                    });
-                                  },
-                                  friendMobile: _requester!.mobile,
-                                ),
-                              ),
-                            );
-                          },
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(
-                              _requester!.profilePicUrl ?? "",
+                              _mainPerformer!.profilePicUrl ?? "",
                             ),
                           ),
                           title: Text(
-                            "${_requester!.salutation == "Others" ? "" : _requester!.salutation} ${_requester!.name}",
+                            "${_mainPerformer!.salutation == "Others" ? "" : _mainPerformer!.salutation} ${_mainPerformer!.name}",
                           ),
                           subtitle: Widgets().createResponsiveRow(context, [
-                            Icon(
-                              Icons.phone,
-                              size: 16,
-                            ),
-                            Text(_requester!.mobile),
+                            Icon(Icons.phone, size: 16),
+                            Text(_mainPerformer!.mobile),
                             SizedBox(width: 4),
-                            Icon(
-                              Icons.workspace_premium,
-                              size: 16,
-                            ),
-                            Text(_requester!.credentials),
+                            Icon(Icons.workspace_premium, size: 16),
+                            Text(_mainPerformer!.credentials),
                           ]),
                         ),
                       ),
@@ -1047,19 +1020,19 @@ class _EventDetailsState extends State<EventDetails> {
                       title: "Performers",
                       child: Column(
                         children: [
-                          Column(children: [
-                            ...List.generate(_performers.length, (index) {
-                              return _createPerfomerTile(index);
-                            }),
-                          ]),
+                          Column(
+                            children: [
+                              ...List.generate(_performers.length, (index) {
+                                return _createPerfomerTile(index);
+                              }),
+                            ],
+                          ),
 
                           // button - add performer team
                           if (widget.readOnly == null)
                             TextButton(
                               onPressed: () async {
-                                await _showAddPerformerDialog(
-                                  context: context,
-                                );
+                                await _showAddPerformerDialog(context: context);
 
                                 if (widget.oldEvent != null) {
                                   _onSubmit(goback: false);
@@ -1076,9 +1049,7 @@ class _EventDetailsState extends State<EventDetails> {
                           if (widget.readOnly == null && _guests == 0)
                             TextButton(
                               onPressed: () async {
-                                await _showAddGuestDialog(
-                                  context: context,
-                                );
+                                await _showAddGuestDialog(context: context);
                                 if (widget.oldEvent != null) {
                                   _onSubmit(goback: false);
                                 }
@@ -1127,9 +1098,7 @@ class _EventDetailsState extends State<EventDetails> {
                           if (_noteController.text.isNotEmpty)
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(
-                                _noteController.text,
-                              ),
+                              child: Text(_noteController.text),
                             ),
                           TextButton(
                             onPressed: () async {
@@ -1152,7 +1121,9 @@ class _EventDetailsState extends State<EventDetails> {
                     SizedBox(height: 20),
                     if (widget.readOnly == null && widget.oldEvent == null)
                       ElevatedButton(
-                          onPressed: _onSubmit, child: Text("Submit")),
+                        onPressed: _onSubmit,
+                        child: Text("Submit"),
+                      ),
 
                     // leave some space at bottom
                     SizedBox(height: 100),
