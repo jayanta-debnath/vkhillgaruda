@@ -87,12 +87,6 @@ class TabEventsState extends State<TabEvents> {
     });
   }
 
-  void setProfile(PerformerProfile profile) {
-    setState(() {
-      _profile = profile;
-    });
-  }
-
   Widget _createEventTile(int index) {
     if (_profile == null) {
       return SizedBox();

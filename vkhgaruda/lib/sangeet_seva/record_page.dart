@@ -40,8 +40,6 @@ class _RecordPageState extends State<RecordPage> {
 
     if (widget.profile != null) {
       _profile = widget.profile;
-    } else {
-      _profile = _keyTabProfile.currentState?.getPerformerProfile();
     }
 
     refresh();
@@ -76,14 +74,7 @@ class _RecordPageState extends State<RecordPage> {
     setState(() {});
   }
 
-  Future<void> _save() async {
-    await _keyTabProfile.currentState?.save();
-    _profile = _keyTabProfile.currentState?.getPerformerProfile();
-    if (_profile != null) {
-      _keyTabEvents.currentState?.setProfile(_profile!);
-      await _keyTabEvents.currentState?.refresh();
-    }
-  }
+  Future<void> _save() async {}
 
   @override
   Widget build(BuildContext context) {

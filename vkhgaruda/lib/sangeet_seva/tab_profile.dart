@@ -36,19 +36,11 @@ class TabProfileState extends State<TabProfile> {
     super.dispose();
   }
 
-  PerformerProfile? getPerformerProfile() {
-    return _keyProfile.currentState?.getPerformerProfile();
-  }
-
   Future<void> refresh() async {
     await _lock.synchronized(() async {
       // perform your work here
       setState(() {});
     });
-  }
-
-  Future<void> save() async {
-    await _keyProfile.currentState?.save(goback: false);
   }
 
   @override
