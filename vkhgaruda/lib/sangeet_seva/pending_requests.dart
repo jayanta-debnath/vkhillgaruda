@@ -178,7 +178,9 @@ class _PendingRequestsState extends State<PendingRequests> {
         context: context,
         child: ListTile(
           title: Text(title),
-          leading: CircleAvatar(backgroundImage: NetworkImage(profilePicUrl)),
+          leading: CircleAvatar(
+              backgroundImage:
+                  profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl)),
           subtitle: Row(
             children: [
               Icon(Icons.person),

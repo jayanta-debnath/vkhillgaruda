@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhgaruda/sangeet_seva/slot_selection.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
@@ -120,6 +121,14 @@ class TabEventsState extends State<TabEvents> {
         subtitle: Text(
             "${DateFormat("HH:mm").format(_events[index].eventStart)} to ${DateFormat("HH:mm").format(_events[index].eventEnd)}"),
         trailing: statusIcon,
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EventDetails(
+                    title: "Event Details",
+                    selectedDate: _events[index].date,
+                    oldEvent: _events[index],
+                    profile: widget.profile!))),
       ),
     );
   }
