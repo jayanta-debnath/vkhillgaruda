@@ -116,13 +116,15 @@ class _PendingRequestsState extends State<PendingRequests> {
         String path = pendingRequestLink['path'];
 
         var pendingRequestPerUserRaw = await FB().getValue(path: path);
-        EventRecord pendingRequest = Utils().convertRawToDatatype(
-            pendingRequestPerUserRaw, EventRecord.fromJson);
+        if (pendingRequestPerUserRaw != null) {
+          EventRecord pendingRequest = Utils().convertRawToDatatype(
+              pendingRequestPerUserRaw, EventRecord.fromJson);
 
-        // discard if pending request is in the past
-        if (pendingRequest.eventStart.isAfter(DateTime.now())) {
-          pendingRequests.add({'path': path});
-          _linkedEventRecords.add(pendingRequest);
+          // discard if pending request is in the past
+          if (pendingRequest.eventStart.isAfter(DateTime.now())) {
+            pendingRequests.add({'path': path});
+            _linkedEventRecords.add(pendingRequest);
+          }
         }
       }
       if (pendingRequests.length != pendingRequestLinks.length) {

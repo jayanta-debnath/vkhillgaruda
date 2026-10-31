@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/slot_selection.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class TabEvents extends StatefulWidget {
@@ -60,7 +61,8 @@ class TabEventsState extends State<TabEvents> {
         String dbpath =
             "${Const().dbrootSangeetSeva}/Events/${widget.profile!.mobile}";
 
-        Map<String, dynamic> json = await FB().getJson(path: dbpath);
+        Map<String, dynamic> json =
+            await FB().getJson(path: dbpath, silent: true);
 
         // loop through dates
         for (Map json2Raw in json.values) {

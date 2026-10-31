@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
 
 class EventDetails extends StatefulWidget {
   final String title;
@@ -173,10 +174,9 @@ class _EventDetailsState extends State<EventDetails> {
         }
       }
       Performer self = Performer(
-        salutation:
-            _mainPerformer!.salutation == "Others"
-                ? ""
-                : _mainPerformer!.salutation,
+        salutation: _mainPerformer!.salutation == "Others"
+            ? ""
+            : _mainPerformer!.salutation,
         name: _mainPerformer!.name,
         specialization: "Vocalist",
       );
@@ -199,47 +199,45 @@ class _EventDetailsState extends State<EventDetails> {
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       title: Text(title),
-      subtitle:
-          (raga.isEmpty && tala.isEmpty)
-              ? null
-              : Row(
-                children: [
-                  Text("raga: $raga"),
-                  SizedBox(width: 10),
-                  Text("tala: $tala"),
-                ],
-              ),
-      trailing:
-          widget.readOnly != null
-              ? null
-              : Widgets().createContextMenu(
-                items: ["Edit", "Delete"],
-                onPressed: (String action) async {
-                  switch (action) {
-                    case "Edit":
-                      await _showAddSongDialog(context: context, index: index);
-                      if (widget.oldEvent != null) {
-                        _onSubmit(goback: false);
-                      }
-                      break;
-                    case "Delete":
-                      Widgets().showConfirmDialog(
-                        context,
-                        "Are you sure to delete the song?",
-                        "Delete",
-                        () async {
-                          setState(() {
-                            _songs.removeAt(index);
-                          });
-                          if (widget.oldEvent != null) {
-                            _onSubmit(goback: false);
-                          }
-                        },
-                      );
-                      break;
-                  }
-                },
-              ),
+      subtitle: (raga.isEmpty && tala.isEmpty)
+          ? null
+          : Row(
+              children: [
+                Text("raga: $raga"),
+                SizedBox(width: 10),
+                Text("tala: $tala"),
+              ],
+            ),
+      trailing: widget.readOnly != null
+          ? null
+          : Widgets().createContextMenu(
+              items: ["Edit", "Delete"],
+              onPressed: (String action) async {
+                switch (action) {
+                  case "Edit":
+                    await _showAddSongDialog(context: context, index: index);
+                    if (widget.oldEvent != null) {
+                      _onSubmit(goback: false);
+                    }
+                    break;
+                  case "Delete":
+                    Widgets().showConfirmDialog(
+                      context,
+                      "Are you sure to delete the song?",
+                      "Delete",
+                      () async {
+                        setState(() {
+                          _songs.removeAt(index);
+                        });
+                        if (widget.oldEvent != null) {
+                          _onSubmit(goback: false);
+                        }
+                      },
+                    );
+                    break;
+                }
+              },
+            ),
     );
   }
 
@@ -272,40 +270,39 @@ class _EventDetailsState extends State<EventDetails> {
           ],
         ),
       ),
-      trailing:
-          widget.readOnly != null
-              ? null
-              : Widgets().createContextMenu(
-                items: ["Edit", "Remove"],
-                onPressed: (String action) async {
-                  switch (action) {
-                    case "Edit":
-                      await _showAddPerformerDialog(
-                        context: context,
-                        oldUser: member,
-                      );
-                      if (widget.oldEvent != null) {
-                        _onSubmit(goback: false);
-                      }
-                      break;
-                    case "Remove":
-                      Widgets().showConfirmDialog(
-                        context,
-                        "Are you sure to remove performer?",
-                        "Remove",
-                        () async {
-                          setState(() {
-                            _performers.removeAt(index);
-                          });
-                          if (widget.oldEvent != null) {
-                            _onSubmit(goback: false);
-                          }
-                        },
-                      );
-                      break;
-                  }
-                },
-              ),
+      trailing: widget.readOnly != null
+          ? null
+          : Widgets().createContextMenu(
+              items: ["Edit", "Remove"],
+              onPressed: (String action) async {
+                switch (action) {
+                  case "Edit":
+                    await _showAddPerformerDialog(
+                      context: context,
+                      oldUser: member,
+                    );
+                    if (widget.oldEvent != null) {
+                      _onSubmit(goback: false);
+                    }
+                    break;
+                  case "Remove":
+                    Widgets().showConfirmDialog(
+                      context,
+                      "Are you sure to remove performer?",
+                      "Remove",
+                      () async {
+                        setState(() {
+                          _performers.removeAt(index);
+                        });
+                        if (widget.oldEvent != null) {
+                          _onSubmit(goback: false);
+                        }
+                      },
+                    );
+                    break;
+                }
+              },
+            ),
     );
   }
 
@@ -434,13 +431,6 @@ class _EventDetailsState extends State<EventDetails> {
 
     // show success message
     if (widget.oldEvent == null) {
-      if (mounted) {
-        await Widgets().showMessage(
-          context,
-          "Your request has been submitted.\nYou will be notified once your request is approved",
-        );
-      }
-
       // notify coordinator
       String date = DateFormat("EEE, dd MM, yyyy").format(widget.selectedDate);
       String startTime = DateFormat("h:mm a").format(_eventStart);
@@ -456,18 +446,15 @@ class _EventDetailsState extends State<EventDetails> {
     }
 
     // go to homepage
-    if (goback) {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) {
-      //       return HomePage(title: "Hare Krishna");
-      //     },
-      //   ),
-      // );
+    if (goback && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return SangeetSeva(title: "Hare Krishna");
+          },
+        ),
+      );
     }
   }
 
@@ -727,24 +714,22 @@ class _EventDetailsState extends State<EventDetails> {
                   flex: salutationFlex,
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: "Salutation"),
-                    value:
-                        salutation.isNotEmpty
-                            ? salutation
-                            : SSConst().salutations.first,
-                    items:
-                        SSConst().salutations.map((salutation) {
-                          return DropdownMenuItem<String>(
-                            value: salutation,
-                            child: Text(salutation),
-                          );
-                        }).toList(),
+                    value: salutation.isNotEmpty
+                        ? salutation
+                        : SSConst().salutations.first,
+                    items: SSConst().salutations.map((salutation) {
+                      return DropdownMenuItem<String>(
+                        value: salutation,
+                        child: Text(salutation),
+                      );
+                    }).toList(),
                     onChanged:
                         performerNameController.text == _mainPerformer?.name &&
                                 salutation == _mainPerformer?.salutation
                             ? null
                             : (value) {
-                              salutation = value!;
-                            },
+                                salutation = value!;
+                              },
                     validator: (value) {
                       if (value == null ||
                           value.isEmpty ||
@@ -814,15 +799,14 @@ class _EventDetailsState extends State<EventDetails> {
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(labelText: "Specialization"),
                       value: specialization,
-                      items:
-                          ["Vocalist", ...SSConst().instrumentSkills].map((
-                            specialization,
-                          ) {
-                            return DropdownMenuItem<String>(
-                              value: specialization,
-                              child: Text(specialization),
-                            );
-                          }).toList(),
+                      items: ["Vocalist", ...SSConst().instrumentSkills].map((
+                        specialization,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: specialization,
+                          child: Text(specialization),
+                        );
+                      }).toList(),
                       onChanged: (value) {
                         setState(() {
                           specialization = value!;
@@ -877,10 +861,9 @@ class _EventDetailsState extends State<EventDetails> {
             Performer user = Performer(
               salutation: salutation,
               name: performerNameController.text,
-              specialization:
-                  specialization == "Other"
-                      ? otherSpecialization
-                      : specialization,
+              specialization: specialization == "Other"
+                  ? otherSpecialization
+                  : specialization,
             );
 
             setState(() {
@@ -997,9 +980,12 @@ class _EventDetailsState extends State<EventDetails> {
                         title: "Event requester",
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              _mainPerformer!.profilePicUrl ?? "",
-                            ),
+                            backgroundImage:
+                                _mainPerformer!.profilePicUrl!.isEmpty
+                                    ? null
+                                    : NetworkImage(
+                                        _mainPerformer!.profilePicUrl ?? "",
+                                      ),
                           ),
                           title: Text(
                             "${_mainPerformer!.salutation == "Others" ? "" : _mainPerformer!.salutation} ${_mainPerformer!.name}",

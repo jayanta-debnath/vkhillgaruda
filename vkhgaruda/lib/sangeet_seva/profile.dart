@@ -159,8 +159,6 @@ class ProfileState extends State<Profile> {
       widget.onProfileSaved!(_profile!);
     }
 
-    Toaster().info('Profile saved');
-
     if (mounted) {
       setState(() {
         _isLoading = false;

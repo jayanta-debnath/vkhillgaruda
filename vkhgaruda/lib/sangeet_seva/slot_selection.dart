@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class SlotSelection extends StatefulWidget {
@@ -95,14 +96,13 @@ class _SlotSelectionState extends State<SlotSelection> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder:
-              (context) => EventDetails(
-                title: widget.title,
-                selectedDate: _date,
-                eventStart: _toDateTime(_timeStart),
-                eventEnd: _toDateTime(_timeEnd),
-                profile: widget.profile,
-              ),
+          builder: (context) => EventDetails(
+            title: widget.title,
+            selectedDate: _date,
+            eventStart: _toDateTime(_timeStart),
+            eventEnd: _toDateTime(_timeEnd),
+            profile: widget.profile,
+          ),
         ),
       );
     }
@@ -149,10 +149,9 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 1,
                                           child: Text(
                                             "Date",
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.headlineSmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.headlineSmall,
                                           ),
                                         ),
                                         Expanded(
@@ -167,8 +166,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 1,
                                           child: IconButton(
                                             onPressed: () async {
-                                              _date =
-                                                  await showDatePicker(
+                                              _date = await showDatePicker(
                                                     context: context,
                                                     locale: const Locale(
                                                       'en',
@@ -197,10 +195,9 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 2,
                                           child: Text(
                                             "Start Time",
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.headlineSmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.headlineSmall,
                                           ),
                                         ),
                                         Expanded(
@@ -213,8 +210,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 1,
                                           child: IconButton(
                                             onPressed: () async {
-                                              _timeStart =
-                                                  await showTimePicker(
+                                              _timeStart = await showTimePicker(
                                                     context: context,
                                                     initialTime: _timeStart,
                                                   ) ??
@@ -235,10 +231,9 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 2,
                                           child: Text(
                                             "End Time",
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.headlineSmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.headlineSmall,
                                           ),
                                         ),
                                         Expanded(
@@ -249,8 +244,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                           flex: 1,
                                           child: IconButton(
                                             onPressed: () async {
-                                              _timeEnd =
-                                                  await showTimePicker(
+                                              _timeEnd = await showTimePicker(
                                                     context: context,
                                                     initialTime: _timeEnd,
                                                   ) ??
