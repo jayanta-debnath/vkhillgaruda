@@ -162,21 +162,22 @@ class PerformerProfile {
   final List<Supporter> referrals;
   String? friendMobile;
   String fcmToken;
+  int? rating;
 
-  PerformerProfile({
-    required this.id,
-    required this.salutation,
-    required this.name,
-    required this.mobile,
-    this.profilePicUrl,
-    required this.credentials,
-    required this.exps,
-    required this.youtubeUrls,
-    required this.audioClipUrls,
-    required this.referrals,
-    this.friendMobile,
-    this.fcmToken = '',
-  });
+  PerformerProfile(
+      {required this.id,
+      required this.salutation,
+      required this.name,
+      required this.mobile,
+      this.profilePicUrl,
+      required this.credentials,
+      required this.exps,
+      required this.youtubeUrls,
+      required this.audioClipUrls,
+      required this.referrals,
+      this.friendMobile,
+      this.fcmToken = '',
+      this.rating});
 
   factory PerformerProfile.fromJson(Map<String, dynamic> json) {
     return PerformerProfile(
@@ -208,6 +209,7 @@ class PerformerProfile {
             ),
       friendMobile: json['friendMobile'],
       fcmToken: json['fcmToken'] ?? '',
+      rating: json['rating'] ?? 0,
     );
   }
 
@@ -225,6 +227,7 @@ class PerformerProfile {
       'referrals': referrals.map((e) => e.toJson()).toList(),
       'friendMobile': friendMobile,
       'fcmToken': fcmToken,
+      'rating': rating
     };
   }
 }

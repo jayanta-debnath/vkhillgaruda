@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
+import 'package:vkhpackages/vkhpackages.dart';
 
 class TabSettings extends StatefulWidget {
   final PerformerProfile? profile;
@@ -18,9 +20,9 @@ class TabSettings extends StatefulWidget {
 class TabSettingsState extends State<TabSettings> {
   final Lock _lock = Lock();
   bool _isLoading = false;
+  int _rating = 0;
 
   // lists
-  final List<EventRecord> _events = [];
 
   @override
   void initState() {
@@ -32,7 +34,6 @@ class TabSettingsState extends State<TabSettings> {
   @override
   dispose() {
     // clear all lists
-    _events.clear();
 
     // dispose all controllers
 
@@ -50,6 +51,15 @@ class TabSettingsState extends State<TabSettings> {
       // your code here
 
       // read database and populate data
+      if (widget.profile != null) {
+        String dbpath =
+            "${Const().dbrootSangeetSeva}/Users/${widget.profile!.mobile}";
+
+        var data = await FB().getJson(path: dbpath, silent: false);
+        PerformerProfile profile =
+            Utils().convertRawToDatatype(data, PerformerProfile.fromJson);
+        _rating = profile.rating ?? 0;
+      }
 
       // refresh all child widgets
 
@@ -62,7 +72,10 @@ class TabSettingsState extends State<TabSettings> {
   }
 
   Future<void> save() async {
-    return;
+    String dbpath =
+        "${Const().dbrootSangeetSeva}/Users/${widget.profile!.mobile}/rating";
+
+    await FB().setValue(path: dbpath, value: _rating);
   }
 
   @override
@@ -72,25 +85,42 @@ class TabSettingsState extends State<TabSettings> {
             padding: const EdgeInsets.all(8.0),
             child: _isLoading
                 ? Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _events.length + 2,
-                    itemBuilder: (BuildContext context, int index) {
-                      // leave some space on top
-                      if (index == 0) {
-                        return SizedBox(
-                          height: 10,
-                        );
-                      }
+                : Column(
+                    children: [
+                      // user id
+                      Row(
+                        children: [
+                          Expanded(flex: 1, child: Text("User ID:")),
+                          Expanded(flex: 4, child: Text("00001"))
+                        ],
+                      ),
 
-                      // leave some space at the bottom
-                      if (index == _events.length + 1) {
-                        return SizedBox(
-                          height: 100,
-                        );
-                      }
-
-                      // the actual list widgets
-                    }),
+                      // rating
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(flex: 1, child: Text("Rating:")),
+                          Expanded(
+                              flex: 4,
+                              child: RatingBar.builder(
+                                initialRating: 0,
+                                minRating: 1,
+                                allowHalfRating: false,
+                                itemCount: 5,
+                                itemSize: 32,
+                                itemBuilder: (context, index) =>
+                                    const Icon(Icons.star, color: Colors.amber),
+                                onRatingUpdate: (rating) {
+                                  _rating = rating.toInt();
+                                  save();
+                                },
+                              ))
+                        ],
+                      )
+                    ],
+                  ),
           )
         : Center(child: Text("Profile not set "));
   }

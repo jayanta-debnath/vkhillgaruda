@@ -124,7 +124,10 @@ class _RecordPageState extends State<RecordPage> {
                 key: _keyTabEvents,
                 profile: _profile,
               ),
-              TabSettings(),
+              TabSettings(
+                key: _keyTabSettings,
+                profile: _profile,
+              ),
             ],
           ),
         ));
