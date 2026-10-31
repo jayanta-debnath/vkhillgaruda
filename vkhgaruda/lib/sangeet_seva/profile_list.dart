@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/tab_profile.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class ProfileList extends StatefulWidget {
   final String title;

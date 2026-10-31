@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class TabSettings extends StatefulWidget {
   final PerformerProfile? profile;

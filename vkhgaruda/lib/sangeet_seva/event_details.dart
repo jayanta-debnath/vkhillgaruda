@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class EventDetails extends StatefulWidget {
   final String title;

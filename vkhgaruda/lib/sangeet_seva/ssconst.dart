@@ -1,4 +1,4 @@
-import 'package:vkhpackages/sangeet_seva/ssdatatypes.dart';
+import 'datatypes.dart';
 
 class SSConst {
   static final SSConst _instance = SSConst._internal();

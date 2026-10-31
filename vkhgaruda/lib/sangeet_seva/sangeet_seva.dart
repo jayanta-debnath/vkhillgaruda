@@ -5,11 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
-import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
 import 'package:vkhgaruda/sangeet_seva/registered_events.dart';
+import 'package:vkhgaruda/sangeet_seva/sswelcome.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class SangeetSeva extends StatefulWidget {
   final String title;
@@ -30,7 +31,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 class _SangeetSevaState extends State<SangeetSeva> {
   // global keys
-  final GlobalKey<CalendarState> _calendarKey = GlobalKey<CalendarState>();
 
   // scalars
   final Lock _lock = Lock();
@@ -104,10 +104,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
               if (eventRaw != null) {
                 EventRecord event = Utils()
                     .convertRawToDatatype(eventRaw, EventRecord.fromJson);
-                if (_calendarKey.currentState != null) {
-                  _calendarKey.currentState!
-                      .fillAvailabilityIndicators(date: event.date);
-                }
               }
             }
           },
@@ -194,22 +190,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
                     MaterialPageRoute(
                       builder: (context) => ProfileList(
                         title: 'Performer Profiles',
-                        icon: widget.splashImage,
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // calendar
-              IconButton(
-                icon: const Icon(Icons.calendar_month),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CalendarSlots(
-                        title: "Sangeet seva",
                         icon: widget.splashImage,
                       ),
                     ),

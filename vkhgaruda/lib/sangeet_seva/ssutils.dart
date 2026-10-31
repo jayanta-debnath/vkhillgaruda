@@ -1,4 +1,5 @@
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class SSUtils {
   static final SSUtils _instance = SSUtils._internal();
@@ -24,5 +25,10 @@ class SSUtils {
       userDetailsRaw,
       PerformerProfile.fromJson,
     );
+  }
+
+  Future<void> setUserDetails(PerformerProfile details) async {
+    String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
+    await FB().setJson(path: dbpath, json: details.toJson());
   }
 }

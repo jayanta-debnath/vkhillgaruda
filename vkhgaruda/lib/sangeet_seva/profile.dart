@@ -3,10 +3,13 @@ import 'package:fast_image_resizer/fast_image_resizer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
+import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class Profile extends StatefulWidget {
   final Function(PerformerProfile user)? onProfileSaved;
@@ -152,7 +155,7 @@ class ProfileState extends State<Profile> {
     );
 
     // write to database
-    await Utils().setUserDetails(_profile!);
+    await SSUtils().setUserDetails(_profile!);
 
     // invoke the callback
     if (widget.onProfileSaved != null) {

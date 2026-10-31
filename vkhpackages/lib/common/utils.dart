@@ -313,11 +313,6 @@ class Utils {
     await LS().write('userbasics', jsonEncode(userbasics.toJson()));
   }
 
-  Future<void> setUserDetails(PerformerProfile details) async {
-    String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
-    await FB().setJson(path: dbpath, json: details.toJson());
-  }
-
   String convertTimestampToDbKey(DateTime timestamp) {
     return timestamp.toIso8601String().replaceAll(".", "^");
   }
