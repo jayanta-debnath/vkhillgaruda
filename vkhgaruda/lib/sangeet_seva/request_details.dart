@@ -347,9 +347,14 @@ class _RequestDetailsState extends State<RequestDetails> {
                                   leading: _eventRequester == null
                                       ? Text("")
                                       : CircleAvatar(
-                                          backgroundImage: NetworkImage(
-                                              _eventRequester!.profilePicUrl ??
-                                                  ""),
+                                          backgroundImage: (_eventRequester!
+                                                          .profilePicUrl ==
+                                                      null ||
+                                                  _eventRequester!
+                                                      .profilePicUrl!.isEmpty
+                                              ? null
+                                              : NetworkImage(_eventRequester!
+                                                  .profilePicUrl!)),
                                         ),
                                   title: _eventRequester == null
                                       ? Text("")

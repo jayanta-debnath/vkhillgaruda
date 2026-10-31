@@ -184,7 +184,9 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
       title: Text(
         title,
       ),
-      leading: CircleAvatar(backgroundImage: NetworkImage(profilePicUrl)),
+      leading: CircleAvatar(
+          backgroundImage:
+              (profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl))),
       subtitle: Row(
         children: [
           Icon(Icons.person, size: 16),

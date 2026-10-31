@@ -22,7 +22,7 @@ class _SlotSelectionState extends State<SlotSelection> {
   // scalars
   final Lock _lock = Lock();
   bool _isLoading = true;
-  DateTime _date = DateTime.now();
+  DateTime _date = DateTime.now().add(Duration(days: 1));
   TimeOfDay _timeStart = TimeOfDay.now();
   late TimeOfDay _timeEnd;
 
@@ -204,7 +204,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            "Start Time",
+                                            "Time",
                                             style: Theme.of(
                                               context,
                                             ).textTheme.headlineSmall,

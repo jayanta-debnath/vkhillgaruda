@@ -101,13 +101,13 @@ class TabSettingsState extends State<TabSettings> {
                               flex: 1,
                               child: Text(
                                 "User ID:",
-                                style: Theme.of(context).textTheme.bodyLarge,
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall,
                               )),
                           Expanded(
                               flex: 4,
                               child: Text(
                                 "00001",
-                                style: Theme.of(context).textTheme.bodyLarge,
                               ))
                         ],
                       ),
@@ -122,7 +122,8 @@ class TabSettingsState extends State<TabSettings> {
                               flex: 1,
                               child: Text(
                                 "Rating:",
-                                style: Theme.of(context).textTheme.bodyLarge,
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall,
                               )),
                           Expanded(
                               flex: 4,
