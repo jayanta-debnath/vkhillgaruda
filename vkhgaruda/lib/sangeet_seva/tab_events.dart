@@ -19,7 +19,6 @@ class TabEvents extends StatefulWidget {
 class TabEventsState extends State<TabEvents> {
   final Lock _lock = Lock();
   bool _isLoading = false;
-  PerformerProfile? _profile;
 
   // lists
   final List<EventRecord> _events = [];
@@ -27,8 +26,6 @@ class TabEventsState extends State<TabEvents> {
   @override
   void initState() {
     super.initState();
-
-    _profile = widget.profile;
 
     refresh();
   }
@@ -58,10 +55,10 @@ class TabEventsState extends State<TabEvents> {
       // your code here
 
       // read database and populate data
-      if (_profile != null) {
+      if (widget.profile != null) {
         _events.clear();
         String dbpath =
-            "${Const().dbrootSangeetSeva}/Events/${_profile!.mobile}";
+            "${Const().dbrootSangeetSeva}/Events/${widget.profile!.mobile}";
 
         Map<String, dynamic> json = await FB().getJson(path: dbpath);
 
@@ -87,16 +84,21 @@ class TabEventsState extends State<TabEvents> {
     });
   }
 
+  Future<void> save() async {
+    return;
+  }
+
   Widget _createEventTile(int index) {
-    if (_profile == null) {
+    if (widget.profile == null) {
       return SizedBox();
     }
 
     ImageProvider image;
-    if (_profile!.profilePicUrl == null || _profile!.profilePicUrl!.isEmpty) {
+    if (widget.profile!.profilePicUrl == null ||
+        widget.profile!.profilePicUrl!.isEmpty) {
       image = const AssetImage("assets/images/Logo/SangeetSeva.png");
     } else {
-      image = NetworkImage(_profile!.profilePicUrl!);
+      image = NetworkImage(widget.profile!.profilePicUrl!);
     }
 
     Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
@@ -126,14 +128,14 @@ class TabEventsState extends State<TabEvents> {
       MaterialPageRoute(
           builder: (context) => SlotSelection(
                 title: "Event Registration",
-                profile: _profile!,
+                profile: widget.profile!,
               )),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return (_profile != null)
+    return (widget.profile != null)
         ? Padding(
             padding: const EdgeInsets.all(8.0),
             child: _isLoading

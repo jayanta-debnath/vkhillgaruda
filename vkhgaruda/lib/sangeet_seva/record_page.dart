@@ -25,8 +25,8 @@ class _RecordPageState extends State<RecordPage> {
   final GlobalKey<TabProfileState> _keyTabProfile =
       GlobalKey<TabProfileState>();
   final GlobalKey<TabEventsState> _keyTabEvents = GlobalKey<TabEventsState>();
-  // final GlobalKey<TabSettingsState> _keyTabSettings =
-  //     GlobalKey<TabSettingsState>();
+  final GlobalKey<TabSettingsState> _keyTabSettings =
+      GlobalKey<TabSettingsState>();
   PerformerProfile? _profile;
   int _currentTabIndex = 0;
 
@@ -77,8 +77,8 @@ class _RecordPageState extends State<RecordPage> {
 
   Future<void> _save() async {
     _profile = await _keyTabProfile.currentState?.save();
-    //  _keyTabEvents.currentState?.save();
-    //  _keyTabSettings.currentState?.save();
+    _keyTabEvents.currentState?.save();
+    _keyTabSettings.currentState?.save();
 
     setState(() {});
   }
@@ -105,10 +105,10 @@ class _RecordPageState extends State<RecordPage> {
               ],
               onTap: (index) async {
                 // Save the profile tab's data before switching
-                _currentTabIndex = index;
-                if (_currentTabIndex != 0) {
+                if (_currentTabIndex == 0) {
                   _profile = await _keyTabProfile.currentState?.save();
                 }
+                _currentTabIndex = index;
                 setState(() {});
               },
             ),
