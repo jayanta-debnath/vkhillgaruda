@@ -4,7 +4,7 @@ import subprocess
 import sys
 from packaging.version import Version
 
-apps = ["vkhgaruda", "vkhsangeetseva"]
+apps = ["vkhgaruda"]
 reltype = ""
 hostingsite = ""
 rootdir = ""
