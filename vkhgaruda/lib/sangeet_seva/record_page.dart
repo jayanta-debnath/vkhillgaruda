@@ -76,6 +76,14 @@ class _RecordPageState extends State<RecordPage> {
     setState(() {});
   }
 
+  void _onProfileUpdateFromBelow(PerformerProfile? profile) {
+    if (profile != null) {
+      setState(() {
+        _profile = profile;
+      });
+    }
+  }
+
   Future<void> _save() async {
     _profile = await _keyTabProfile.currentState?.save();
     _keyTabEvents.currentState?.save();
@@ -127,6 +135,7 @@ class _RecordPageState extends State<RecordPage> {
               TabSettings(
                 key: _keyTabSettings,
                 profile: _profile,
+                onProfileUpdate: _onProfileUpdateFromBelow,
               ),
             ],
           ),

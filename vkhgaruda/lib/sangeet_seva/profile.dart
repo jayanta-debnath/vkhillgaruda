@@ -142,20 +142,27 @@ class ProfileState extends State<Profile> {
     });
 
     // create user details object
-    int id =
-        (_profile == null) ? await SSUtils().getNextUserId() : _profile!.id;
+    int id, rating;
+    if (_profile == null) {
+      id = await SSUtils().getNextUserId();
+      rating = 0;
+    } else {
+      id = _profile!.id;
+      rating = _profile!.rating ?? 0;
+    }
+
     _profile = PerformerProfile(
-      id: id,
-      salutation: _salutation,
-      name: _nameController.text,
-      mobile: _mobileController.text,
-      profilePicUrl: _profilePicUrl,
-      exps: _exp,
-      credentials: _credController.text,
-      youtubeUrls: _youtubeLinks.where((link) => link.isNotEmpty).toList(),
-      audioClipUrls: _audioClips.where((link) => link.isNotEmpty).toList(),
-      referrals: [],
-    );
+        id: id,
+        salutation: _salutation,
+        name: _nameController.text,
+        mobile: _mobileController.text,
+        profilePicUrl: _profilePicUrl,
+        exps: _exp,
+        credentials: _credController.text,
+        youtubeUrls: _youtubeLinks.where((link) => link.isNotEmpty).toList(),
+        audioClipUrls: _audioClips.where((link) => link.isNotEmpty).toList(),
+        referrals: [],
+        rating: rating);
 
     // write to database
     await SSUtils().setUserDetails(_profile!);

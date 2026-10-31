@@ -6,8 +6,9 @@ import 'package:vkhpackages/vkhpackages.dart';
 
 class TabSettings extends StatefulWidget {
   final PerformerProfile? profile;
+  final Function(PerformerProfile?) onProfileUpdate;
 
-  const TabSettings({this.profile, super.key});
+  const TabSettings({super.key, this.profile, required this.onProfileUpdate});
 
   @override
   State<TabSettings> createState() => TabSettingsState();
@@ -20,13 +21,15 @@ class TabSettings extends StatefulWidget {
 class TabSettingsState extends State<TabSettings> {
   final Lock _lock = Lock();
   bool _isLoading = false;
-  int _rating = 0;
+  PerformerProfile? _profile;
 
   // lists
 
   @override
   void initState() {
     super.initState();
+
+    _profile = widget.profile;
 
     refresh();
   }
@@ -58,7 +61,7 @@ class TabSettingsState extends State<TabSettings> {
         var data = await FB().getJson(path: dbpath, silent: false);
         PerformerProfile profile =
             Utils().convertRawToDatatype(data, PerformerProfile.fromJson);
-        _rating = profile.rating ?? 0;
+        _profile!.rating = profile.rating ?? 0;
       }
 
       // refresh all child widgets
@@ -72,10 +75,14 @@ class TabSettingsState extends State<TabSettings> {
   }
 
   Future<void> save() async {
-    String dbpath =
-        "${Const().dbrootSangeetSeva}/Users/${widget.profile!.mobile}/rating";
+    if (_profile != null) {
+      String dbpath =
+          "${Const().dbrootSangeetSeva}/Users/${widget.profile!.mobile}/rating";
 
-    await FB().setValue(path: dbpath, value: _rating);
+      await FB().setValue(path: dbpath, value: _profile!.rating);
+
+      widget.onProfileUpdate(_profile);
+    }
   }
 
   @override
@@ -105,7 +112,9 @@ class TabSettingsState extends State<TabSettings> {
                           Expanded(
                               flex: 4,
                               child: RatingBar.builder(
-                                initialRating: 0,
+                                initialRating: (_profile == null)
+                                    ? 0
+                                    : _profile!.rating!.toDouble(),
                                 minRating: 1,
                                 allowHalfRating: false,
                                 itemCount: 5,
@@ -113,8 +122,10 @@ class TabSettingsState extends State<TabSettings> {
                                 itemBuilder: (context, index) =>
                                     const Icon(Icons.star, color: Colors.amber),
                                 onRatingUpdate: (rating) {
-                                  _rating = rating.toInt();
-                                  save();
+                                  if (_profile != null) {
+                                    _profile!.rating = rating.toInt();
+                                    save();
+                                  }
                                 },
                               ))
                         ],

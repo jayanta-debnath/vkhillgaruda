@@ -230,4 +230,48 @@ class PerformerProfile {
       'rating': rating
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is PerformerProfile &&
+            runtimeType == other.runtimeType &&
+            id == other.id &&
+            salutation == other.salutation &&
+            name == other.name &&
+            mobile == other.mobile &&
+            profilePicUrl == other.profilePicUrl &&
+            credentials == other.credentials &&
+            _sameList(exps, other.exps) &&
+            _sameList(youtubeUrls, other.youtubeUrls) &&
+            _sameList(audioClipUrls, other.audioClipUrls) &&
+            friendMobile == other.friendMobile &&
+            fcmToken == other.fcmToken &&
+            rating == other.rating;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        runtimeType,
+        id,
+        salutation,
+        name,
+        mobile,
+        profilePicUrl,
+        credentials,
+        Object.hashAll(exps),
+        Object.hashAll(youtubeUrls),
+        Object.hashAll(audioClipUrls),
+        friendMobile,
+        fcmToken,
+        rating,
+      );
+}
+
+bool _sameList<T>(List<T> left, List<T> right) {
+  if (left.length != right.length) return false;
+  for (var i = 0; i < left.length; i++) {
+    if (left[i] != right[i]) return false;
+  }
+  return true;
 }
