@@ -20,6 +20,15 @@ class Utils {
     // init
   }
 
+  TimeOfDay addMinutesToTimeOfDay(TimeOfDay time, int minutes) {
+    final totalMinutes = time.hour * 60 + time.minute + minutes;
+
+    return TimeOfDay(
+      hour: (totalMinutes ~/ 60) % 24,
+      minute: totalMinutes % 60,
+    );
+  }
+
   Future<void> checkForNewVersion(BuildContext context, String app) async {
     final rc = FirebaseRemoteConfig.instance;
 

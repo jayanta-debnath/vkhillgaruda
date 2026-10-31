@@ -23,9 +23,15 @@ class _SlotSelectionState extends State<SlotSelection> {
   bool _isLoading = true;
   DateTime _date = DateTime.now();
   TimeOfDay _timeStart = TimeOfDay.now();
-  TimeOfDay _timeEnd = TimeOfDay.now();
+  late TimeOfDay _timeEnd;
 
   // lists
+  final List<String> _possibleDurations = [
+    "30 min",
+    "1 hr",
+    "1.5 hrs",
+    "2 hrs"
+  ];
 
   // controllers, listeners and focus nodes
 
@@ -33,12 +39,15 @@ class _SlotSelectionState extends State<SlotSelection> {
   initState() {
     super.initState();
 
+    _timeEnd = Utils().addMinutesToTimeOfDay(_timeStart, 60);
+
     refresh();
   }
 
   @override
   dispose() {
     // clear all lists
+    _possibleDurations.clear();
 
     // clear all controllers and focus nodes
 
@@ -146,7 +155,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                     Row(
                                       children: [
                                         Expanded(
-                                          flex: 1,
+                                          flex: 2,
                                           child: Text(
                                             "Date",
                                             style: Theme.of(
@@ -224,36 +233,59 @@ class _SlotSelectionState extends State<SlotSelection> {
                                       ],
                                     ),
 
-                                    // end time row
+                                    // duration
                                     Row(
                                       children: [
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            "End Time",
+                                            "Duration",
                                             style: Theme.of(
                                               context,
                                             ).textTheme.headlineSmall,
                                           ),
                                         ),
                                         Expanded(
-                                          flex: 3,
-                                          child: Text(_timeEnd.format(context)),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: IconButton(
-                                            onPressed: () async {
-                                              _timeEnd = await showTimePicker(
-                                                    context: context,
-                                                    initialTime: _timeEnd,
-                                                  ) ??
-                                                  _timeEnd;
+                                          flex: 4,
+                                          child: DropdownButton(
+                                              items: _possibleDurations
+                                                  .map((item) {
+                                                return DropdownMenuItem(
+                                                  value: item,
+                                                  child: Text(item),
+                                                );
+                                              }).toList(),
+                                              value: "1 hr",
+                                              isExpanded: true,
+                                              onChanged: (value) =>
+                                                  setState(() {
+                                                    switch (value) {
+                                                      case "30 mins":
+                                                        _timeEnd = Utils()
+                                                            .addMinutesToTimeOfDay(
+                                                                _timeStart, 30);
+                                                        break;
 
-                                              setState(() {});
-                                            },
-                                            icon: Icon(Icons.access_time),
-                                          ),
+                                                      case "1 hr":
+                                                        _timeEnd = Utils()
+                                                            .addMinutesToTimeOfDay(
+                                                                _timeStart, 60);
+                                                        break;
+
+                                                      case "1.5 hrs":
+                                                        _timeEnd = Utils()
+                                                            .addMinutesToTimeOfDay(
+                                                                _timeStart, 90);
+                                                        break;
+
+                                                      case "2 hrs":
+                                                        _timeEnd = Utils()
+                                                            .addMinutesToTimeOfDay(
+                                                                _timeStart,
+                                                                120);
+                                                        break;
+                                                    }
+                                                  })),
                                         ),
                                       ],
                                     ),
