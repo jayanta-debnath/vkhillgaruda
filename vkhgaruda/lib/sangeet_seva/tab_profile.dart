@@ -39,6 +39,8 @@ class TabProfileState extends State<TabProfile> {
   Future<void> refresh() async {
     await _lock.synchronized(() async {
       // perform your work here
+      _keyProfile.currentState?.refresh();
+
       setState(() {});
     });
   }
@@ -51,7 +53,6 @@ class TabProfileState extends State<TabProfile> {
         padding: const EdgeInsets.all(8.0),
         child: Profile(
           key: _keyProfile,
-          self: false,
           oldUserDetails: widget.profile,
         ),
       ),

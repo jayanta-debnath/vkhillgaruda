@@ -10,24 +10,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Profile extends StatefulWidget {
-  final bool? self;
   final Function(PerformerProfile user)? onProfileSaved;
-  final String? friendMobile;
   final PerformerProfile? oldUserDetails;
-  final String? fcmToken;
-  final String? splashImage;
-  final String? mobile;
 
-  const Profile({
-    super.key,
-    required this.self,
-    this.onProfileSaved,
-    this.friendMobile,
-    this.oldUserDetails,
-    this.fcmToken,
-    this.splashImage,
-    this.mobile,
-  });
+  const Profile({super.key, this.onProfileSaved, this.oldUserDetails});
 
   @override
   State<Profile> createState() => ProfileState();
@@ -42,11 +28,10 @@ class ProfileState extends State<Profile> {
   final Lock _lock = Lock();
   final double _imagesize = 200;
   bool _isLoading = true;
-  PerformerProfile? _userDetailsOld;
   String _profilePicUrl = '';
   late String _salutation;
   bool _isAdmin = false;
-  PerformerProfile? _savedProfile;
+  PerformerProfile? _profile;
 
   // lists
   List<SangeetExp> _exp = [];
@@ -67,7 +52,15 @@ class ProfileState extends State<Profile> {
   void initState() {
     super.initState();
 
+    // set admin status
+    Utils().isAdmin().then(
+      (value) => setState(() {
+        _isAdmin = value;
+      }),
+    );
+
     _salutation = SSConst().salutations[0];
+    _profile = widget.oldUserDetails;
 
     refresh();
   }
@@ -87,69 +80,22 @@ class ProfileState extends State<Profile> {
   }
 
   Future<void> refresh() async {
-    if (!mounted) {
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
 
-    _isAdmin = await Utils().isAdmin();
-
     await _lock.synchronized(() async {
       // perform your work here
-      // fetch form values
-      if (widget.self != null && widget.self == true) {
-        await Utils().fetchUserBasics();
-        UserBasics? basics = Utils().getUserBasics();
-        if (basics != null) {
-          String mobile = basics.mobile;
-          bool exists = await FB().pathExists(
-            "${Const().dbrootSangeetSeva}/Users/$mobile",
-          );
-          if (exists) {
-            Map<String, dynamic> userdetailsJson = await FB().getJson(
-              path: "${Const().dbrootSangeetSeva}/Users/$mobile",
-            );
-            _userDetailsOld = PerformerProfile.fromJson(userdetailsJson);
 
-            // write fcm token if not set
-            if (_userDetailsOld != null &&
-                (_userDetailsOld!.fcmToken.isEmpty ||
-                    _userDetailsOld!.fcmToken != (widget.fcmToken ?? ""))) {
-              String dbpath =
-                  "${Const().dbrootSangeetSeva}/Users/$mobile/fcmToken";
-              FB().setValue(
-                path: dbpath,
-                value: widget.fcmToken ?? "",
-              ); // no need to await
-            }
-          }
-        }
-      } else if (widget.oldUserDetails != null) {
-        _userDetailsOld = widget.oldUserDetails;
-      } else if (widget.mobile != null) {
-        _userDetailsOld = await SSUtils().getPerformerProfile(widget.mobile!);
-      }
-
-      if (widget.self != null && widget.self == true) {
-        UserBasics? basics = Utils().getUserBasics();
-        if (basics != null) {
-          _nameController.text = basics.name;
-          _mobileController.text = basics.mobile;
-        }
-      }
-
-      if (_userDetailsOld != null) {
-        _salutation = _userDetailsOld!.salutation;
-        _nameController.text = _userDetailsOld!.name;
-        _mobileController.text = _userDetailsOld!.mobile;
-        _profilePicUrl = _userDetailsOld!.profilePicUrl ?? "";
-        _credController.text = _userDetailsOld!.credentials;
-        _exp = _userDetailsOld!.exps;
-        _youtubeLinks = _userDetailsOld!.youtubeUrls;
-        _audioClips = _userDetailsOld!.audioClipUrls;
+      if (_profile != null) {
+        _salutation = _profile!.salutation;
+        _nameController.text = _profile!.name;
+        _mobileController.text = _profile!.mobile;
+        _profilePicUrl = _profile!.profilePicUrl ?? "";
+        _credController.text = _profile!.credentials;
+        _exp = _profile!.exps;
+        _youtubeLinks = _profile!.youtubeUrls;
+        _audioClips = _profile!.audioClipUrls;
       }
 
       // hack: facilitate browse button always for audio clips
@@ -169,23 +115,6 @@ class ProfileState extends State<Profile> {
       Toaster().error('There are errors in the form');
       return;
     }
-
-    // validation for profile photo
-    // if (_profilePicUrl.isEmpty) {
-    //   Toaster().error('Please upload your profile picture');
-    //   return;
-    // }
-
-    // validation of performance links
-    // if (widget.self != null && widget.self == true) {
-    //   if ((_youtubeLinks.isEmpty || _youtubeLinks[0].isEmpty) &&
-    //       (_audioClips.isEmpty || _audioClips[0].isEmpty)) {
-    //     Toaster().error(
-    //       'Please enter at least one youtube link or upload one audio clip',
-    //     );
-    //     return;
-    //   }
-    // }
 
     // no abrupt returns after this point
     setState(() {
@@ -207,8 +136,7 @@ class ProfileState extends State<Profile> {
     });
 
     // create user details object
-    PerformerProfile? details;
-    details = PerformerProfile(
+    _profile = PerformerProfile(
       salutation: _salutation,
       name: _nameController.text,
       mobile: _mobileController.text,
@@ -218,42 +146,24 @@ class ProfileState extends State<Profile> {
       youtubeUrls: _youtubeLinks.where((link) => link.isNotEmpty).toList(),
       audioClipUrls: _audioClips.where((link) => link.isNotEmpty).toList(),
       referrals: [],
-      friendMobile: widget.friendMobile,
-      fcmToken: widget.fcmToken ?? "",
     );
 
     // write to database
-    await Utils().setUserDetails(details);
-
-    // update old details
-    _userDetailsOld = details;
-
-    // Write to local storage
-    if (widget.self != null && widget.self == true) {
-      UserBasics basics = UserBasics(
-        name: details.name,
-        mobile: details.mobile,
-      );
-      await LS().write("userbasics", jsonEncode(basics));
-    }
-
-    // propage profile details upwards
-    _savedProfile = details;
+    await Utils().setUserDetails(_profile!);
 
     // invoke the callback
     if (widget.onProfileSaved != null) {
-      widget.onProfileSaved!(details);
+      widget.onProfileSaved!(_profile!);
     }
 
     Toaster().info('Profile saved');
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
 
-      if (goback == true) {
-        Navigator.of(context).pop();
-      }
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (mounted && goback == true) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -314,7 +224,7 @@ class ProfileState extends State<Profile> {
                       _isLoading = false;
                     });
 
-                    if (_userDetailsOld != null) {
+                    if (widget.oldUserDetails != null) {
                       await _save(goback: false);
                     }
                   },
@@ -348,7 +258,7 @@ class ProfileState extends State<Profile> {
                           _audioClips.removeAt(index);
                         });
 
-                        if (_userDetailsOld != null) {
+                        if (widget.oldUserDetails != null) {
                           await _save(goback: false);
                         }
                       },
@@ -384,7 +294,7 @@ class ProfileState extends State<Profile> {
                 _exp.removeAt(index);
               });
 
-              if (_userDetailsOld != null) {
+              if (widget.oldUserDetails != null) {
                 await _save(goback: false);
               }
             },
@@ -426,7 +336,7 @@ class ProfileState extends State<Profile> {
                 _youtubeLinks.removeAt(index);
               });
 
-              if (_userDetailsOld != null) {
+              if (widget.oldUserDetails != null) {
                 await _save(goback: false);
               }
             },
@@ -436,81 +346,8 @@ class ProfileState extends State<Profile> {
     );
   }
 
-  Future<void> _handleExistingUser(BuildContext context) async {
-    // fetch existing user details
-    String dbpath =
-        "${Const().dbrootSangeetSeva}/Users/${_mobileController.text}";
-    Map<String, dynamic> userdetailsJson = await FB().getJson(path: dbpath);
-    PerformerProfile? userDetails = PerformerProfile.fromJson(userdetailsJson);
-
-    // check if current user is friend
-    bool isFriend = false;
-    UserBasics? currentUser = Utils().getUserBasics();
-    if (currentUser != null) {
-      if (currentUser.mobile == userDetails.mobile ||
-          (userDetails.friendMobile != null &&
-              userDetails.friendMobile!.contains(currentUser.mobile))) {
-        isFriend = true;
-      }
-    }
-
-    // show dialog
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('User already exists'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Mobile: ${_mobileController.text}'),
-                  Text(
-                    'Name: ${userDetails.salutation == "Others" ? "" : userDetails.salutation} ${userDetails.name}',
-                  ),
-                  Text('Credentials: ${userDetails.credentials}'),
-                  SizedBox(height: 4),
-                  if (!isFriend && !_isAdmin)
-                    Text(
-                      'You do not have permission to edit this profile.',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                child: Text('Cancel'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Use existing'),
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                  widget.onProfileSaved!(userDetails);
-                },
-              ),
-              if (isFriend || _isAdmin)
-                TextButton(
-                  child: Text('Overwrite'),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    await _save(goback: false);
-                  },
-                ),
-            ],
-          );
-        },
-      );
-    }
-  }
-
   Future<void> _pickAndUploadImage() async {
-    if (!_isAdmin && (widget.self != null && widget.self == false)) {
+    if (!_isAdmin) {
       Toaster().error('You cannot change other\'s profile picture');
       return;
     }
@@ -913,7 +750,7 @@ class ProfileState extends State<Profile> {
                       TextFormField(
                         controller: _mobileController,
                         decoration: const InputDecoration(labelText: 'Mobile'),
-                        readOnly: widget.self ?? false,
+                        readOnly: _isAdmin ? false : true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Mobile number cannot be empty';
@@ -968,7 +805,7 @@ class ProfileState extends State<Profile> {
                       onPressed: () async {
                         await _showDialogSangeetExp(context);
 
-                        if (_userDetailsOld != null) {
+                        if (widget.oldUserDetails != null) {
                           await _save(goback: false);
                         }
                       },
@@ -983,7 +820,7 @@ class ProfileState extends State<Profile> {
               ),
 
               // youtube links
-              if (_isAdmin || (widget.self != null && widget.self == true))
+              if (_isAdmin)
                 Widgets().createTopLevelCard(
                   context: context,
                   title: "Performance details",
@@ -1009,7 +846,7 @@ class ProfileState extends State<Profile> {
                           onPressed: () async {
                             await _showDialogYoutube(context);
 
-                            if (_userDetailsOld != null) {
+                            if (widget.oldUserDetails != null) {
                               await _save(goback: false);
                             }
                           },
