@@ -98,12 +98,9 @@ class _RecordPageState extends State<RecordPage> {
               ],
               onTap: (index) async {
                 // Save the previous tab's data before switching
-                if (_currentTabIndex == 0) {
-                  await _save();
-                }
-                setState(() {
-                  _currentTabIndex = index;
-                });
+                _currentTabIndex = index;
+                await _save();
+                setState(() {});
               },
             ),
           ),
