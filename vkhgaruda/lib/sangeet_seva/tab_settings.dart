@@ -54,9 +54,9 @@ class TabSettingsState extends State<TabSettings> {
       // your code here
 
       // read database and populate data
-      if (widget.profile != null) {
+      if (_profile != null) {
         String dbpath =
-            "${Const().dbrootSangeetSeva}/Users/${widget.profile!.mobile}";
+            "${Const().dbrootSangeetSeva}/Users/${_profile!.mobile}";
 
         var data = await FB().getJson(path: dbpath, silent: false);
         PerformerProfile profile =
@@ -97,8 +97,18 @@ class TabSettingsState extends State<TabSettings> {
                       // user id
                       Row(
                         children: [
-                          Expanded(flex: 1, child: Text("User ID:")),
-                          Expanded(flex: 4, child: Text("00001"))
+                          Expanded(
+                              flex: 1,
+                              child: Text(
+                                "User ID:",
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              )),
+                          Expanded(
+                              flex: 4,
+                              child: Text(
+                                "00001",
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ))
                         ],
                       ),
 
@@ -108,7 +118,12 @@ class TabSettingsState extends State<TabSettings> {
                       ),
                       Row(
                         children: [
-                          Expanded(flex: 1, child: Text("Rating:")),
+                          Expanded(
+                              flex: 1,
+                              child: Text(
+                                "Rating:",
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              )),
                           Expanded(
                               flex: 4,
                               child: RatingBar.builder(

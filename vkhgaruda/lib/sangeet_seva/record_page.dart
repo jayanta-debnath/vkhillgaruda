@@ -69,9 +69,15 @@ class _RecordPageState extends State<RecordPage> {
       }
     }
 
-    _keyTabProfile.currentState?.refresh();
-    _keyTabEvents.currentState?.refresh();
-    // _keySettings.currentState?.refresh();
+    if (_profile != null) {
+      String dbpath = "${Const().dbrootSangeetSeva}/Users/${_profile!.mobile}";
+      var data = await FB().getJson(path: dbpath, silent: false);
+      _profile = Utils().convertRawToDatatype(data, PerformerProfile.fromJson);
+    }
+
+    await _keyTabProfile.currentState?.refresh();
+    await _keyTabEvents.currentState?.refresh();
+    await _keyTabSettings.currentState?.refresh();
 
     setState(() {});
   }
@@ -100,6 +106,10 @@ class _RecordPageState extends State<RecordPage> {
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: refresh,
+              ),
               IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () async {

@@ -90,6 +90,14 @@ class ProfileState extends State<Profile> {
       // perform your work here
 
       if (_profile != null) {
+        // read db
+        String dbpath =
+            "${Const().dbrootSangeetSeva}/Users/${_profile!.mobile}";
+        var data = await FB().getJson(path: dbpath, silent: false);
+        _profile =
+            Utils().convertRawToDatatype(data, PerformerProfile.fromJson);
+
+        // update fields
         _salutation = _profile!.salutation;
         _nameController.text = _profile!.name;
         _mobileController.text = _profile!.mobile;
