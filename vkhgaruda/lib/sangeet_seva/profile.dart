@@ -142,7 +142,10 @@ class ProfileState extends State<Profile> {
     });
 
     // create user details object
+    int id =
+        (_profile == null) ? await SSUtils().getNextUserId() : _profile!.id;
     _profile = PerformerProfile(
+      id: id,
       salutation: _salutation,
       name: _nameController.text,
       mobile: _mobileController.text,

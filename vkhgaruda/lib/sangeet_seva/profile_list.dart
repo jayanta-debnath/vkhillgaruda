@@ -25,7 +25,7 @@ class _ProfileListState extends State<ProfileList> {
 
   // lists
   final List<PerformerProfile> _performers = [];
-  final List<Map<int, Performer>> _supporters =
+  final List<Map<int, Supporter>> _supporters =
       []; // Map<PerformerIndex, Referral>
 
   // controllers, listeners and focus nodes
@@ -132,8 +132,8 @@ class _ProfileListState extends State<ProfileList> {
   }
 
   Widget _createSupporterCard(int indexSupporter) {
-    Map<int, Performer> memberMap = _supporters[indexSupporter];
-    Performer member = memberMap.values.first;
+    Map<int, Supporter> memberMap = _supporters[indexSupporter];
+    Supporter member = memberMap.values.first;
     return ListTile(
       title: Text("${member.salutation} ${member.name}"),
       subtitle: Row(

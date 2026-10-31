@@ -1,37 +1,9 @@
-class Performer {
-  String salutation;
-  String name;
-  String specialization;
-
-  Performer({
-    required this.salutation,
-    required this.name,
-    required this.specialization,
-  });
-
-  factory Performer.fromJson(Map<String, dynamic> json) {
-    return Performer(
-      salutation: json['salutation'] as String,
-      name: json['name'] as String,
-      specialization: json['specialization'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'salutation': salutation,
-      'name': name,
-      'specialization': specialization,
-    };
-  }
-}
-
 class EventRecord {
   final DateTime date;
   DateTime eventStart;
   DateTime eventEnd;
   final String eventRequesterMobile;
-  final List<Performer> performers;
+  final List<Supporter> performers;
   final int guests;
   final List<String> songs;
   String status; // Pending, Approved, Rejected
@@ -55,29 +27,26 @@ class EventRecord {
     return EventRecord(
       date: DateTime.parse(json['date'] as String),
       eventRequesterMobile: json['mainPerformer'] as String,
-
       notePerformer: json['notePerformer'] as String,
       noteTemple: json['noteTemple'] as String,
       eventStart: DateTime.parse(json['eventStart'] as String),
       eventEnd: DateTime.parse(json['eventEnd'] as String),
-      songs:
-          (json['songs'] == null || json['songs'].length == 0)
-              ? []
-              : List.generate(json['songs'].length, (index) {
-                return json['songs'][index];
-              }),
+      songs: (json['songs'] == null || json['songs'].length == 0)
+          ? []
+          : List.generate(json['songs'].length, (index) {
+              return json['songs'][index];
+            }),
       status: json['status'] as String,
       guests: json['guests'],
-      performers:
-          json['performers'] == null
-              ? []
-              : List.generate(json['performers'].length, (index) {
-                dynamic supportRaw = json['performers'][index];
-                Map<String, dynamic> supportMap = Map<String, dynamic>.from(
-                  supportRaw,
-                );
-                return Performer.fromJson(supportMap);
-              }),
+      performers: json['performers'] == null
+          ? []
+          : List.generate(json['performers'].length, (index) {
+              dynamic supportRaw = json['performers'][index];
+              Map<String, dynamic> supportMap = Map<String, dynamic>.from(
+                supportRaw,
+              );
+              return Supporter.fromJson(supportMap);
+            }),
     );
   }
 
@@ -152,7 +121,36 @@ class Slot {
   }
 }
 
+class Supporter {
+  String salutation;
+  String name;
+  String specialization;
+
+  Supporter({
+    required this.salutation,
+    required this.name,
+    required this.specialization,
+  });
+
+  factory Supporter.fromJson(Map<String, dynamic> json) {
+    return Supporter(
+      salutation: json['salutation'] as String,
+      name: json['name'] as String,
+      specialization: json['specialization'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'salutation': salutation,
+      'name': name,
+      'specialization': specialization,
+    };
+  }
+}
+
 class PerformerProfile {
+  final int id;
   final String salutation;
   final String name;
   final String mobile;
@@ -161,11 +159,12 @@ class PerformerProfile {
   final List<SangeetExp> exps;
   final List<String> youtubeUrls;
   final List<String> audioClipUrls;
-  final List<Performer> referrals;
+  final List<Supporter> referrals;
   String? friendMobile;
   String fcmToken;
 
   PerformerProfile({
+    required this.id,
     required this.salutation,
     required this.name,
     required this.mobile,
@@ -181,37 +180,32 @@ class PerformerProfile {
 
   factory PerformerProfile.fromJson(Map<String, dynamic> json) {
     return PerformerProfile(
+      id: json['id'],
       salutation: json['salutation'],
       name: json['name'],
       mobile: json['mobile'],
       profilePicUrl: json['profilePicUrl'],
       credentials: json['credentials'],
-      exps:
-          json['exps'] == null
-              ? []
-              : List<SangeetExp>.from(
-                json['exps'].map(
-                  (e) =>
-                      SangeetExp.fromJson(Map<String, dynamic>.from(e as Map)),
-                ),
+      exps: json['exps'] == null
+          ? []
+          : List<SangeetExp>.from(
+              json['exps'].map(
+                (e) => SangeetExp.fromJson(Map<String, dynamic>.from(e as Map)),
               ),
-      youtubeUrls:
-          json['youtubeUrls'] == null
-              ? []
-              : List<String>.from(json['youtubeUrls']),
-      audioClipUrls:
-          json['audioClipUrls'] == null
-              ? []
-              : List<String>.from(json['audioClipUrls']),
-      referrals:
-          json['referrals'] == null
-              ? []
-              : List<Performer>.from(
-                json['referrals'].map(
-                  (e) =>
-                      Performer.fromJson(Map<String, dynamic>.from(e as Map)),
-                ),
+            ),
+      youtubeUrls: json['youtubeUrls'] == null
+          ? []
+          : List<String>.from(json['youtubeUrls']),
+      audioClipUrls: json['audioClipUrls'] == null
+          ? []
+          : List<String>.from(json['audioClipUrls']),
+      referrals: json['referrals'] == null
+          ? []
+          : List<Supporter>.from(
+              json['referrals'].map(
+                (e) => Supporter.fromJson(Map<String, dynamic>.from(e as Map)),
               ),
+            ),
       friendMobile: json['friendMobile'],
       fcmToken: json['fcmToken'] ?? '',
     );
@@ -219,6 +213,7 @@ class PerformerProfile {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'salutation': salutation,
       'name': name,
       'mobile': mobile,

@@ -27,6 +27,18 @@ class SSUtils {
     );
   }
 
+  Future<int> getNextUserId() async {
+    List? users = await FB().getValue(
+      path: "${Const().dbrootSangeetSeva}/Users",
+    );
+
+    if (users == null) {
+      return 1;
+    } else {
+      return users.length + 1;
+    }
+  }
+
   Future<void> setUserDetails(PerformerProfile details) async {
     String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
     await FB().setJson(path: dbpath, json: details.toJson());

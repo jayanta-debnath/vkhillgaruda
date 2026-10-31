@@ -42,7 +42,7 @@ class _EventDetailsState extends State<EventDetails> {
   late DateTime _eventEnd;
 
   // lists
-  final List<Performer> _performers = [];
+  final List<Supporter> _performers = [];
   int _guests = 0;
   final List<String> _songs = [];
 
@@ -175,7 +175,7 @@ class _EventDetailsState extends State<EventDetails> {
           _noteController.text = performanceRequest.notePerformer;
         }
       }
-      Performer self = Performer(
+      Supporter self = Supporter(
         salutation: _mainPerformer!.salutation == "Others"
             ? ""
             : _mainPerformer!.salutation,
@@ -406,7 +406,7 @@ class _EventDetailsState extends State<EventDetails> {
     // update referrals
     String dbpath = "${Const().dbrootSangeetSeva}/Users/$mobile/referrals";
     List<dynamic> existingReferrals = await FB().getList(path: dbpath);
-    final List<Performer> referrals = [];
+    final List<Supporter> referrals = [];
     // Add performers to referrals, skipping the one whose name matches _mainPerformer!.name
     referrals.addAll(_performers.where((p) => p.name != _mainPerformer!.name));
     for (var referral in referrals) {
@@ -678,7 +678,7 @@ class _EventDetailsState extends State<EventDetails> {
 
   Future<void> _showAddPerformerDialog({
     required BuildContext context,
-    Performer? oldUser,
+    Supporter? oldUser,
   }) async {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -860,7 +860,7 @@ class _EventDetailsState extends State<EventDetails> {
 
             Navigator.pop(context);
 
-            Performer user = Performer(
+            Supporter user = Supporter(
               salutation: salutation,
               name: performerNameController.text,
               specialization: specialization == "Other"
