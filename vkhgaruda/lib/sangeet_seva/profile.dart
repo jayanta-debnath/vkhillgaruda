@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:fast_image_resizer/fast_image_resizer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -54,10 +53,10 @@ class ProfileState extends State<Profile> {
 
     // set admin status
     Utils().isAdmin().then(
-      (value) => setState(() {
-        _isAdmin = value;
-      }),
-    );
+          (value) => setState(() {
+            _isAdmin = value;
+          }),
+        );
 
     _salutation = SSConst().salutations[0];
     _profile = widget.oldUserDetails;
@@ -109,6 +108,11 @@ class ProfileState extends State<Profile> {
     });
   }
 
+  Future<PerformerProfile?> save() async {
+    await _save(goback: false);
+    return _profile;
+  }
+
   Future<void> _save({bool goback = true}) async {
     // validation of form
     if (!_formKey.currentState!.validate()) {
@@ -117,20 +121,19 @@ class ProfileState extends State<Profile> {
     }
 
     // no abrupt returns after this point
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     // Convert name to title case
     String name = _nameController.text;
     setState(() {
-      _nameController.text = name
-          .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
-          .join(' ');
+      _nameController.text = name.split(' ').map((word) {
+        if (word.isEmpty) return word;
+        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+      }).join(' ');
 
       _nameController.text = _nameController.text.trim();
     });
@@ -158,9 +161,11 @@ class ProfileState extends State<Profile> {
 
     Toaster().info('Profile saved');
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
 
     if (mounted && goback == true) {
       Navigator.of(context).pop();
@@ -319,9 +324,9 @@ class ProfileState extends State<Profile> {
         child: Text(
           _youtubeLinks[index],
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.blue,
-            decoration: TextDecoration.underline,
-          ),
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
         ),
       ),
       trailing: IconButton(
@@ -453,10 +458,9 @@ class ProfileState extends State<Profile> {
                       onChanged: (String value) {
                         setState(() {
                           selectedExpertiseType = value;
-                          selectedSkill =
-                              value == "Vocal"
-                                  ? SSConst().vocalSkills[0]
-                                  : SSConst().instrumentSkills[0];
+                          selectedSkill = value == "Vocal"
+                              ? SSConst().vocalSkills[0]
+                              : SSConst().instrumentSkills[0];
                         });
                       },
                     ),
@@ -471,28 +475,27 @@ class ProfileState extends State<Profile> {
                           selectedSkill = newValue!;
                         });
                       },
-                      items:
-                          selectedExpertiseType == "Vocal"
-                              ? SSConst().vocalSkills
-                                  .map<DropdownMenuItem<String>>((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  })
-                                  .toList()
-                              : SSConst().instrumentSkills
-                                  .map<DropdownMenuItem<String>>((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  })
-                                  .toList(),
+                      items: selectedExpertiseType == "Vocal"
+                          ? SSConst()
+                              .vocalSkills
+                              .map<DropdownMenuItem<String>>((
+                              String value,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList()
+                          : SSConst()
+                              .instrumentSkills
+                              .map<DropdownMenuItem<String>>((
+                              String value,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
                     ),
 
                     // hidden box for others
@@ -543,10 +546,9 @@ class ProfileState extends State<Profile> {
             // Handle the add logic here
             SangeetExp exp = SangeetExp(
               category: selectedExpertiseType,
-              subcategory:
-                  selectedSkill == "Others"
-                      ? othersController.text
-                      : selectedSkill,
+              subcategory: selectedSkill == "Others"
+                  ? othersController.text
+                  : selectedSkill,
               yrs: int.parse(yearsController.text),
             );
             setState(() {
@@ -653,29 +655,28 @@ class ProfileState extends State<Profile> {
     return _isLoading
         ? Center(child: CircularProgressIndicator())
         : Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // leave some space at top
-              SizedBox(height: 10),
+            key: _formKey,
+            child: Column(
+              children: [
+                // leave some space at top
+                SizedBox(height: 10),
 
-              // picture
-              SizedBox(height: 10),
-              Align(
-                alignment: Alignment.center,
-                child: Container(
-                  width: _imagesize,
-                  height: _imagesize,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                  ),
-                  child:
-                      _profilePicUrl.isEmpty
-                          ? TextButton(
+                // picture
+                SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: _imagesize,
+                    height: _imagesize,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: _profilePicUrl.isEmpty
+                        ? TextButton(
                             onPressed: _pickAndUploadImage,
                             child: Text("Upload"),
                           )
-                          : ClipRRect(
+                        : ClipRRect(
                             child: GestureDetector(
                               onTap: _pickAndUploadImage,
                               child: Image.network(
@@ -686,198 +687,198 @@ class ProfileState extends State<Profile> {
                               ),
                             ),
                           ),
-                ),
-              ),
-
-              // salutation
-              SizedBox(height: 10),
-              Widgets().createTopLevelCard(
-                context: context,
-                title: "Basic details",
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Salutation',
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                          ),
-                          border: OutlineInputBorder(),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _salutation,
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _salutation = newValue!;
-                              });
-                            },
-                            items:
-                                SSConst().salutations
-                                    .map<DropdownMenuItem<String>>((
-                                      String value,
-                                    ) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      );
-                                    })
-                                    .toList(),
-                          ),
-                        ),
-                      ),
-
-                      // name
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Full name',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Name cannot be empty';
-                          }
-                          if (value.length < 3) {
-                            return 'Please enter full name';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      // mobile
-                      TextFormField(
-                        controller: _mobileController,
-                        decoration: const InputDecoration(labelText: 'Mobile'),
-                        readOnly: _isAdmin ? false : true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Mobile number cannot be empty';
-                          }
-                          if (value.length != 10) {
-                            return 'Please enter 10 digit mobile number';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      // Sangeet credentials
-                      TextFormField(
-                        controller: _credController,
-                        decoration: const InputDecoration(
-                          labelText: 'Sangeet academic details',
-                          hintText: "e.g. MA in music",
-                        ),
-                        validator: (value) {
-                          // if (value == null || value.isEmpty) {
-                          //   return 'Field cannot be empty';
-                          // }
-                          return null;
-                        },
-                      ),
-                    ],
                   ),
                 ),
-              ),
 
-              // sangeet exp details
-              Widgets().createTopLevelCard(
-                context: context,
-                title: "Sangeet sadhana details",
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ...List.generate(_exp.length, (index) {
-                            return _createSangeetSadhanaTile(index);
-                          }),
-                        ],
-                      ),
-                    ),
-
-                    // button for sangeet exp
-                    SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () async {
-                        await _showDialogSangeetExp(context);
-
-                        if (widget.oldUserDetails != null) {
-                          await _save(goback: false);
-                        }
-                      },
-                      child: Text(
-                        _exp.isEmpty
-                            ? "Add sangeet sadhana details"
-                            : "Add more ...",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // youtube links
-              if (_isAdmin)
+                // salutation
+                SizedBox(height: 10),
                 Widgets().createTopLevelCard(
                   context: context,
-                  title: "Performance details",
+                  title: "Basic details",
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ...List.generate(_youtubeLinks.length, (index) {
-                                return _createYoutubeTile(index);
-                              }),
-                            ],
+                        InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Salutation',
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _salutation,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _salutation = newValue!;
+                                });
+                              },
+                              items: SSConst()
+                                  .salutations
+                                  .map<DropdownMenuItem<String>>((
+                                String value,
+                              ) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
 
-                        // button for adding youtube link
-                        SizedBox(height: 20),
-                        TextButton(
-                          onPressed: () async {
-                            await _showDialogYoutube(context);
-
-                            if (widget.oldUserDetails != null) {
-                              await _save(goback: false);
+                        // name
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Full name',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Name cannot be empty';
                             }
+                            if (value.length < 3) {
+                              return 'Please enter full name';
+                            }
+                            return null;
                           },
-                          child: Text(
-                            _youtubeLinks.isEmpty
-                                ? "Add youtube link"
-                                : "Add more youtube links",
-                          ),
                         ),
 
-                        // upload audio clip
-                        SizedBox(height: 20),
-                        Text(
-                          (_youtubeLinks.isEmpty && _audioClips.isEmpty)
-                              ? "Upload audio clip of your performance"
-                              : "Upload audio clip (optional)",
-                          style: Theme.of(context).textTheme.headlineSmall,
+                        // mobile
+                        TextFormField(
+                          controller: _mobileController,
+                          decoration:
+                              const InputDecoration(labelText: 'Mobile'),
+                          readOnly: _isAdmin ? false : true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Mobile number cannot be empty';
+                            }
+                            if (value.length != 10) {
+                              return 'Please enter 10 digit mobile number';
+                            }
+                            return null;
+                          },
                         ),
-                        SizedBox(height: 10),
-                        ...List.generate(_audioClips.length, (index) {
-                          return _createAudioClipTile(index);
-                        }),
+
+                        // Sangeet credentials
+                        TextFormField(
+                          controller: _credController,
+                          decoration: const InputDecoration(
+                            labelText: 'Sangeet academic details',
+                            hintText: "e.g. MA in music",
+                          ),
+                          validator: (value) {
+                            // if (value == null || value.isEmpty) {
+                            //   return 'Field cannot be empty';
+                            // }
+                            return null;
+                          },
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-              // leave some space at bottom
-              SizedBox(height: 100),
-            ],
-          ),
-        );
+                // sangeet exp details
+                Widgets().createTopLevelCard(
+                  context: context,
+                  title: "Sangeet sadhana details",
+                  child: Column(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...List.generate(_exp.length, (index) {
+                              return _createSangeetSadhanaTile(index);
+                            }),
+                          ],
+                        ),
+                      ),
+
+                      // button for sangeet exp
+                      SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () async {
+                          await _showDialogSangeetExp(context);
+
+                          if (widget.oldUserDetails != null) {
+                            await _save(goback: false);
+                          }
+                        },
+                        child: Text(
+                          _exp.isEmpty
+                              ? "Add sangeet sadhana details"
+                              : "Add more ...",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // youtube links
+                if (_isAdmin)
+                  Widgets().createTopLevelCard(
+                    context: context,
+                    title: "Performance details",
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ...List.generate(_youtubeLinks.length, (index) {
+                                  return _createYoutubeTile(index);
+                                }),
+                              ],
+                            ),
+                          ),
+
+                          // button for adding youtube link
+                          SizedBox(height: 20),
+                          TextButton(
+                            onPressed: () async {
+                              await _showDialogYoutube(context);
+
+                              if (widget.oldUserDetails != null) {
+                                await _save(goback: false);
+                              }
+                            },
+                            child: Text(
+                              _youtubeLinks.isEmpty
+                                  ? "Add youtube link"
+                                  : "Add more youtube links",
+                            ),
+                          ),
+
+                          // upload audio clip
+                          SizedBox(height: 20),
+                          Text(
+                            (_youtubeLinks.isEmpty && _audioClips.isEmpty)
+                                ? "Upload audio clip of your performance"
+                                : "Upload audio clip (optional)",
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          SizedBox(height: 10),
+                          ...List.generate(_audioClips.length, (index) {
+                            return _createAudioClipTile(index);
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // leave some space at bottom
+                SizedBox(height: 100),
+              ],
+            ),
+          );
   }
 }

@@ -70,11 +70,18 @@ class _RecordPageState extends State<RecordPage> {
 
     _keyTabProfile.currentState?.refresh();
     _keyTabEvents.currentState?.refresh();
+    // _keySettings.currentState?.refresh();
 
     setState(() {});
   }
 
-  Future<void> _save() async {}
+  Future<void> _save() async {
+    _profile = await _keyTabProfile.currentState?.save();
+    //  _keyTabEvents.currentState?.save();
+    //  _keyTabSettings.currentState?.save();
+
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,9 +104,11 @@ class _RecordPageState extends State<RecordPage> {
                 Tab(text: 'Settings'),
               ],
               onTap: (index) async {
-                // Save the previous tab's data before switching
+                // Save the profile tab's data before switching
                 _currentTabIndex = index;
-                await _save();
+                if (_currentTabIndex != 0) {
+                  _profile = await _keyTabProfile.currentState?.save();
+                }
                 setState(() {});
               },
             ),

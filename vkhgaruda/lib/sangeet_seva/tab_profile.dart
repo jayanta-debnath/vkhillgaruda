@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhpackages/sangeet_seva/profile.dart';
+import 'profile.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
 class TabProfile extends StatefulWidget {
@@ -43,6 +43,10 @@ class TabProfileState extends State<TabProfile> {
 
       setState(() {});
     });
+  }
+
+  Future<PerformerProfile?> save() async {
+    return await _keyProfile.currentState?.save();
   }
 
   @override
