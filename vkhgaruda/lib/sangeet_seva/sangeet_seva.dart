@@ -182,20 +182,21 @@ class _SangeetSevaState extends State<SangeetSeva> {
             title: Text(widget.title),
             actions: [
               // registered users
-              IconButton(
-                icon: Icon(Icons.group),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfileList(
-                        title: 'Performer Profiles',
-                        icon: widget.splashImage,
+              if (_isAdmin)
+                IconButton(
+                  icon: Icon(Icons.group),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileList(
+                          title: 'Performer Profiles',
+                          icon: widget.splashImage,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
             ],
           ),
           body: RefreshIndicator(
@@ -246,60 +247,61 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                   ]),
                                 ),
 
-                              // register event
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Stack(children: [
-                                  Widgets().createImageButton(
-                                      context: context,
-                                      image:
-                                          "assets/images/SangeetSeva/PendingRequests.png",
-                                      text: "View pending requests",
-                                      onPressed: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                PendingRequests(
-                                              title: "Pending requests",
+                              // Pending requests
+                              if (_isAdmin)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(children: [
+                                    Widgets().createImageButton(
+                                        context: context,
+                                        image:
+                                            "assets/images/SangeetSeva/PendingRequests.png",
+                                        text: "View pending requests",
+                                        onPressed: () {
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PendingRequests(
+                                                title: "Pending requests",
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                      fixedWidth: 250),
+                                          );
+                                        },
+                                        fixedWidth: 250),
 
-                                  // count
-                                  if (_pendingRequests > 0)
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: GestureDetector(
-                                        child: Container(
-                                          padding: EdgeInsets.only(
-                                              left: 4, right: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          constraints: BoxConstraints(
-                                            minWidth: 10,
-                                            minHeight: 10,
-                                          ),
-                                          child: Text(
-                                            '$_pendingRequests',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                    // count
+                                    if (_pendingRequests > 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: GestureDetector(
+                                          child: Container(
+                                            padding: EdgeInsets.only(
+                                                left: 4, right: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
-                                            textAlign: TextAlign.center,
+                                            constraints: BoxConstraints(
+                                              minWidth: 10,
+                                              minHeight: 10,
+                                            ),
+                                            child: Text(
+                                              '$_pendingRequests',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    )
-                                ]),
-                              ),
+                                      )
+                                  ]),
+                                ),
 
                               // view registered events
                               Padding(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
@@ -980,26 +981,34 @@ class _EventDetailsState extends State<EventDetails> {
                       Widgets().createTopLevelCard(
                         context: context,
                         title: "Event requester",
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage:
-                                _mainPerformer!.profilePicUrl!.isEmpty
-                                    ? null
-                                    : NetworkImage(
-                                        _mainPerformer!.profilePicUrl ?? "",
-                                      ),
-                          ),
-                          title: Text(
-                            "${_mainPerformer!.salutation == "Others" ? "" : _mainPerformer!.salutation} ${_mainPerformer!.name}",
-                          ),
-                          subtitle: Widgets().createResponsiveRow(context, [
-                            Icon(Icons.phone, size: 16),
-                            Text(_mainPerformer!.mobile),
-                            SizedBox(width: 4),
-                            Icon(Icons.workspace_premium, size: 16),
-                            Text(_mainPerformer!.credentials),
-                          ]),
-                        ),
+                        child: ListTileCompact(
+                            leading: CircleAvatar(
+                              backgroundImage:
+                                  _mainPerformer!.profilePicUrl!.isEmpty
+                                      ? null
+                                      : NetworkImage(
+                                          _mainPerformer!.profilePicUrl ?? "",
+                                        ),
+                            ),
+                            title: Text(
+                              "${_mainPerformer!.salutation == "Others" ? "" : _mainPerformer!.salutation} ${_mainPerformer!.name}",
+                            ),
+                            subtitle: Widgets().createResponsiveRow(context, [
+                              Icon(Icons.phone, size: 16),
+                              Text(_mainPerformer!.mobile),
+                              SizedBox(width: 4),
+                              Icon(Icons.workspace_premium, size: 16),
+                              Text(_mainPerformer!.credentials),
+                            ]),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => RecordPage(
+                                            title: "Profile",
+                                            profile: _mainPerformer,
+                                          )));
+                            }),
                       ),
 
                     // Performers
