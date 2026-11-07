@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhgaruda/sangeet_seva/request_details.dart';
 import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
@@ -25,6 +26,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
   final Lock _lock = Lock();
   bool _isLoading = true;
   DateTime _lastCallbackInvoked = DateTime.now();
+  PerformerProfile? _mainPerformer;
 
   // lists
   final List<EventRecord> _events = [];
@@ -53,14 +55,14 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             var eventRaw = await FB().getJson(path: eventPath);
             EventRecord event =
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
-            var mainPerformer =
+            PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
 
             setState(() {
               _events.add(event);
 
               if (mainPerformer != null) {
-                _mainPerformers[mainPerformer.mobile] = mainPerformer;
+                _mainPerformers[mainPerformer!.mobile] = mainPerformer;
               }
             });
           },
@@ -139,10 +141,10 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
             _events.add(event);
 
-            var mainPerformer =
+            _mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
-            if (mainPerformer != null) {
-              _mainPerformers[mainPerformer.mobile] = mainPerformer;
+            if (_mainPerformer != null) {
+              _mainPerformers[_mainPerformer!.mobile] = _mainPerformer!;
             }
           }
         }
@@ -224,13 +226,17 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                         ...List.generate(_events.length, (index) {
                           return GestureDetector(
                             onTap: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) {
-                                return RequestDetails(
-                                  title: "Request Details",
-                                  eventRecord: _events[index],
-                                );
-                              }));
+                              if (_mainPerformer != null) {
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) {
+                                  return EventDetails(
+                                    title: "Request Details",
+                                    oldEvent: _events[index],
+                                    selectedDate: _events[index].eventStart,
+                                    profile: _mainPerformer!,
+                                  );
+                                }));
+                              }
                             },
                             child: _createEventCard(index),
                           );

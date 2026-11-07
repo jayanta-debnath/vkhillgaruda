@@ -44,6 +44,7 @@ class _EventDetailsState extends State<EventDetails> {
   late DateTime _eventEnd;
   String _eventStatus = "Pending";
   String _note = "";
+  bool _isAdmin = false;
 
   // lists
   final List<Supporter> _performers = [];
@@ -109,6 +110,8 @@ class _EventDetailsState extends State<EventDetails> {
     });
 
     // perform async operations here
+
+    _isAdmin = await Utils().isAdmin();
 
     // fetch form values
     String mobile = _mainPerformer!.mobile;
@@ -247,163 +250,114 @@ class _EventDetailsState extends State<EventDetails> {
     String tala = songDetails[2];
 
     return ListTile(
-      leading: Text(
-        "${index + 1}",
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      title: Text(title),
-      subtitle: (raga.isEmpty && tala.isEmpty)
-          ? null
-          : Row(
-              children: [
-                Text("raga: $raga"),
-                SizedBox(width: 10),
-                Text("tala: $tala"),
-              ],
-            ),
-      trailing: widget.readOnly != null
-          ? null
-          : Widgets().createContextMenu(
-              items: ["Edit", "Delete"],
-              onPressed: (String action) async {
-                switch (action) {
-                  case "Edit":
-                    await _showAddSongDialog(context: context, index: index);
-                    if (widget.oldEvent != null) {
-                      _onSubmit(goback: false);
-                    }
-                    break;
-                  case "Delete":
-                    Widgets().showConfirmDialog(
-                      context,
-                      "Are you sure to delete the song?",
-                      "Delete",
-                      () async {
-                        setState(() {
-                          _songs.removeAt(index);
-                        });
-                        if (widget.oldEvent != null) {
-                          _onSubmit(goback: false);
-                        }
-                      },
-                    );
-                    break;
-                }
-              },
-            ),
-    );
+        leading: Text(
+          "${index + 1}",
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        title: Text(title),
+        subtitle: (raga.isEmpty && tala.isEmpty)
+            ? null
+            : Row(
+                children: [
+                  Text("raga: $raga"),
+                  SizedBox(width: 10),
+                  Text("tala: $tala"),
+                ],
+              ),
+        trailing: _isAdmin
+            ? Widgets().createContextMenu(
+                items: ["Edit", "Delete"],
+                onPressed: (String action) async {
+                  switch (action) {
+                    case "Edit":
+                      await _showAddSongDialog(context: context, index: index);
+                      if (widget.oldEvent != null) {
+                        _onSubmit(goback: false);
+                      }
+                      break;
+                    case "Delete":
+                      Widgets().showConfirmDialog(
+                        context,
+                        "Are you sure to delete the song?",
+                        "Delete",
+                        () async {
+                          setState(() {
+                            _songs.removeAt(index);
+                          });
+                          if (widget.oldEvent != null) {
+                            _onSubmit(goback: false);
+                          }
+                        },
+                      );
+                      break;
+                  }
+                },
+              )
+            : null);
   }
 
   Widget _createPerfomerTile(int index) {
     var member = _performers[index];
     String salutation = member.salutation == "Others" ? "" : member.salutation;
     return ListTile(
-      onTap: () {},
-      title: Text("$salutation ${member.name}"),
-      leading: Text(
-        "${index + 1}",
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      subtitle: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            Row(
-              children: [
-                Icon(
-                  member.specialization == "Vocalist"
-                      ? Icons.mic
-                      : Icons.music_note,
-                  size: 16,
-                ),
-                SizedBox(width: 5),
-                Text(member.specialization),
-              ],
-            ),
-          ],
+        onTap: () {},
+        title: Text("$salutation ${member.name}"),
+        leading: Text(
+          "${index + 1}",
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
-      ),
-      trailing: widget.readOnly != null
-          ? null
-          : Widgets().createContextMenu(
-              items: ["Edit", "Remove"],
-              onPressed: (String action) async {
-                switch (action) {
-                  case "Edit":
-                    await _showAddPerformerDialog(
-                      context: context,
-                      oldUser: member,
-                    );
-                    if (widget.oldEvent != null) {
-                      _onSubmit(goback: false);
-                    }
-                    break;
-                  case "Remove":
-                    Widgets().showConfirmDialog(
-                      context,
-                      "Are you sure to remove performer?",
-                      "Remove",
-                      () async {
-                        setState(() {
-                          _performers.removeAt(index);
-                        });
-                        if (widget.oldEvent != null) {
-                          _onSubmit(goback: false);
-                        }
-                      },
-                    );
-                    break;
-                }
-              },
-            ),
-    );
-  }
-
-  Future<void> _deleteEvent() async {
-    // validate if event is in the past
-    DateTime today = DateTime.now();
-    today = DateTime(today.year, today.month, today.day);
-    if (widget.oldEvent!.date.isBefore(today)) {
-      Toaster().error("Can't delete past event");
-      return;
-    }
-
-    // delete from events
-    String mobile = _mainPerformer!.mobile;
-    String dbpath = "";
-
-    String dbdate = DateFormat("yyyy-MM-dd").format(widget.selectedDate);
-    String slotName = DateFormat("HH_mm").format(_eventStart);
-    dbpath = "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
-    await FB().deleteValue(path: dbpath);
-
-    // delete from pending requests
-    List pendingEvents = await FB().getList(
-      path: "${Const().dbrootSangeetSeva}/PendingRequests",
-    );
-    int indexP = pendingEvents.indexWhere(
-      (element) => element['path'] == dbpath,
-    );
-    await FB().deleteFromList(
-      listpath: "${Const().dbrootSangeetSeva}/PendingRequests",
-      index: indexP,
-    );
-
-    // show success message
-    Toaster().info("Event deleted successfully");
-
-    // go to homepage
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) {
-    //       return HomePage(title: "Hare Krishna");
-    //     },
-    //   ),
-    // );
+        subtitle: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    member.specialization == "Vocalist"
+                        ? Icons.mic
+                        : Icons.music_note,
+                    size: 16,
+                  ),
+                  SizedBox(width: 5),
+                  Text(member.specialization),
+                ],
+              ),
+            ],
+          ),
+        ),
+        trailing: _isAdmin
+            ? Widgets().createContextMenu(
+                items: ["Edit", "Remove"],
+                onPressed: (String action) async {
+                  switch (action) {
+                    case "Edit":
+                      await _showAddPerformerDialog(
+                        context: context,
+                        oldUser: member,
+                      );
+                      if (widget.oldEvent != null) {
+                        _onSubmit(goback: false);
+                      }
+                      break;
+                    case "Remove":
+                      Widgets().showConfirmDialog(
+                        context,
+                        "Are you sure to remove performer?",
+                        "Remove",
+                        () async {
+                          setState(() {
+                            _performers.removeAt(index);
+                          });
+                          if (widget.oldEvent != null) {
+                            _onSubmit(goback: false);
+                          }
+                        },
+                      );
+                      break;
+                  }
+                },
+              )
+            : null);
   }
 
 // status = Approved / Rejected
@@ -661,74 +615,6 @@ class _EventDetailsState extends State<EventDetails> {
           ],
         );
       },
-    );
-  }
-
-  Future<void> _showAddGuestDialog({required BuildContext context}) async {
-    FocusNode focusNode = FocusNode();
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    int guests = _guests;
-
-    // Request focus after the dialog is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      focusNode.requestFocus();
-    });
-
-    await Widgets().showResponsiveDialog(
-      context: context,
-      title: "Number of guests",
-      child: Form(
-        key: formKey,
-        child: TextFormField(
-          focusNode: focusNode,
-          keyboardType: TextInputType.number,
-          initialValue: guests.toString(),
-          onChanged: (value) {
-            if (value.isNotEmpty) {
-              guests = int.parse(value);
-            }
-          },
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return "Please enter a valid number";
-            }
-            if (int.tryParse(value) == null) {
-              return "Please enter a valid number";
-            }
-            if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
-              return "Special characters not allowed";
-            }
-            if (int.parse(value) < 0) {
-              return "Number of guests can't be negative";
-            }
-            return null;
-          },
-        ),
-      ),
-      actions: [
-        // ok button
-        ElevatedButton(
-          onPressed: () {
-            if (!formKey.currentState!.validate()) {
-              return;
-            }
-
-            setState(() {
-              _guests = guests;
-            });
-
-            Navigator.pop(context);
-
-            if (_guests + _performers.length > 10) {
-              Widgets().showMessage(
-                context,
-                "Nominal charges for prasadam will apply for more than 10 members",
-              );
-            }
-          },
-          child: Text("OK"),
-        ),
-      ],
     );
   }
 
@@ -1100,20 +986,22 @@ class _EventDetailsState extends State<EventDetails> {
             title: Text(widget.title),
             actions: [
               // reject button
-              IconButton(
-                icon: Icon(Icons.close),
-                onPressed: () {
-                  _showActionDialog("Rejected");
-                },
-              ),
+              if (_isAdmin)
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    _showActionDialog("Rejected");
+                  },
+                ),
 
               // approve button
-              IconButton(
-                icon: Icon(Icons.check),
-                onPressed: () {
-                  _showActionDialog("Approved");
-                },
-              ),
+              if (_isAdmin)
+                IconButton(
+                  icon: Icon(Icons.check),
+                  onPressed: () {
+                    _showActionDialog("Approved");
+                  },
+                ),
             ],
           ),
           body: RefreshIndicator(
@@ -1230,19 +1118,21 @@ class _EventDetailsState extends State<EventDetails> {
                           // button - add performer team
                           if (widget.readOnly == null)
                             TextButton(
-                              onPressed: () async {
-                                await _showAddPerformerDialog(context: context);
+                                onPressed: () async {
+                                  await _showAddPerformerDialog(
+                                      context: context);
 
-                                if (widget.oldEvent != null) {
-                                  _onSubmit(goback: false);
-                                }
-                              },
-                              child: Text(
-                                _performers.isEmpty
-                                    ? "Add performer"
-                                    : "Add more performers",
-                              ),
-                            ),
+                                  if (widget.oldEvent != null) {
+                                    _onSubmit(goback: false);
+                                  }
+                                },
+                                child: _isAdmin
+                                    ? Text(
+                                        _performers.isEmpty
+                                            ? "Add performer"
+                                            : "Add more performers",
+                                      )
+                                    : Container()),
                         ],
                       ),
                     ),
@@ -1260,18 +1150,19 @@ class _EventDetailsState extends State<EventDetails> {
                           // button
                           if (_songs.length < 10 && widget.readOnly == null)
                             TextButton(
-                              onPressed: () async {
-                                await _showAddSongDialog(context: context);
-                                if (widget.oldEvent != null) {
-                                  _onSubmit(goback: false);
-                                }
-                              },
-                              child: Text(
-                                _songs.isEmpty
-                                    ? "Add song for event"
-                                    : "Add more songs",
-                              ),
-                            ),
+                                onPressed: () async {
+                                  await _showAddSongDialog(context: context);
+                                  if (widget.oldEvent != null) {
+                                    _onSubmit(goback: false);
+                                  }
+                                },
+                                child: _isAdmin
+                                    ? Text(
+                                        _songs.isEmpty
+                                            ? "Add song for event"
+                                            : "Add more songs",
+                                      )
+                                    : Container()),
                         ],
                       ),
                     ),
@@ -1294,11 +1185,13 @@ class _EventDetailsState extends State<EventDetails> {
                                 _onSubmit(goback: false);
                               }
                             },
-                            child: Text(
-                              _noteController.text.isEmpty
-                                  ? "Add some notes"
-                                  : "Edit notes",
-                            ),
+                            child: _isAdmin
+                                ? Text(
+                                    _noteController.text.isEmpty
+                                        ? "Add some notes"
+                                        : "Edit notes",
+                                  )
+                                : Container(),
                           ),
                         ],
                       ),
@@ -1306,7 +1199,10 @@ class _EventDetailsState extends State<EventDetails> {
 
                     // submit button
                     SizedBox(height: 20),
-                    if (widget.readOnly == null && widget.oldEvent == null)
+
+                    if (_isAdmin &&
+                        widget.readOnly == null &&
+                        widget.oldEvent == null)
                       ElevatedButton(
                         onPressed: _onSubmit,
                         child: Text("Submit"),
