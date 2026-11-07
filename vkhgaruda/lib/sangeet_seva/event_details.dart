@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -41,6 +42,8 @@ class _EventDetailsState extends State<EventDetails> {
   PerformerProfile? _mainPerformer;
   late DateTime _eventStart;
   late DateTime _eventEnd;
+  String _eventStatus = "Pending";
+  String _note = "";
 
   // lists
   final List<Supporter> _performers = [];
@@ -52,6 +55,7 @@ class _EventDetailsState extends State<EventDetails> {
   final TextEditingController _raagaController = TextEditingController();
   final TextEditingController _taalaController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  List<StreamSubscription<DatabaseEvent>> _listeners = [];
 
   @override
   initState() {
@@ -91,6 +95,11 @@ class _EventDetailsState extends State<EventDetails> {
     _taalaController.dispose();
     _noteController.dispose();
 
+    // listeners
+    for (var listener in _listeners) {
+      listener.cancel();
+    }
+
     super.dispose();
   }
 
@@ -123,6 +132,7 @@ class _EventDetailsState extends State<EventDetails> {
       if (widget.oldEvent != null) {
         _eventStart = widget.oldEvent!.eventStart;
         _eventEnd = widget.oldEvent!.eventEnd;
+        _eventStatus = widget.oldEvent!.status;
       }
     }
 
@@ -138,6 +148,10 @@ class _EventDetailsState extends State<EventDetails> {
         data,
         EventRecord.fromJson,
       );
+
+      _eventStatus = performanceRequest!.status;
+
+      _addListeners(dbpath);
     }
 
     // refresh all child widgets
@@ -193,6 +207,36 @@ class _EventDetailsState extends State<EventDetails> {
         _performers.add(self);
       }
     });
+  }
+
+  void _addListeners(String dbpath) {
+    for (var listener in _listeners) {
+      listener.cancel();
+    }
+    FB().listenForChange(
+      dbpath,
+      FBCallbacks(
+        // add
+        add: (data) {
+          refresh();
+        },
+
+        // edit
+        edit: () {
+          refresh();
+        },
+
+        // delete
+        delete: (data) async {
+          refresh();
+        },
+
+        // get listeners
+        getListeners: (listeners) {
+          _listeners = listeners;
+        },
+      ),
+    );
   }
 
   Widget _createSongTile(int index) {
@@ -362,6 +406,37 @@ class _EventDetailsState extends State<EventDetails> {
     // );
   }
 
+// status = Approved / Rejected
+  Future<void> _notifyUser(String status) async {
+    // prepare notification
+    String date = DateFormat("EEE, dd MM, yyyy").format(_eventStart);
+    String startTime = DateFormat("hh:mm a").format(_eventStart);
+    String endTime = DateFormat("hh:mm a").format(_eventEnd);
+    NotificationEntry notif = NotificationEntry(
+        title: status == "Approved"
+            ? "Request approved"
+            : (status == "Rejected" ? "Request rejected" : status),
+        timestamp: DateTime.now(),
+        isRead: false,
+        message: "Event: $date [$startTime - $endTime]",
+        actions: status == "Approved" ? ["advisory"] : []);
+
+    // send notification to user
+    if (_mainPerformer?.fcmToken != null &&
+        _mainPerformer!.fcmToken.isNotEmpty) {
+      Utils().sendNotification(
+          fcmToken: _mainPerformer!.fcmToken,
+          title: notif.title,
+          body: notif.message);
+    }
+
+    // store notification in database
+    String dbkey = Utils().convertTimestampToDbKey(notif.timestamp);
+    String dbpathNotif =
+        "${Const().dbrootSangeetSeva}/Notifications/Performers/${_mainPerformer!.mobile}/$dbkey";
+    await FB().setJson(path: dbpathNotif, json: notif.toJson());
+  }
+
   Future<void> _onSubmit({bool goback = true}) async {
     // validations for edit event
     if (widget.oldEvent != null) {
@@ -448,6 +523,145 @@ class _EventDetailsState extends State<EventDetails> {
         ),
       );
     }
+  }
+
+  // action = Approved or Rejected
+  Future<void> _performAction(String action) async {
+    String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
+    String slotName = DateFormat("HH_mm").format(_eventStart);
+    String bookedEventPath =
+        "${Const().dbrootSangeetSeva}/BookedEvents/$dbdate";
+    String eventPath =
+        "${Const().dbrootSangeetSeva}/Events/${_mainPerformer!.mobile}/$dbdate/$slotName";
+
+    if (_eventStatus == "Approved") {
+      // event is already booked
+
+      if (action == "Approved") {
+        Toaster().info("Event is already approved");
+        return;
+      } else {
+        // reject an approved event
+
+        _eventStatus = action;
+
+        // delete from booked events
+        if (_mainPerformer != null) {
+          List bookedEventsRaw = await FB().getList(path: bookedEventPath);
+          List bookedEventsOutput = [];
+          for (var bookedEventRaw in bookedEventsRaw) {
+            Map<String, dynamic> bookedEvent =
+                Map<String, dynamic>.from(bookedEventRaw);
+            if (bookedEvent['path'] != eventPath) {
+              bookedEventsOutput.add({"path": bookedEvent['path']});
+            }
+          }
+          await FB().setValue(path: bookedEventPath, value: bookedEventsOutput);
+        }
+
+        if (await FB().pathExists(eventPath)) {
+          // change status of event
+          _eventStatus = "Rejected";
+          _note = _noteController.text;
+          await FB().setValue(path: "$eventPath/status", value: _eventStatus);
+          await FB().setValue(path: "$eventPath/noteTemple", value: _note);
+
+          // mark the availability of the slot
+          // String slotPath =
+          //     "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotName";
+          // await FB()
+          //     .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
+
+          _notifyUser(_eventStatus);
+        }
+      }
+    } else {
+      // event is pending approval
+
+      _eventStatus = action;
+
+      // set the availability flag in Event
+      var eventRaw = await FB().getValue(path: eventPath);
+      EventRecord event =
+          Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
+      event.status = action;
+      event.noteTemple = _noteController.text;
+      eventRaw = event.toJson();
+      await FB().setValue(path: eventPath, value: eventRaw);
+
+      // Toaster().info("Request processed");
+
+      // append to booked events
+      String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
+      String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents/$dbdate";
+      await FB().addToList(listpath: dbpath, data: {"path": eventPath});
+
+      // loop through all pending requests, remove the matching one
+      List pendingRequestsRaw = await FB()
+          .getList(path: "${Const().dbrootSangeetSeva}/PendingRequests");
+      for (var pendingRequestRaw in pendingRequestsRaw) {
+        Map<String, dynamic> pendingRequest =
+            Map<String, dynamic>.from(pendingRequestRaw);
+        if (pendingRequest['path'] == eventPath) {
+          pendingRequestsRaw.remove(pendingRequestRaw);
+          break;
+        }
+      }
+      await FB().setValue(
+          path: "${Const().dbrootSangeetSeva}/PendingRequests",
+          value: pendingRequestsRaw);
+
+      _notifyUser(action);
+    }
+  }
+
+  void _showActionDialog(String action) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Change request to $action"),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Are you sure?"),
+                SizedBox(height: 10),
+                Text("Note from temple:",
+                    style: themeGaruda.textTheme.headlineSmall),
+                TextField(
+                  maxLines: 2,
+                  controller: _noteController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Mark $action"),
+              onPressed: () async {
+                Navigator.pop(context);
+
+                if (action == "Approved") {
+                  await _performAction("Approved");
+                } else {
+                  await _performAction("Rejected");
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showAddGuestDialog({required BuildContext context}) async {
@@ -885,21 +1099,21 @@ class _EventDetailsState extends State<EventDetails> {
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
-              // delete button
-              if (widget.oldEvent != null && widget.readOnly == null)
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    Widgets().showConfirmDialog(
-                      context,
-                      "Are you sure you want to delete this event?",
-                      "Delete",
-                      () async {
-                        await _deleteEvent();
-                      },
-                    );
-                  },
-                ),
+              // reject button
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  _showActionDialog("Rejected");
+                },
+              ),
+
+              // approve button
+              IconButton(
+                icon: Icon(Icons.check),
+                onPressed: () {
+                  _showActionDialog("Approved");
+                },
+              ),
             ],
           ),
           body: RefreshIndicator(
@@ -911,31 +1125,6 @@ class _EventDetailsState extends State<EventDetails> {
                   children: [
                     // leave some space at top
                     SizedBox(height: 10),
-
-                    // approval status
-                    if (widget.oldEvent != null &&
-                        widget.oldEvent!.status == "Approved")
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 1,
-                          horizontal: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.green.shade700,
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          "Approved",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
 
                     // date
                     Text(
@@ -949,6 +1138,28 @@ class _EventDetailsState extends State<EventDetails> {
                     Text(
                       "${Time().convertDateTimeTo12hrFormat(_eventStart)} - ${Time().convertDateTimeTo12hrFormat(_eventEnd)}",
                       style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+
+                    // approval status
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 1,
+                        horizontal: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _eventStatus == "Approved"
+                            ? Colors.green
+                            : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(width: 1, color: Colors.grey),
+                      ),
+                      child: Text(
+                        "Status: $_eventStatus",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
 
                     // temple notes

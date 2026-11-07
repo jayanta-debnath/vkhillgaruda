@@ -40,7 +40,9 @@ class SSUtils {
   }
 
   Future<void> setUserDetails(PerformerProfile details) async {
-    String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
-    await FB().setJson(path: dbpath, json: details.toJson());
+    if (details.mobile.isNotEmpty) {
+      String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
+      await FB().setJson(path: dbpath, json: details.toJson());
+    }
   }
 }

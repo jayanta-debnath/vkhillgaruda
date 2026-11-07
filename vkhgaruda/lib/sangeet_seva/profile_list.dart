@@ -159,6 +159,21 @@ class _ProfileListState extends State<ProfileList> {
           Scaffold(
             appBar: AppBar(
               title: Text(widget.title),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecordPage(
+                          title: "Add new profile",
+                        ),
+                      ),
+                    );
+                  },
+                )
+              ],
             ),
             body: RefreshIndicator(
                 onRefresh: refresh,
@@ -182,39 +197,16 @@ class _ProfileListState extends State<ProfileList> {
 
                           // performers list
                           if (_tab == "Performers")
-                            // new profile
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Stack(children: [
-                                Widgets().createImageButton(
-                                    context: context,
-                                    image:
-                                        "assets/images/SangeetSeva/AddRequest.png",
-                                    imageOnRight: true,
-                                    text: "Add new profile",
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => RecordPage(
-                                            title: "Add new profile",
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    fixedWidth: 250),
-                              ]),
-                            ),
 
-                          // existing profiles
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: _performers.length,
-                            itemBuilder: (context, index) {
-                              return Card(child: _createPerformerCard(index));
-                            },
-                          ),
+                            // existing profiles
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: _performers.length,
+                              itemBuilder: (context, index) {
+                                return Card(child: _createPerformerCard(index));
+                              },
+                            ),
 
                           // supporters list
                           if (_tab == "Supporters")

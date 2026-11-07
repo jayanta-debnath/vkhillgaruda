@@ -82,9 +82,11 @@ class ProfileState extends State<Profile> {
   }
 
   Future<void> refresh() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     await _lock.synchronized(() async {
       // perform your work here
@@ -114,9 +116,11 @@ class ProfileState extends State<Profile> {
       }
     });
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<PerformerProfile?> save() async {
