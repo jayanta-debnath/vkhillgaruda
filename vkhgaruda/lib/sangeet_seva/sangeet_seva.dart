@@ -222,7 +222,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                             context: context,
                             child: Center(
                                 child: Column(children: [
-                              // new request
+                              // new profile
                               if (_isAdmin)
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -232,13 +232,13 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                         image:
                                             "assets/images/SangeetSeva/AddRequest.png",
                                         imageOnRight: true,
-                                        text: "Add new request",
+                                        text: "Add new profile",
                                         onPressed: () {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => RecordPage(
-                                                title: "Add new request",
+                                                title: "Add new profile",
                                               ),
                                             ),
                                           );

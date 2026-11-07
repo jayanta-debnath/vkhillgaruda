@@ -2,7 +2,10 @@
 - signup
 
 # Sangeet Seva
-- create event slot
+- add/edit profile
+- add/edit event
+- change settings:
+  - rate performer
 - approve/reject request
 - view registered events
 - browse as non-admin

@@ -152,15 +152,21 @@ class _EventDetailsState extends State<EventDetails> {
       }
 
       // write fcm token if not set
-      FirebaseMessaging.instance.getToken().then((fcmToken) {
+      FirebaseMessaging.instance.getToken().then((fcmToken) async {
         if (_mainPerformer != null &&
             (_mainPerformer!.fcmToken.isEmpty ||
                 _mainPerformer!.fcmToken != (fcmToken ?? ""))) {
-          String dbpath = "${Const().dbrootSangeetSeva}/Users/$mobile/fcmToken";
-          FB().setValue(
-            path: dbpath,
-            value: fcmToken ?? "",
-          ); // no need to await
+          bool userExists = await FB().pathExists(
+            "${Const().dbrootSangeetSeva}/Users/$mobile",
+          );
+          if (userExists) {
+            String dbpath =
+                "${Const().dbrootSangeetSeva}/Users/$mobile/fcmToken";
+            FB().setValue(
+              path: dbpath,
+              value: fcmToken ?? "",
+            ); // no need to await
+          }
         }
       });
 
@@ -404,23 +410,6 @@ class _EventDetailsState extends State<EventDetails> {
       json: performanceRequest.toJson(),
     );
 
-    // update referrals
-    String dbpath = "${Const().dbrootSangeetSeva}/Users/$mobile/referrals";
-    List<dynamic> existingReferrals = await FB().getList(path: dbpath);
-    final List<Supporter> referrals = [];
-    // Add performers to referrals, skipping the one whose name matches _mainPerformer!.name
-    referrals.addAll(_performers.where((p) => p.name != _mainPerformer!.name));
-    for (var referral in referrals) {
-      if (!existingReferrals.contains(referral)) {
-        existingReferrals.add(referral);
-      }
-    }
-    await FB().setList(
-      path: dbpath,
-      list: referrals,
-      toJson: (p) => p.toJson(),
-    );
-
     // add to pending requests
     if (widget.oldEvent == null || widget.oldEvent!.status != "Pending") {
       FB().addToList(
@@ -481,7 +470,9 @@ class _EventDetailsState extends State<EventDetails> {
           keyboardType: TextInputType.number,
           initialValue: guests.toString(),
           onChanged: (value) {
-            guests = int.parse(value);
+            if (value.isNotEmpty) {
+              guests = int.parse(value);
+            }
           },
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -1040,18 +1031,6 @@ class _EventDetailsState extends State<EventDetails> {
                                     ? "Add performer"
                                     : "Add more performers",
                               ),
-                            ),
-
-                          // button - add guest team
-                          if (widget.readOnly == null && _guests == 0)
-                            TextButton(
-                              onPressed: () async {
-                                await _showAddGuestDialog(context: context);
-                                if (widget.oldEvent != null) {
-                                  _onSubmit(goback: false);
-                                }
-                              },
-                              child: Text("Add guests"),
                             ),
                         ],
                       ),

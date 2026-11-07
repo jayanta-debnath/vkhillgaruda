@@ -225,6 +225,9 @@ class _SlotSelectionState extends State<SlotSelection> {
                                                     initialTime: _timeStart,
                                                   ) ??
                                                   _timeStart;
+                                              _timeEnd = Utils()
+                                                  .addMinutesToTimeOfDay(
+                                                      _timeStart, 60);
 
                                               setState(() {});
                                             },

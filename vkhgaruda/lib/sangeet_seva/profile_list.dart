@@ -93,11 +93,14 @@ class _ProfileListState extends State<ProfileList> {
                       profile: _performers[index],
                     )));
       },
-      leading: CircleAvatar(
-        backgroundImage:
-            (member.profilePicUrl == null || member.profilePicUrl!.isEmpty
-                ? null
-                : NetworkImage(member.profilePicUrl!)),
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: CircleAvatar(
+          backgroundImage:
+              (member.profilePicUrl == null || member.profilePicUrl!.isEmpty
+                  ? null
+                  : NetworkImage(member.profilePicUrl!)),
+        ),
       ),
       title: Text("${member.salutation} ${member.name}"),
       subtitle: SingleChildScrollView(
@@ -179,14 +182,39 @@ class _ProfileListState extends State<ProfileList> {
 
                           // performers list
                           if (_tab == "Performers")
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: _performers.length,
-                              itemBuilder: (context, index) {
-                                return Card(child: _createPerformerCard(index));
-                              },
+                            // new profile
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Stack(children: [
+                                Widgets().createImageButton(
+                                    context: context,
+                                    image:
+                                        "assets/images/SangeetSeva/AddRequest.png",
+                                    imageOnRight: true,
+                                    text: "Add new profile",
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => RecordPage(
+                                            title: "Add new profile",
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    fixedWidth: 250),
+                              ]),
                             ),
+
+                          // existing profiles
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _performers.length,
+                            itemBuilder: (context, index) {
+                              return Card(child: _createPerformerCard(index));
+                            },
+                          ),
 
                           // supporters list
                           if (_tab == "Supporters")

@@ -37,7 +37,7 @@ class EventRecord {
               return json['songs'][index];
             }),
       status: json['status'] as String,
-      guests: json['guests'],
+      guests: json['guests'] ?? 0,
       performers: json['performers'] == null
           ? []
           : List.generate(json['performers'].length, (index) {

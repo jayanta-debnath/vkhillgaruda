@@ -28,7 +28,7 @@ class SSUtils {
   }
 
   Future<int> getNextUserId() async {
-    List? users = await FB().getValue(
+    Map? users = await FB().getValue(
       path: "${Const().dbrootSangeetSeva}/Users",
     );
 

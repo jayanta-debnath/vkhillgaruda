@@ -126,7 +126,7 @@ class ProfileState extends State<Profile> {
 
   Future<void> _save({bool goback = true}) async {
     // validation of form
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       Toaster().error('There are errors in the form');
       return;
     }
@@ -184,6 +184,8 @@ class ProfileState extends State<Profile> {
       setState(() {
         _isLoading = false;
       });
+
+      Toaster().info("Profile saved");
     }
 
     if (mounted && goback == true) {
@@ -230,23 +232,28 @@ class ProfileState extends State<Profile> {
                       return;
                     }
                     String ext = file.name.split('.').last;
-                    String dstPath =
-                        "${Const().dbrootSangeetSeva}/Users/${basics.mobile}/audio$index.$ext";
-                    String url = await FS().uploadBytes(
-                      dstPath: dstPath,
-                      bytes: file.bytes!,
+                    bool userExists = await FB().pathExists(
+                      "${Const().dbrootSangeetSeva}/Users/$basics.mobile",
                     );
+                    if (userExists) {
+                      String dstPath =
+                          "${Const().dbrootSangeetSeva}/Users/${basics.mobile}/audio$index.$ext";
+                      String url = await FS().uploadBytes(
+                        dstPath: dstPath,
+                        bytes: file.bytes!,
+                      );
 
-                    setState(() {
-                      _audioClips[index] = url;
+                      setState(() {
+                        _audioClips[index] = url;
 
-                      // hack for the browse button not to disappear
-                      if (_audioClips.last.isNotEmpty) {
-                        _audioClips.add("");
-                      }
+                        // hack for the browse button not to disappear
+                        if (_audioClips.last.isNotEmpty) {
+                          _audioClips.add("");
+                        }
 
-                      _isLoading = false;
-                    });
+                        _isLoading = false;
+                      });
+                    }
 
                     if (widget.oldUserDetails != null) {
                       await _save(goback: false);
@@ -770,7 +777,8 @@ class ProfileState extends State<Profile> {
                           controller: _mobileController,
                           decoration:
                               const InputDecoration(labelText: 'Mobile'),
-                          readOnly: _isAdmin ? false : true,
+                          readOnly:
+                              _mobileController.text.isEmpty ? false : true,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Mobile number cannot be empty';
