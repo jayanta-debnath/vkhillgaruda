@@ -25,7 +25,7 @@ class EventRecord {
 
   factory EventRecord.fromJson(Map<String, dynamic> json) {
     return EventRecord(
-      date: DateTime.parse(json['date'] as String),
+      date: DateTime.parse((json['date'] ?? json['eventStart']) as String),
       eventRequesterMobile: json['mainPerformer'] as String,
       notePerformer:
           json['notePerformer'] == null ? "" : json['notePerformer'] as String,

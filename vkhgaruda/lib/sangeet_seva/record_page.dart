@@ -58,7 +58,7 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   Future<void> refresh() async {
-    setState(() {});
+    if (mounted) setState(() {});
 
     // access control
     _isAdmin = await Utils().isAdmin();
@@ -79,7 +79,7 @@ class _RecordPageState extends State<RecordPage> {
     await _keyTabEvents.currentState?.refresh();
     await _keyTabSettings.currentState?.refresh();
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void _onProfileUpdateFromBelow(PerformerProfile? profile) {

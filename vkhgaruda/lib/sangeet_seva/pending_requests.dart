@@ -235,17 +235,22 @@ class _PendingRequestsState extends State<PendingRequests> {
 
                         // create the card
                         return GestureDetector(
-                          onTap: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return EventDetails(
-                                title: "Pending request",
-                                selectedDate: event.eventStart,
-                                profile: _mainPerformers.values.first,
-                                oldEvent: event,
-                                readOnly: false,
-                              );
-                            }));
+                          onTap: () async {
+                            PerformerProfile? profile = await SSUtils()
+                                .getPerformerProfile(
+                                    event.eventRequesterMobile);
+                            if (profile != null) {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return EventDetails(
+                                  title: "Pending request",
+                                  selectedDate: event.eventStart,
+                                  profile: profile,
+                                  oldEvent: event,
+                                  readOnly: false,
+                                );
+                              }));
+                            }
                           },
                           child: _createPendingRequestCard(index),
                         );
