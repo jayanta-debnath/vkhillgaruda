@@ -160,7 +160,6 @@ class PerformerProfile {
   final List<String> youtubeUrls;
   final List<String> audioClipUrls;
   final List<Supporter> referrals;
-  String? friendMobile;
   String fcmToken;
   int? rating;
 
@@ -175,7 +174,6 @@ class PerformerProfile {
       required this.youtubeUrls,
       required this.audioClipUrls,
       required this.referrals,
-      this.friendMobile,
       this.fcmToken = '',
       this.rating});
 
@@ -207,7 +205,6 @@ class PerformerProfile {
                 (e) => Supporter.fromJson(Map<String, dynamic>.from(e as Map)),
               ),
             ),
-      friendMobile: json['friendMobile'],
       fcmToken: json['fcmToken'] ?? '',
       rating: json['rating'] ?? 0,
     );
@@ -225,7 +222,6 @@ class PerformerProfile {
       'youtubeUrls': youtubeUrls,
       'audioClipUrls': audioClipUrls,
       'referrals': referrals.map((e) => e.toJson()).toList(),
-      'friendMobile': friendMobile,
       'fcmToken': fcmToken,
       'rating': rating
     };
@@ -245,7 +241,6 @@ class PerformerProfile {
             _sameList(exps, other.exps) &&
             _sameList(youtubeUrls, other.youtubeUrls) &&
             _sameList(audioClipUrls, other.audioClipUrls) &&
-            friendMobile == other.friendMobile &&
             fcmToken == other.fcmToken &&
             rating == other.rating;
   }
@@ -262,7 +257,6 @@ class PerformerProfile {
         Object.hashAll(exps),
         Object.hashAll(youtubeUrls),
         Object.hashAll(audioClipUrls),
-        friendMobile,
         fcmToken,
         rating,
       );

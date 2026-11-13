@@ -235,28 +235,32 @@ class ProfileState extends State<Profile> {
                       Toaster().error('User not found');
                       return;
                     }
-                    String ext = file.name.split('.').last;
-                    bool userExists = await FB().pathExists(
-                      "${Const().dbrootSangeetSeva}/Users/$basics.mobile",
-                    );
-                    if (userExists) {
-                      String dstPath =
-                          "${Const().dbrootSangeetSeva}/Users/${basics.mobile}/audio$index.$ext";
-                      String url = await FS().uploadBytes(
-                        dstPath: dstPath,
-                        bytes: file.bytes!,
+                    if (_profile != null && _isValidAudioFile(file.name)) {
+                      String ext = file.name.split('.').last;
+                      bool userExists = await FB().pathExists(
+                        "${Const().dbrootSangeetSeva}/Users/${_profile!.mobile}",
                       );
+                      if (userExists) {
+                        String dstPath =
+                            "${Const().dbrootSangeetSeva}/Users/${basics.mobile}/audio$index.$ext";
+                        String url = await FS().uploadBytes(
+                          dstPath: dstPath,
+                          bytes: file.bytes!,
+                        );
 
-                      setState(() {
-                        _audioClips[index] = url;
+                        setState(() {
+                          _audioClips[index] = url;
 
-                        // hack for the browse button not to disappear
-                        if (_audioClips.last.isNotEmpty) {
-                          _audioClips.add("");
-                        }
+                          // hack for the browse button not to disappear
+                          if (_audioClips.last.isNotEmpty) {
+                            _audioClips.add("");
+                          }
 
-                        _isLoading = false;
-                      });
+                          _isLoading = false;
+                        });
+                      }
+                    } else {
+                      return;
                     }
 
                     if (widget.oldUserDetails != null) {
@@ -379,6 +383,28 @@ class ProfileState extends State<Profile> {
         },
       ),
     );
+  }
+
+  bool _isValidAudioFile(String fileName) {
+    final Set<String> audioExtensions = {
+      'mp3',
+      'wav',
+      'ogg',
+      'flac',
+      'm4a',
+      'aac',
+      'wma',
+      'webm'
+    };
+
+    String ext = fileName.split('.').last.toLowerCase();
+    bool ret = audioExtensions.contains(ext);
+
+    if (!ret) {
+      Toaster().error("Not an audio file");
+    }
+
+    return ret;
   }
 
   Future<void> _pickAndUploadImage() async {
