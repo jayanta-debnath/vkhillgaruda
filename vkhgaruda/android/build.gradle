@@ -7,6 +7,9 @@ allprojects {
         google()
         mavenCentral()
     }
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << "-Xlint:-options" << "-Xlint:-deprecation"
+    }
 }
 
 rootProject.buildDir = "../build"
