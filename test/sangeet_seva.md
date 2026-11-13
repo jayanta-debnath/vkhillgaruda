@@ -11,6 +11,5 @@
   -[x] rate performer
 -[x] approve/reject request
   -[x] event should appear in registered events
--[ ] view registered events
--[ ] browse as non-admin
-  -[ ] no modification should be allowed
+-[x] view registered events
+-[x] no modification should be allowed in non-admin mode
