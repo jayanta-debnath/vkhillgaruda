@@ -25,7 +25,6 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
   final Lock _lock = Lock();
   bool _isLoading = true;
   DateTime _lastCallbackInvoked = DateTime.now();
-  PerformerProfile? _mainPerformer;
 
   // lists
   final List<EventRecord> _events = [];
@@ -150,10 +149,10 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
               _events.add(event);
             }
 
-            _mainPerformer =
+            PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
-            if (_mainPerformer != null) {
-              _mainPerformers[_mainPerformer!.mobile] = _mainPerformer!;
+            if (mainPerformer != null) {
+              _mainPerformers[mainPerformer!.mobile] = mainPerformer!;
             }
           }
         }
@@ -234,15 +233,19 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                         // your widgets here
                         ...List.generate(_events.length, (index) {
                           return GestureDetector(
-                            onTap: () {
-                              if (_mainPerformer != null) {
+                            onTap: () async {
+                              PerformerProfile? profile = await SSUtils()
+                                  .getPerformerProfile(
+                                      _events[index].eventRequesterMobile);
+
+                              if (profile != null) {
                                 Navigator.push(context,
                                     MaterialPageRoute(builder: (context) {
                                   return EventDetails(
                                     title: "Request Details",
                                     oldEvent: _events[index],
                                     selectedDate: _events[index].eventStart,
-                                    profile: _mainPerformer!,
+                                    profile: profile,
                                   );
                                 }));
                               }

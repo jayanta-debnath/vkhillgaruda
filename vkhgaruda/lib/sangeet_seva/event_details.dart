@@ -530,7 +530,7 @@ class _EventDetailsState extends State<EventDetails> {
         }
       }
     } else {
-      // event is pending approval
+      // event is pending approval or rejected
 
       _eventStatus = action;
 
