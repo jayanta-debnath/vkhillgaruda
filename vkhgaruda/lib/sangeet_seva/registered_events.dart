@@ -138,7 +138,17 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             var eventRaw = await FB().getValue(path: eventLinkRaw['path']);
             EventRecord event =
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
-            _events.add(event);
+
+            // Add validation to check if eventStart is not in the past (only checking date)
+            DateTime today = DateTime.now();
+            DateTime startOfDay = DateTime(today.year, today.month, today.day);
+            DateTime eventStartOfDay = DateTime(event.eventStart.year,
+                event.eventStart.month, event.eventStart.day);
+
+            if (!eventStartOfDay.isBefore(startOfDay) &&
+                event.status == "Approved") {
+              _events.add(event);
+            }
 
             _mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);

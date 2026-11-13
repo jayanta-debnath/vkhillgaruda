@@ -9,8 +9,8 @@
   -[ ] event should appear in pending requests page
 -[x] change settings:
   -[x] rate performer
--[ ] approve/reject request
-  -[ ] event should appear in registered events
+-[x] approve/reject request
+  -[x] event should appear in registered events
 -[ ] view registered events
 -[ ] browse as non-admin
   -[ ] no modification should be allowed
