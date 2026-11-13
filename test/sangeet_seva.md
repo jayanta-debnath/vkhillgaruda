@@ -4,7 +4,7 @@
 # Sangeet Seva
 -[x] add/edit profile
 -[ ] add/edit event
-  -[ ] add/edit event for existing user
+  -[x] add/edit event for existing user
   -[ ] add/edit event while creating a new user
 -[ ] change settings:
   -[ ] rate performer

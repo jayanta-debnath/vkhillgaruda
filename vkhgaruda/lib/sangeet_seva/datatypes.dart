@@ -27,7 +27,8 @@ class EventRecord {
     return EventRecord(
       date: DateTime.parse(json['date'] as String),
       eventRequesterMobile: json['mainPerformer'] as String,
-      notePerformer: json['notePerformer'] as String,
+      notePerformer:
+          json['notePerformer'] == null ? "" : json['notePerformer'] as String,
       noteTemple: json['noteTemple'] as String,
       eventStart: DateTime.parse(json['eventStart'] as String),
       eventEnd: DateTime.parse(json['eventEnd'] as String),
