@@ -1116,7 +1116,8 @@ class _EventDetailsState extends State<EventDetails> {
                           ),
 
                           // button - add performer team
-                          if (widget.readOnly == null)
+                          if (widget.readOnly == null ||
+                              widget.readOnly == false)
                             TextButton(
                                 onPressed: () async {
                                   await _showAddPerformerDialog(
@@ -1148,7 +1149,9 @@ class _EventDetailsState extends State<EventDetails> {
                           }),
 
                           // button
-                          if (_songs.length < 10 && widget.readOnly == null)
+                          if (_songs.length < 10 &&
+                              (widget.readOnly == null ||
+                                  widget.readOnly == false))
                             TextButton(
                                 onPressed: () async {
                                   await _showAddSongDialog(context: context);

@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/request_details.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
 import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
@@ -29,7 +29,7 @@ class _PendingRequestsState extends State<PendingRequests> {
 
   // lists
   final List<EventRecord> _linkedEventRecords = [];
-  final Map<String, PerformerProfile> _mainPerformers = {};
+  final Map<String, PerformerProfile> _mainPerformers = {}; // {mobile, profile}
 
   // controllers, listeners and focus nodes
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
@@ -232,27 +232,18 @@ class _PendingRequestsState extends State<PendingRequests> {
                       ...List.generate(_linkedEventRecords.length, (index) {
                         // get the path of the pending request
                         EventRecord event = _linkedEventRecords[index];
-                        String mobile = event.eventRequesterMobile;
-                        String date =
-                            DateFormat("yyyy-MM-dd").format(event.date);
-                        String slot =
-                            DateFormat("HH_mm").format(event.eventStart);
-                        String path =
-                            "${Const().dbrootSangeetSeva}/Events/$mobile/$date/$slot";
-                        Map<String, dynamic> pendingRequest = {
-                          'path': path,
-                        };
 
                         // create the card
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(context,
                                 MaterialPageRoute(builder: (context) {
-                              return RequestDetails(
-                                title: "Request Details",
-                                pendingRequest: pendingRequest,
-                                eventRecord: _linkedEventRecords[index],
-                                callbackDelete: (String action) {},
+                              return EventDetails(
+                                title: "Pending request",
+                                selectedDate: event.eventStart,
+                                profile: _mainPerformers.values.first,
+                                oldEvent: event,
+                                readOnly: false,
                               );
                             }));
                           },
