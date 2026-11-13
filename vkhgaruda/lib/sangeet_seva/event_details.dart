@@ -986,7 +986,7 @@ class _EventDetailsState extends State<EventDetails> {
             title: Text(widget.title),
             actions: [
               // reject button
-              if (_isAdmin)
+              if (_isAdmin && (_eventStatus != "Rejected"))
                 IconButton(
                   icon: Icon(Icons.close),
                   onPressed: () {
@@ -995,7 +995,7 @@ class _EventDetailsState extends State<EventDetails> {
                 ),
 
               // approve button
-              if (_isAdmin)
+              if (_isAdmin && (_eventStatus != "Approved"))
                 IconButton(
                   icon: Icon(Icons.check),
                   onPressed: () {
@@ -1037,7 +1037,9 @@ class _EventDetailsState extends State<EventDetails> {
                       decoration: BoxDecoration(
                         color: _eventStatus == "Approved"
                             ? Colors.green
-                            : Colors.orange,
+                            : (_eventStatus == "Rejected"
+                                ? Colors.red
+                                : Colors.orange),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(width: 1, color: Colors.grey),
                       ),
