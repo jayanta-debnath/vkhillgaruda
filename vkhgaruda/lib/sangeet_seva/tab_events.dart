@@ -129,6 +129,7 @@ class TabEventsState extends State<TabEvents> {
                     title: "Event Details",
                     selectedDate: _events[index].date,
                     oldEvent: _events[index],
+                    doubleBack: false,
                     profile: widget.profile!))),
       ),
     );

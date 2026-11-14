@@ -112,6 +112,7 @@ class _SlotSelectionState extends State<SlotSelection> {
             eventStart: _toDateTime(_timeStart),
             eventEnd: _toDateTime(_timeEnd),
             profile: widget.profile,
+            doubleBack: true,
           ),
         ),
       );

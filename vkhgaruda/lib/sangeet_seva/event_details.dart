@@ -18,18 +18,19 @@ class EventDetails extends StatefulWidget {
   final DateTime? eventStart;
   final DateTime? eventEnd;
   final PerformerProfile profile;
+  final bool doubleBack;
 
-  const EventDetails({
-    super.key,
-    required this.title,
-    this.icon,
-    required this.selectedDate,
-    this.oldEvent,
-    this.readOnly,
-    this.eventStart,
-    this.eventEnd,
-    required this.profile,
-  });
+  const EventDetails(
+      {super.key,
+      required this.title,
+      this.icon,
+      required this.selectedDate,
+      this.oldEvent,
+      this.readOnly,
+      this.eventStart,
+      this.eventEnd,
+      required this.profile,
+      required this.doubleBack});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -468,14 +469,10 @@ class _EventDetailsState extends State<EventDetails> {
 
     // go to homepage
     if (goback && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return SangeetSeva(title: "Hare Krishna");
-          },
-        ),
-      );
+      Navigator.pop(context);
+      if (widget.doubleBack) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -569,6 +566,7 @@ class _EventDetailsState extends State<EventDetails> {
     }
   }
 
+  // action = Pending, Approved, Rejected
   void _showActionDialog(String action) {
     showDialog(
       context: context,

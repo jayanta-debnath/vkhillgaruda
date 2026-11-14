@@ -246,6 +246,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                                     oldEvent: _events[index],
                                     selectedDate: _events[index].eventStart,
                                     profile: profile,
+                                    doubleBack: false,
                                   );
                                 }));
                               }

@@ -248,6 +248,7 @@ class _PendingRequestsState extends State<PendingRequests> {
                                   profile: profile,
                                   oldEvent: event,
                                   readOnly: false,
+                                  doubleBack: false,
                                 );
                               }));
                             }
