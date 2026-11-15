@@ -106,10 +106,14 @@ class _RecordPageState extends State<RecordPage> {
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
+              // refresh button
               IconButton(
                 icon: Icon(Icons.refresh),
                 onPressed: refresh,
               ),
+
+              // save button
+              if (_currentTabIndex == 0)
               IconButton(
                   icon: Icon(Icons.save),
                   onPressed: () async {
