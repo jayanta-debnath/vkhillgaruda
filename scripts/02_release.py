@@ -17,331 +17,14 @@ verbose = False  # Default: detailed logging disabled
 warnings = []  # Collect warnings to display at the end
 
 
-def is_temple_service_time(now=None):
-    if now is None:
-        now = datetime.now()
-
-    # Saturday=5, Sunday=6
-    if now.weekday() not in (5, 6):
-        return False
-
-    current_time = now.time()
-    windows = [
-        (time(9, 30), time(13, 45)),
-        (time(15, 45), time(20, 45)),
-    ]
-
-    return any(start <= current_time <= end for start, end in windows)
-
-
-def update_remote_config(
-    param_key,
-    param_value,
-    cred_file="../garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json",
-):
-    """Update a Firebase Remote Config parameter.
-
-    Args:
-        param_key: The parameter key to update
-        param_value: The value to set
-        cred_file: Path to the Firebase credentials JSON file
-
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    try:
-        # Initialize Firebase app if not already initialized
-        try:
-            app = firebase_admin.get_app()
-        except ValueError:
-            cred = credentials.Certificate(cred_file)
-            app = firebase_admin.initialize_app(cred)
-            cred = credentials.Certificate(cred_file)
-        else:
-            # Get credentials from existing app
-            cred = credentials.Certificate(cred_file)
-
-        # Get access token
-        access_token = cred.get_access_token().access_token
-        project_id = app.project_id
-
-        # Remote Config REST API endpoint
-        base_url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{project_id}/remoteConfig"
-
-        # Get current template
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-        }
-        response = requests.get(base_url, headers=headers)
-        template = response.json()
-
-        # Update or add the parameter
-        if "parameters" not in template:
-            template["parameters"] = {}
-
-        template["parameters"][param_key] = {"defaultValue": {"value": param_value}}
-
-        # Update the template
-        headers["Content-Type"] = "application/json; UTF-8"
-        etag = response.headers.get("ETag")
-        if etag:
-            headers["If-Match"] = etag
-
-        response = requests.put(base_url, headers=headers, json=template)
-        if response.status_code == 200:
-            print("Remote Config updated successfully!")
-            print(f"{param_key} set to: {param_value}")
-            return True
-        else:
-            print(f"Error updating Remote Config: {response.status_code}")
-            print(response.text)
-            return False
-    except Exception as e:
-        print(f"Error updating Remote Config: {e}")
-        return False
-
-
-def run_command(command, retries=0, retry_delay=5):
-    """Run a shell command with optional retry mechanism.
-
-    Args:
-        command: The command to execute
-        retries: Number of times to retry on failure (default: 0)
-        retry_delay: Seconds to wait between retries (default: 5)
-
-    Returns:
-        Command output as string
-    """
-    import time
-
-    attempt = 0
-    max_attempts = retries + 1
-
-    while attempt < max_attempts:
-        if verbose:
-            if attempt > 0:
-                print(f"Retry attempt {attempt}/{retries} for command: {command}")
-            else:
-                print(f"Running command: {command}")
-
-        result = subprocess.run(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-        if result.returncode == 0:
-            if verbose and result.stdout:
-                print(f"Command output:\n{result.stdout}")
-            return result.stdout.strip()
-
-        # Command failed
-        attempt += 1
-        if attempt < max_attempts:
-            print(f"Command '{command}' failed (attempt {attempt}/{max_attempts})")
-            print(f"Error: {result.stderr}")
-            print(f"Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)
-        else:
-            # Final attempt failed
-            print(
-                f"Command '{command}' failed after {max_attempts} attempts with error:\n{result.stderr}"
-            )
-            sys.exit(1)
-
-    return result.stdout.strip()
-
-
-def update_changelog(app, version):
-    print("generate the changelog from git log")
-    base_branch = run_command("git merge-base origin/main HEAD")
-    logs = run_command(f"git log {base_branch}..HEAD --pretty=%B")
-    log_messages = logs.split("\n\n")
-    filtered_log_messages = []
-    for log_message in log_messages:
-        first_line = log_message.split("\n")[0]
-        if first_line.startswith("feature:") or first_line.startswith("feat:") or first_line.startswith("fix:"):
-            filtered_log_messages.append(log_message)
-    log_messages = filtered_log_messages
-    log_messages.reverse()
-
-    changelog_file = f"{rootdir}/{app}/changelog_{app}.json"
-    print(f"write changelog: {changelog_file}")
-    with open(changelog_file, "r") as file:
-        changelog = json.load(file)
-        if f"{version}" in changelog.keys():
-            for msg in log_messages:
-                if msg.startswith("feature:") or msg.startswith("feat:"):
-                    # Determine the prefix to remove
-                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
-                    clean_msg = msg.replace(prefix, "").strip()
-                    if clean_msg not in changelog[f"{version}"]["features"]:
-                        changelog[f"{version}"]["features"].append(clean_msg)
-                elif msg.startswith("fix:"):
-                    clean_msg = msg.replace("fix:", "").strip()
-                    if clean_msg not in changelog[f"{version}"]["fixes"]:
-                        changelog[f"{version}"]["fixes"].append(clean_msg)
-        else:
-            changelog[f"{version}"] = {"features": [], "fixes": []}
-            for msg in log_messages:
-                if msg.startswith("feature:") or msg.startswith("feat:"):
-                    # Determine the prefix to remove
-                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
-                    clean_msg = msg.replace(prefix, "").strip()
-                    changelog[f"{version}"]["features"].append(clean_msg)
-                elif msg.startswith("fix:"):
-                    clean_msg = msg.replace("fix:", "").strip()
-                    changelog[f"{version}"]["fixes"].append(clean_msg)
-
-    # Sort the changelog dictionary by keys in descending order using semantic versioning
-    def version_key(version_string):
-        """Convert version string to tuple of integers for proper sorting."""
-        try:
-            return tuple(map(int, version_string.split(".")))
-        except ValueError:
-            # If parsing fails, return a tuple that sorts to the end
-            return (0, 0, 0)
-
-    changelog = dict(
-        sorted(changelog.items(), key=lambda x: version_key(x[0]), reverse=True)
-    )
-    with open(changelog_file, "w") as file:
-        json.dump(changelog, file, indent=4)
-
-    print("Testcases refreshing")
-    with open(f"{rootdir}/test/nitya_seva.md", "r+") as testspec:
-        content = testspec.read()
-        testspec.seek(0)
-        testspec.write(content.replace("-[x]", "-[]"))
-        testspec.truncate()
-        # Load the updated changelog
-        with open(changelog_file, "r") as f:
-            changelog = json.load(f)
-
-        # Get the first (latest) version's features
-        first_version = next(iter(changelog))
-        features = changelog[first_version].get("features", [])
-
-        # Read the test spec again to update after "# new features"
-        testspec.seek(0)
-        content = testspec.read()
-        split_marker = "# new features"
-        if split_marker in content:
-            before, _ = content.split(split_marker, 1)
-            new_content = before + split_marker + "\n"
-            for feature in features:
-                new_content += f"-[] {feature}\n"
-            testspec.seek(0)
-            testspec.write(new_content)
-            testspec.truncate()
-
-
-def set_parameters():
-    global rootdir
-    global reltype
-    global target
-    global app_selection
-    global verbose
-
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(
-        description="Build and release Flutter application",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python 02_release.py --type release
-  python 02_release.py --type release --target web
-  python 02_release.py --type release --target apk
-  python 02_release.py --type test --target both
-  python 02_release.py -t release -T web
-  python 02_release.py --type release
-  python 02_release.py --type release --verbose
-        """,
-    )
-    parser.add_argument(
-        "-t",
-        "--type",
-        choices=["release", "test"],
-        required=True,
-        help="Release type: release or test",
-    )
-    parser.add_argument(
-        "-T",
-        "--target",
-        choices=["web", "apk", "both"],
-        default="both",
-        help="Build target: web, apk, or both (default: both)",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable detailed logging of commands being run",
-    )
-
-    args = parser.parse_args()
-
-    reltype = args.type
-    target = args.target
-    verbose = args.verbose
-
-    print(f"Release type: {reltype}")
-    print(f"Target: {target}")
-    print(f"Verbose logging: {verbose}")
-
-    rootdir = run_command("git rev-parse --show-toplevel")
-
-
-def set_hosting_site(app):
-    global hostingsite
-    if app == "vkhgaruda" and reltype == "release":
-        hostingsite = "vkhillgaruda"
-    elif app == "vkhgaruda" and reltype == "test":
-        hostingsite = "testgaruda"
-    elif app == "vkhsangeetseva" and reltype == "release":
-        hostingsite = "govindasangeetseva"
-    elif app == "vkhsangeetseva" and reltype == "test":
-        hostingsite = "testsangeetseva"
-    else:
-        print("Hosting site could not be determined")
-        sys.exit(1)
-    print(f"Hosting site: {hostingsite}")
-
-
-def replace_string_in_file(filepath, search_string, replacement_string):
-    curdir = os.getcwd()
-    os.chdir(rootdir)
-    with open(filepath, "r") as file:
-        lines = file.readlines()
-    with open(filepath, "w") as file:
-        for line in lines:
-            if search_string in line:
-                file.write(replacement_string)
-            else:
-                file.write(line)
-    os.chdir(curdir)
-
-
-def set_value_in_file(filepath, search_string, value):
-    curdir = os.getcwd()
-    os.chdir(rootdir)
-    with open(filepath, "r") as file:
-        lines = file.readlines()
-    with open(filepath, "w") as file:
-        for line in lines:
-            if search_string in line:
-                if "=" in line:
-                    key, _ = line.split("=", 1)
-                    file.write(f"{key}={value}\n")
-                elif ":" in line:
-                    key, _ = line.split(":", 1)
-                    file.write(f"{key}: {value}\n")
-            else:
-                file.write(line)
-    os.chdir(curdir)
-
+def get_timetracker_data():
+  try:
+    with open(f'{rootdir}/.timetracker', 'r') as file:
+      data = json.load(file)
+      effort = data.get('total', 0)
+      return effort
+  except Exception:
+      return 0
 
 def get_value_from_file(filepath, search_string):
     ret = ""
@@ -391,6 +74,25 @@ def has_firebase_functions(app):
     except Exception as e:
         print(f"Warning: Could not check Firebase functions configuration: {e}")
         return False
+
+
+def is_temple_service_time(now=None):
+    if now is None:
+        now = datetime.now()
+
+    # Saturday=5, Sunday=6
+    if now.weekday() not in (5, 6):
+        return False
+
+    current_time = now.time()
+    windows = [
+        (time(9, 30), time(13, 45)),
+        (time(15, 45), time(20, 45)),
+    ]
+
+    return any(start <= current_time <= end for start, end in windows)
+
+
 
 
 def release():
@@ -596,6 +298,320 @@ def release():
             print("Checking out main branch after release")
             run_command("git checkout main")
             run_command("git pull")
+
+
+def replace_string_in_file(filepath, search_string, replacement_string):
+    curdir = os.getcwd()
+    os.chdir(rootdir)
+    with open(filepath, "r") as file:
+        lines = file.readlines()
+    with open(filepath, "w") as file:
+        for line in lines:
+            if search_string in line:
+                file.write(replacement_string)
+            else:
+                file.write(line)
+    os.chdir(curdir)
+
+
+def run_command(command, retries=0, retry_delay=5):
+    """Run a shell command with optional retry mechanism.
+
+    Args:
+        command: The command to execute
+        retries: Number of times to retry on failure (default: 0)
+        retry_delay: Seconds to wait between retries (default: 5)
+
+    Returns:
+        Command output as string
+    """
+    import time
+
+    attempt = 0
+    max_attempts = retries + 1
+
+    while attempt < max_attempts:
+        if verbose:
+            if attempt > 0:
+                print(f"Retry attempt {attempt}/{retries} for command: {command}")
+            else:
+                print(f"Running command: {command}")
+
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            if verbose and result.stdout:
+                print(f"Command output:\n{result.stdout}")
+            return result.stdout.strip()
+
+        # Command failed
+        attempt += 1
+        if attempt < max_attempts:
+            print(f"Command '{command}' failed (attempt {attempt}/{max_attempts})")
+            print(f"Error: {result.stderr}")
+            print(f"Retrying in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+        else:
+            # Final attempt failed
+            print(
+                f"Command '{command}' failed after {max_attempts} attempts with error:\n{result.stderr}"
+            )
+            sys.exit(1)
+
+    return result.stdout.strip()
+
+
+def set_hosting_site(app):
+    global hostingsite
+    if app == "vkhgaruda" and reltype == "release":
+        hostingsite = "vkhillgaruda"
+    elif app == "vkhgaruda" and reltype == "test":
+        hostingsite = "testgaruda"
+    elif app == "vkhsangeetseva" and reltype == "release":
+        hostingsite = "govindasangeetseva"
+    elif app == "vkhsangeetseva" and reltype == "test":
+        hostingsite = "testsangeetseva"
+    else:
+        print("Hosting site could not be determined")
+        sys.exit(1)
+    print(f"Hosting site: {hostingsite}")
+
+
+def set_parameters():
+    global rootdir
+    global reltype
+    global target
+    global app_selection
+    global verbose
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Build and release Flutter application",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python 02_release.py --type release
+  python 02_release.py --type release --target web
+  python 02_release.py --type release --target apk
+  python 02_release.py --type test --target both
+  python 02_release.py -t release -T web
+  python 02_release.py --type release
+  python 02_release.py --type release --verbose
+        """,
+    )
+    parser.add_argument(
+        "-t",
+        "--type",
+        choices=["release", "test"],
+        required=True,
+        help="Release type: release or test",
+    )
+    parser.add_argument(
+        "-T",
+        "--target",
+        choices=["web", "apk", "both"],
+        default="both",
+        help="Build target: web, apk, or both (default: both)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable detailed logging of commands being run",
+    )
+
+    args = parser.parse_args()
+
+    reltype = args.type
+    target = args.target
+    verbose = args.verbose
+
+    print(f"Release type: {reltype}")
+    print(f"Target: {target}")
+    print(f"Verbose logging: {verbose}")
+
+    rootdir = run_command("git rev-parse --show-toplevel")
+
+
+def set_value_in_file(filepath, search_string, value):
+    curdir = os.getcwd()
+    os.chdir(rootdir)
+    with open(filepath, "r") as file:
+        lines = file.readlines()
+    with open(filepath, "w") as file:
+        for line in lines:
+            if search_string in line:
+                if "=" in line:
+                    key, _ = line.split("=", 1)
+                    file.write(f"{key}={value}\n")
+                elif ":" in line:
+                    key, _ = line.split(":", 1)
+                    file.write(f"{key}: {value}\n")
+            else:
+                file.write(line)
+    os.chdir(curdir)
+
+
+def update_changelog(app, version):
+    print("generate the changelog from git log")
+    base_branch = run_command("git merge-base origin/main HEAD")
+    logs = run_command(f"git log {base_branch}..HEAD --pretty=%B")
+    log_messages = logs.split("\n\n")
+    filtered_log_messages = []
+    for log_message in log_messages:
+        first_line = log_message.split("\n")[0]
+        if first_line.startswith("feature:") or first_line.startswith("feat:") or first_line.startswith("fix:"):
+            filtered_log_messages.append(log_message)
+    log_messages = filtered_log_messages
+    log_messages.reverse()
+
+    changelog_file = f"{rootdir}/changelog.json"
+    print(f"write changelog: {changelog_file}")
+    with open(changelog_file, "r") as file:
+        changelog = json.load(file)
+        if f"{version}" in changelog.keys():
+            for msg in log_messages:
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
+                    if clean_msg not in changelog[f"{version}"]["features"]:
+                        changelog[f"{version}"]["features"].append(clean_msg)
+                elif msg.startswith("fix:"):
+                    clean_msg = msg.replace("fix:", "").strip()
+                    if clean_msg not in changelog[f"{version}"]["fixes"]:
+                        changelog[f"{version}"]["fixes"].append(clean_msg)
+        else:
+            changelog[f"{version}"] = {"features": [], "fixes": []}
+            for msg in log_messages:
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
+                    changelog[f"{version}"]["features"].append(clean_msg)
+                elif msg.startswith("fix:"):
+                    clean_msg = msg.replace("fix:", "").strip()
+                    changelog[f"{version}"]["fixes"].append(clean_msg)
+
+    # Sort the changelog dictionary by keys in descending order using semantic versioning
+    def version_key(version_string):
+        """Convert version string to tuple of integers for proper sorting."""
+        try:
+            return tuple(map(int, version_string.split(".")))
+        except ValueError:
+            # If parsing fails, return a tuple that sorts to the end
+            return (0, 0, 0)
+
+    # populate time spent
+    effort = round(int(get_timetracker_data()) / 60 / 60)
+    changelog[f"{version}"]['effort'] = f"{effort}h"
+
+    
+    changelog = dict(
+        sorted(changelog.items(), key=lambda x: version_key(x[0]), reverse=True)
+    )
+    with open(changelog_file, "w") as file:
+        json.dump(changelog, file, indent=4)
+
+    print("Testcases refreshing")
+    with open(f"{rootdir}/test/nitya_seva.md", "r+") as testspec:
+        content = testspec.read()
+        testspec.seek(0)
+        testspec.write(content.replace("-[x]", "-[]"))
+        testspec.truncate()
+        # Load the updated changelog
+        with open(changelog_file, "r") as f:
+            changelog = json.load(f)
+
+        # Get the first (latest) version's features
+        first_version = next(iter(changelog))
+        features = changelog[first_version].get("features", [])
+
+        # Read the test spec again to update after "# new features"
+        testspec.seek(0)
+        content = testspec.read()
+        split_marker = "# new features"
+        if split_marker in content:
+            before, _ = content.split(split_marker, 1)
+            new_content = before + split_marker + "\n"
+            for feature in features:
+                new_content += f"-[] {feature}\n"
+            testspec.seek(0)
+            testspec.write(new_content)
+            testspec.truncate()
+
+
+def update_remote_config(
+    param_key,
+    param_value,
+    cred_file="../garuda-1ba07-firebase-adminsdk-fbsvc-c07e3d6e0a.json",
+):
+    """Update a Firebase Remote Config parameter.
+
+    Args:
+        param_key: The parameter key to update
+        param_value: The value to set
+        cred_file: Path to the Firebase credentials JSON file
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Initialize Firebase app if not already initialized
+        try:
+            app = firebase_admin.get_app()
+        except ValueError:
+            cred = credentials.Certificate(cred_file)
+            app = firebase_admin.initialize_app(cred)
+            cred = credentials.Certificate(cred_file)
+        else:
+            # Get credentials from existing app
+            cred = credentials.Certificate(cred_file)
+
+        # Get access token
+        access_token = cred.get_access_token().access_token
+        project_id = app.project_id
+
+        # Remote Config REST API endpoint
+        base_url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{project_id}/remoteConfig"
+
+        # Get current template
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        response = requests.get(base_url, headers=headers)
+        template = response.json()
+
+        # Update or add the parameter
+        if "parameters" not in template:
+            template["parameters"] = {}
+
+        template["parameters"][param_key] = {"defaultValue": {"value": param_value}}
+
+        # Update the template
+        headers["Content-Type"] = "application/json; UTF-8"
+        etag = response.headers.get("ETag")
+        if etag:
+            headers["If-Match"] = etag
+
+        response = requests.put(base_url, headers=headers, json=template)
+        if response.status_code == 200:
+            print("Remote Config updated successfully!")
+            print(f"{param_key} set to: {param_value}")
+            return True
+        else:
+            print(f"Error updating Remote Config: {response.status_code}")
+            print(response.text)
+            return False
+    except Exception as e:
+        print(f"Error updating Remote Config: {e}")
+        return False
 
 
 def main():

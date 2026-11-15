@@ -1,5 +1,6 @@
 {
     "13.0.0": {
+        "effort": "32h",
         "features": [
             "button to add request",
             "Add new request",

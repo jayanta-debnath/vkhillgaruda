@@ -176,9 +176,12 @@ def main():
         print("Remote set for new branch")
     except subprocess.CalledProcessError:
         print("Failed to set remote for new branch")
+
+    # reset time tracker
+    os.unlink(f"{rootdir}/.timetracker")
    
     print("all operations completed")
-    input("Log the Start Date and recompute timetracerk. Press Enter when ready...")
+    input("Log the Start Date and recompute timetracker. Press Enter when ready...")
 
 
 if __name__ == "__main__":
