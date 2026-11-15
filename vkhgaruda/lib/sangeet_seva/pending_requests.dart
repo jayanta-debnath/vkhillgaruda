@@ -204,17 +204,17 @@ class _PendingRequestsState extends State<PendingRequests> {
         children: [
           Scaffold(
             appBar: AppBar(
-              leading:
-                  // hack to force refresh the page upon entry
-                  IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) {
-                    return SangeetSeva(title: "Sangeet Seva");
-                  }));
-                },
-              ),
+              // leading:
+              //     // hack to force refresh the page upon entry
+              //     IconButton(
+              //   icon: const Icon(Icons.arrow_back),
+              //   onPressed: () {
+              //     Navigator.pushReplacement(context,
+              //         MaterialPageRoute(builder: (context) {
+              //       return SangeetSeva(title: "Sangeet Seva");
+              //     }));
+              //   },
+              // ),
               title: Text(widget.title),
             ),
             body: RefreshIndicator(

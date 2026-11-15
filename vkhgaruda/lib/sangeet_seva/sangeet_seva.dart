@@ -258,7 +258,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                             "assets/images/SangeetSeva/PendingRequests.png",
                                         text: "View pending requests",
                                         onPressed: () {
-                                          Navigator.pushReplacement(
+                                          Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
