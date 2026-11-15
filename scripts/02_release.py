@@ -13,7 +13,6 @@ reltype = ""
 hostingsite = ""
 rootdir = ""
 target = "both"  # Default: build both web and apk
-app_selection = "both"  # Default: release both apps
 verbose = False  # Default: detailed logging disabled
 warnings = []  # Collect warnings to display at the end
 
@@ -257,9 +256,7 @@ Examples:
   python 02_release.py --type release --target apk
   python 02_release.py --type test --target both
   python 02_release.py -t release -T web
-  python 02_release.py --type release --app vkhgaruda
-  python 02_release.py --type release --app vkhsangeetseva
-  python 02_release.py --type release --app both
+  python 02_release.py --type release
   python 02_release.py --type release --verbose
         """,
     )
@@ -276,13 +273,6 @@ Examples:
         choices=["web", "apk", "both"],
         default="both",
         help="Build target: web, apk, or both (default: both)",
-    )
-    parser.add_argument(
-        "-a",
-        "--app",
-        choices=["vkhgaruda", "vkhsangeetseva", "both"],
-        default="both",
-        help="App to release: vkhgaruda, vkhsangeetseva, or both (default: both)",
     )
     parser.add_argument(
         "-v",
@@ -402,10 +392,11 @@ def has_firebase_functions(app):
         return False
 
 
-def release(app):
+def release():
+    app = "vkhgaruda"
     os.chdir(rootdir)
 
-    print("get the branch name")
+    # get the branch name
     branch_name = run_command("git rev-parse --abbrev-ref HEAD")
     branch_name = branch_name.lstrip()
     version_full = get_value_from_file(f"{app}/pubspec.yaml", "version")
@@ -418,7 +409,7 @@ def release(app):
 
     input("Log the time taken for the release and press Enter...")
 
-    print("Changing directory to app folder")
+    # Changing directory to app folder
     try:
         os.chdir(app)
     except FileNotFoundError:
@@ -623,11 +614,7 @@ def main():
         print("!" * 70 + "\n")
         input()
 
-    if app_selection in ["vkhgaruda", "both"]:
-        release("vkhgaruda")
-
-    if app_selection in ["vkhsangeetseva", "both"]:
-        release("vkhsangeetseva")
+    release()
 
     # Print all warnings at the end
     if warnings:
