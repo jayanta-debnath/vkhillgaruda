@@ -517,7 +517,7 @@ def release():
         ####################################
         if has_firebase_functions(app):
             print("deploying firebase functions")
-            run_command("firebase deploy --only functions", retries=2, retry_delay=10)
+            # run_command("firebase deploy --only functions", retries=2, retry_delay=10)
         else:
             print(
                 f"Skipping Firebase functions deployment - no functions configured for {app}"
