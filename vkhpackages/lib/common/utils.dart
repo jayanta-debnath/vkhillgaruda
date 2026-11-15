@@ -51,12 +51,8 @@ class Utils {
     String triggerUpdate = rc.getString("${app}_trigger_update");
     if (triggerUpdate == "true") {
       final info = await PackageInfo.fromPlatform();
-      int curver = int.parse(info.buildNumber);
-      String newverStr = rc.getString("${app}_version_suffix");
-      int newver = int.tryParse(newverStr) ?? 0;
-      if (newver > curver) {
-        String newverName = rc.getString("${app}_version");
-
+      String newverName = rc.getString("${app}_version");
+      if (_isVersionGreater(newverName, info.version)) {
         String msg = "New version available: $newverName";
         if (kIsWeb) {
           msg += "\n\nKindly press the browser refresh button to update";
@@ -67,6 +63,27 @@ class Utils {
         Widgets().showMessage(context, msg);
       }
     }
+  }
+
+  bool _isVersionGreater(String newVersion, String currentVersion) {
+    List<int> parseVersion(String v) {
+      final clean = v.split('+').first.split('-').first.trim();
+      return clean.split('.').map((part) => int.tryParse(part) ?? 0).toList();
+    }
+
+    final newParts = parseVersion(newVersion);
+    final currentParts = parseVersion(currentVersion);
+
+    final maxLength = max(newParts.length, currentParts.length);
+
+    for (int i = 0; i < maxLength; i++) {
+      final n = i < newParts.length ? newParts[i] : 0;
+      final c = i < currentParts.length ? currentParts[i] : 0;
+      if (n > c) return true;
+      if (n < c) return false;
+    }
+
+    return false;
   }
 
   Future<bool> checkPermission(String seva) async {
