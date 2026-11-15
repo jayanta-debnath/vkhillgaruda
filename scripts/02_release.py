@@ -381,6 +381,9 @@ def has_firebase_functions(app):
 
         with open(firebase_json_path, "r") as f:
             firebase_config = json.load(f)
+            confirm = input("Do you want to publish the firebase function? (y/n) ")
+            if confirm == "n":
+                return False
             # Check if 'functions' key exists and is not empty
             return (
                 "functions" in firebase_config and len(firebase_config["functions"]) > 0
