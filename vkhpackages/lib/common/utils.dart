@@ -48,21 +48,24 @@ class Utils {
     });
     await rc.fetchAndActivate();
 
-    final info = await PackageInfo.fromPlatform();
-    int curver = int.parse(info.buildNumber);
-    String newverStr = rc.getString("${app}_version_suffix");
-    int newver = int.tryParse(newverStr) ?? 0;
-    if (newver > curver) {
-      String newverName = rc.getString("${app}_version");
+    String triggerUpdate = rc.getString("${app}_trigger_update");
+    if (triggerUpdate == "true") {
+      final info = await PackageInfo.fromPlatform();
+      int curver = int.parse(info.buildNumber);
+      String newverStr = rc.getString("${app}_version_suffix");
+      int newver = int.tryParse(newverStr) ?? 0;
+      if (newver > curver) {
+        String newverName = rc.getString("${app}_version");
 
-      String msg = "New version available: $newverName";
-      if (kIsWeb) {
-        msg += "\n\nKindly press the browser refresh button to update";
-      } else {
-        msg += "\n\nPlease contact admin for new version";
+        String msg = "New version available: $newverName";
+        if (kIsWeb) {
+          msg += "\n\nKindly press the browser refresh button to update";
+        } else {
+          msg += "\n\nPlease contact admin for new version";
+        }
+
+        Widgets().showMessage(context, msg);
       }
-
-      Widgets().showMessage(context, msg);
     }
   }
 
