@@ -593,7 +593,7 @@ class ProfileState extends State<Profile> {
       actions: [
         ElevatedButton(
           child: Text('Add'),
-          onPressed: () {
+          onPressed: () async {
             // validate
             if (!formKey.currentState!.validate()) {
               return;
@@ -614,6 +614,10 @@ class ProfileState extends State<Profile> {
             // clear all local lists
 
             // clear all local controllers and focus nodes
+
+            if (widget.oldUserDetails != null) {
+              await _save(goback: false);
+            }
 
             // close the dialog
             Navigator.of(context).pop();
@@ -672,7 +676,7 @@ class ProfileState extends State<Profile> {
       actions: [
         ElevatedButton(
           child: Text('Add'),
-          onPressed: () {
+          onPressed: () async {
             // validate
             if (!formKey.currentState!.validate()) {
               return;
@@ -688,6 +692,9 @@ class ProfileState extends State<Profile> {
             // clear all local controllers and focus nodes
 
             // close the dialog
+            if (widget.oldUserDetails != null) {
+              await _save(goback: false);
+            }
             Navigator.of(context).pop();
           },
         ),
@@ -863,9 +870,7 @@ class ProfileState extends State<Profile> {
                         onPressed: () async {
                           await _showDialogSangeetExp(context);
 
-                          if (widget.oldUserDetails != null) {
-                            await _save(goback: false);
-                          }
+                          
                         },
                         child: Text(
                           _exp.isEmpty
@@ -904,9 +909,7 @@ class ProfileState extends State<Profile> {
                             onPressed: () async {
                               await _showDialogYoutube(context);
 
-                              if (widget.oldUserDetails != null) {
-                                await _save(goback: false);
-                              }
+                              
                             },
                             child: Text(
                               _youtubeLinks.isEmpty
