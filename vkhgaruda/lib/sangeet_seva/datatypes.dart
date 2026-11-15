@@ -1,0 +1,272 @@
+class EventRecord {
+  final DateTime date;
+  DateTime eventStart;
+  DateTime eventEnd;
+  final String eventRequesterMobile;
+  final List<Supporter> performers;
+  final int guests;
+  final List<String> songs;
+  String status; // Pending, Approved, Rejected
+  final String notePerformer;
+  String noteTemple;
+
+  EventRecord({
+    required this.date,
+    required this.eventStart,
+    required this.eventEnd,
+    required this.eventRequesterMobile,
+    required this.performers,
+    required this.guests,
+    required this.songs,
+    this.status = 'Pending',
+    this.notePerformer = '',
+    this.noteTemple = '',
+  });
+
+  factory EventRecord.fromJson(Map<String, dynamic> json) {
+    return EventRecord(
+      date: DateTime.parse((json['date'] ?? json['eventStart']) as String),
+      eventRequesterMobile: json['mainPerformer'] as String,
+      notePerformer:
+          json['notePerformer'] == null ? "" : json['notePerformer'] as String,
+      noteTemple: json['noteTemple'] as String,
+      eventStart: DateTime.parse(json['eventStart'] as String),
+      eventEnd: DateTime.parse(json['eventEnd'] as String),
+      songs: (json['songs'] == null || json['songs'].length == 0)
+          ? []
+          : List.generate(json['songs'].length, (index) {
+              return json['songs'][index];
+            }),
+      status: json['status'] as String,
+      guests: json['guests'] ?? 0,
+      performers: json['performers'] == null
+          ? []
+          : List.generate(json['performers'].length, (index) {
+              dynamic supportRaw = json['performers'][index];
+              Map<String, dynamic> supportMap = Map<String, dynamic>.from(
+                supportRaw,
+              );
+              return Supporter.fromJson(supportMap);
+            }),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.toIso8601String(),
+      'eventStart': eventStart.toIso8601String(),
+      'eventEnd': eventEnd.toIso8601String(),
+      'mainPerformer': eventRequesterMobile,
+      'performers': performers.map((e) => e.toJson()).toList(),
+      'guests': guests,
+      'songs': songs,
+      'status': status,
+      'notePerformer': notePerformer,
+      'noteTemple': noteTemple,
+    };
+  }
+}
+
+class SangeetExp {
+  final String category;
+  final String subcategory;
+  final int yrs;
+
+  SangeetExp({
+    required this.category,
+    required this.subcategory,
+    required this.yrs,
+  });
+
+  // Factory constructor to create SangeetExp from JSON
+  factory SangeetExp.fromJson(Map<String, dynamic> json) {
+    return SangeetExp(
+      category: json['category'] as String,
+      subcategory: json['subcategory'] as String,
+      yrs: json['yrs'] as int,
+    );
+  }
+
+  // Method to convert SangeetExp to JSON
+  Map<String, dynamic> toJson() {
+    return {'category': category, 'subcategory': subcategory, 'yrs': yrs};
+  }
+}
+
+class Slot {
+  final String name;
+  bool avl;
+  final String from;
+  final String to;
+
+  Slot({
+    required this.name,
+    required this.avl,
+    required this.from,
+    required this.to,
+  });
+
+  // Factory constructor to create a Slot from JSON
+  factory Slot.fromJson(Map<String, dynamic> json) {
+    return Slot(
+      name: json['name'] as String,
+      avl: json['avl'] as bool,
+      from: json['from'] as String,
+      to: json['to'] as String,
+    );
+  }
+
+  // Method to convert Slot to JSON
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'avl': avl, 'from': from, 'to': to};
+  }
+}
+
+class Supporter {
+  String salutation;
+  String name;
+  String specialization;
+
+  Supporter({
+    required this.salutation,
+    required this.name,
+    required this.specialization,
+  });
+
+  factory Supporter.fromJson(Map<String, dynamic> json) {
+    return Supporter(
+      salutation: json['salutation'] as String,
+      name: json['name'] as String,
+      specialization: json['specialization'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'salutation': salutation,
+      'name': name,
+      'specialization': specialization,
+    };
+  }
+}
+
+class PerformerProfile {
+  final int id;
+  final String salutation;
+  final String name;
+  final String mobile;
+  final String? profilePicUrl;
+  final String credentials;
+  final List<SangeetExp> exps;
+  final List<String> youtubeUrls;
+  final List<String> audioClipUrls;
+  final List<Supporter> referrals;
+  String fcmToken;
+  int? rating;
+
+  PerformerProfile(
+      {required this.id,
+      required this.salutation,
+      required this.name,
+      required this.mobile,
+      this.profilePicUrl,
+      required this.credentials,
+      required this.exps,
+      required this.youtubeUrls,
+      required this.audioClipUrls,
+      required this.referrals,
+      this.fcmToken = '',
+      this.rating});
+
+  factory PerformerProfile.fromJson(Map<String, dynamic> json) {
+    return PerformerProfile(
+      id: json['id'],
+      salutation: json['salutation'],
+      name: json['name'],
+      mobile: json['mobile'],
+      profilePicUrl: json['profilePicUrl'],
+      credentials: json['credentials'],
+      exps: json['exps'] == null
+          ? []
+          : List<SangeetExp>.from(
+              json['exps'].map(
+                (e) => SangeetExp.fromJson(Map<String, dynamic>.from(e as Map)),
+              ),
+            ),
+      youtubeUrls: json['youtubeUrls'] == null
+          ? []
+          : List<String>.from(json['youtubeUrls']),
+      audioClipUrls: json['audioClipUrls'] == null
+          ? []
+          : List<String>.from(json['audioClipUrls']),
+      referrals: json['referrals'] == null
+          ? []
+          : List<Supporter>.from(
+              json['referrals'].map(
+                (e) => Supporter.fromJson(Map<String, dynamic>.from(e as Map)),
+              ),
+            ),
+      fcmToken: json['fcmToken'] ?? '',
+      rating: json['rating'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'salutation': salutation,
+      'name': name,
+      'mobile': mobile,
+      'profilePicUrl': profilePicUrl,
+      'credentials': credentials,
+      'exps': exps.map((e) => e.toJson()).toList(),
+      'youtubeUrls': youtubeUrls,
+      'audioClipUrls': audioClipUrls,
+      'referrals': referrals.map((e) => e.toJson()).toList(),
+      'fcmToken': fcmToken,
+      'rating': rating
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is PerformerProfile &&
+            runtimeType == other.runtimeType &&
+            id == other.id &&
+            salutation == other.salutation &&
+            name == other.name &&
+            mobile == other.mobile &&
+            profilePicUrl == other.profilePicUrl &&
+            credentials == other.credentials &&
+            _sameList(exps, other.exps) &&
+            _sameList(youtubeUrls, other.youtubeUrls) &&
+            _sameList(audioClipUrls, other.audioClipUrls) &&
+            fcmToken == other.fcmToken &&
+            rating == other.rating;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        runtimeType,
+        id,
+        salutation,
+        name,
+        mobile,
+        profilePicUrl,
+        credentials,
+        Object.hashAll(exps),
+        Object.hashAll(youtubeUrls),
+        Object.hashAll(audioClipUrls),
+        fcmToken,
+        rating,
+      );
+}
+
+bool _sameList<T>(List<T> left, List<T> right) {
+  if (left.length != right.length) return false;
+  for (var i = 0; i < left.length; i++) {
+    if (left[i] != right[i]) return false;
+  }
+  return true;
+}

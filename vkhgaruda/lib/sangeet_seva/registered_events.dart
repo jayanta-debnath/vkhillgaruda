@@ -4,8 +4,10 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/request_details.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
+import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class RegisteredEvents extends StatefulWidget {
   final String title;
@@ -51,7 +53,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             var eventRaw = await FB().getJson(path: eventPath);
             EventRecord event =
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
-            var mainPerformer =
+            PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
 
             setState(() {
@@ -88,10 +90,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                 EventRecord event = Utils()
                     .convertRawToDatatype(eventRaw, EventRecord.fromJson);
 
-                _events.removeWhere((EventRecord element) =>
-                    element.date == event.date &&
-                    element.slot.from == event.slot.from &&
-                    element.slot.to == event.slot.to);
+                Widgets().showMessage(context, "Delete event not implemented");
               });
             }
           },
@@ -138,9 +137,19 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             var eventRaw = await FB().getValue(path: eventLinkRaw['path']);
             EventRecord event =
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
-            _events.add(event);
 
-            var mainPerformer =
+            // Add validation to check if eventStart is not in the past (only checking date)
+            DateTime today = DateTime.now();
+            DateTime startOfDay = DateTime(today.year, today.month, today.day);
+            DateTime eventStartOfDay = DateTime(event.eventStart.year,
+                event.eventStart.month, event.eventStart.day);
+
+            if (!eventStartOfDay.isBefore(startOfDay) &&
+                event.status == "Approved") {
+              _events.add(event);
+            }
+
+            PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
             if (mainPerformer != null) {
               _mainPerformers[mainPerformer.mobile] = mainPerformer;
@@ -178,14 +187,16 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
       return const SizedBox();
     }
     String performer = _mainPerformers[mobile]!.name;
-    String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl;
+    String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl ?? "";
 
     return Card(
         child: ListTile(
       title: Text(
         title,
       ),
-      leading: CircleAvatar(backgroundImage: NetworkImage(profilePicUrl)),
+      leading: CircleAvatar(
+          backgroundImage:
+              (profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl))),
       subtitle: Row(
         children: [
           Icon(Icons.person, size: 16),
@@ -222,14 +233,23 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                         // your widgets here
                         ...List.generate(_events.length, (index) {
                           return GestureDetector(
-                            onTap: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) {
-                                return RequestDetails(
-                                  title: "Request Details",
-                                  eventRecord: _events[index],
-                                );
-                              }));
+                            onTap: () async {
+                              PerformerProfile? profile = await SSUtils()
+                                  .getPerformerProfile(
+                                      _events[index].eventRequesterMobile);
+
+                              if (profile != null) {
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) {
+                                  return EventDetails(
+                                    title: "Request Details",
+                                    oldEvent: _events[index],
+                                    selectedDate: _events[index].eventStart,
+                                    profile: profile,
+                                    doubleBack: false,
+                                  );
+                                }));
+                              }
                             },
                             child: _createEventCard(index),
                           );

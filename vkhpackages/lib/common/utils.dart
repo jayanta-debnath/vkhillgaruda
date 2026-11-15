@@ -20,6 +20,15 @@ class Utils {
     // init
   }
 
+  TimeOfDay addMinutesToTimeOfDay(TimeOfDay time, int minutes) {
+    final totalMinutes = time.hour * 60 + time.minute + minutes;
+
+    return TimeOfDay(
+      hour: (totalMinutes ~/ 60) % 24,
+      minute: totalMinutes % 60,
+    );
+  }
+
   Future<void> checkForNewVersion(BuildContext context, String app) async {
     final rc = FirebaseRemoteConfig.instance;
 
@@ -302,11 +311,6 @@ class Utils {
   Future<void> setUserBasics(UserBasics userbasics) async {
     _userbasics = userbasics;
     await LS().write('userbasics', jsonEncode(userbasics.toJson()));
-  }
-
-  Future<void> setUserDetails(PerformerProfile details) async {
-    String dbpath = "${Const().dbrootSangeetSeva}/Users/${details.mobile}";
-    await FB().setJson(path: dbpath, json: details.toJson());
   }
 
   String convertTimestampToDbKey(DateTime timestamp) {

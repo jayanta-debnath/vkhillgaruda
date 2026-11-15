@@ -3,9 +3,10 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/request_details.dart';
-import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
+import 'package:vkhgaruda/sangeet_seva/event_details.dart';
+import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class PendingRequests extends StatefulWidget {
   final String title;
@@ -21,12 +22,13 @@ class PendingRequests extends StatefulWidget {
 class _PendingRequestsState extends State<PendingRequests> {
   // scalars
   final Lock _lock = Lock();
+  bool _isAdmin = false;
   bool _isLoading = true;
   DateTime _lastCallbackInvoked = DateTime.now();
 
   // lists
   final List<EventRecord> _linkedEventRecords = [];
-  final Map<String, PerformerProfile> _mainPerformers = {};
+  final Map<String, PerformerProfile> _mainPerformers = {}; // {mobile, profile}
 
   // controllers, listeners and focus nodes
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
@@ -101,6 +103,7 @@ class _PendingRequestsState extends State<PendingRequests> {
     });
 
     // perform async operations here
+    _isAdmin = await Utils().isAdmin();
 
     await _lock.synchronized(() async {
       // fetch pending requests
@@ -114,13 +117,15 @@ class _PendingRequestsState extends State<PendingRequests> {
         String path = pendingRequestLink['path'];
 
         var pendingRequestPerUserRaw = await FB().getValue(path: path);
-        EventRecord pendingRequest = Utils().convertRawToDatatype(
-            pendingRequestPerUserRaw, EventRecord.fromJson);
+        if (pendingRequestPerUserRaw != null) {
+          EventRecord pendingRequest = Utils().convertRawToDatatype(
+              pendingRequestPerUserRaw, EventRecord.fromJson);
 
-        // discard if pending request is in the past
-        if (pendingRequest.eventStart.isAfter(DateTime.now())) {
-          pendingRequests.add({'path': path});
-          _linkedEventRecords.add(pendingRequest);
+          // discard if pending request is in the past
+          if (pendingRequest.eventStart.isAfter(DateTime.now())) {
+            pendingRequests.add({'path': path});
+            _linkedEventRecords.add(pendingRequest);
+          }
         }
       }
       if (pendingRequests.length != pendingRequestLinks.length) {
@@ -167,13 +172,16 @@ class _PendingRequestsState extends State<PendingRequests> {
     String performer =
         _mainPerformers[pendingRequest.eventRequesterMobile]!.name;
     String profilePicUrl =
-        _mainPerformers[pendingRequest.eventRequesterMobile]!.profilePicUrl;
+        _mainPerformers[pendingRequest.eventRequesterMobile]!.profilePicUrl ??
+            "";
 
     return Widgets().createTopLevelCard(
         context: context,
         child: ListTile(
           title: Text(title),
-          leading: CircleAvatar(backgroundImage: NetworkImage(profilePicUrl)),
+          leading: CircleAvatar(
+              backgroundImage:
+                  profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl)),
           subtitle: Row(
             children: [
               Icon(Icons.person),
@@ -195,17 +203,17 @@ class _PendingRequestsState extends State<PendingRequests> {
         children: [
           Scaffold(
             appBar: AppBar(
-              leading:
-                  // hack to force refresh the page upon entry
-                  IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) {
-                    return SangeetSeva(title: "Sangeet Seva");
-                  }));
-                },
-              ),
+              // leading:
+              //     // hack to force refresh the page upon entry
+              //     IconButton(
+              //   icon: const Icon(Icons.arrow_back),
+              //   onPressed: () {
+              //     Navigator.pushReplacement(context,
+              //         MaterialPageRoute(builder: (context) {
+              //       return SangeetSeva(title: "Sangeet Seva");
+              //     }));
+              //   },
+              // ),
               title: Text(widget.title),
             ),
             body: RefreshIndicator(
@@ -223,28 +231,26 @@ class _PendingRequestsState extends State<PendingRequests> {
                       ...List.generate(_linkedEventRecords.length, (index) {
                         // get the path of the pending request
                         EventRecord event = _linkedEventRecords[index];
-                        String mobile = event.eventRequesterMobile;
-                        String date =
-                            DateFormat("yyyy-MM-dd").format(event.date);
-                        String slot = event.slot.name;
-                        String path =
-                            "${Const().dbrootSangeetSeva}/Events/$mobile/$date/$slot";
-                        Map<String, dynamic> pendingRequest = {
-                          'path': path,
-                        };
 
                         // create the card
                         return GestureDetector(
-                          onTap: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return RequestDetails(
-                                title: "Request Details",
-                                pendingRequest: pendingRequest,
-                                eventRecord: _linkedEventRecords[index],
-                                callbackDelete: (String action) {},
-                              );
-                            }));
+                          onTap: () async {
+                            PerformerProfile? profile = await SSUtils()
+                                .getPerformerProfile(
+                                    event.eventRequesterMobile);
+                            if (profile != null) {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return EventDetails(
+                                  title: "Pending request",
+                                  selectedDate: event.eventStart,
+                                  profile: profile,
+                                  oldEvent: event,
+                                  readOnly: false,
+                                  doubleBack: false,
+                                );
+                              }));
+                            }
                           },
                           child: _createPendingRequestCard(index),
                         );

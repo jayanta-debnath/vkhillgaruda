@@ -1,4 +1,21 @@
 {
+    "13.0.0": {
+        "features": [
+            "button to add request",
+            "Add new request",
+            "profile tab",
+            "events tab",
+            "add event by admin",
+            "refresh button"
+        ],
+        "fixes": [
+            "back from pending request page",
+            "profile is saving even when a dialog is cancelled",
+            "mixup of note for temple and performer",
+            "prevent duplicate event submissions and restrict submit button visibility",
+            "profile save only when dirty"
+        ]
+    },
     "12.0.0": {
         "features": [
             "making ticket editable"

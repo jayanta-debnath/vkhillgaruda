@@ -4,12 +4,13 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhgaruda/sangeet_seva/advisory.dart';
-import 'package:vkhgaruda/sangeet_seva/calendar_slots.dart';
+import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
-import 'package:vkhgaruda/sangeet_seva/profiles.dart';
+import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
 import 'package:vkhgaruda/sangeet_seva/registered_events.dart';
+import 'package:vkhgaruda/sangeet_seva/sswelcome.dart';
 import 'package:vkhpackages/vkhpackages.dart';
+import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class SangeetSeva extends StatefulWidget {
   final String title;
@@ -30,10 +31,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 class _SangeetSevaState extends State<SangeetSeva> {
   // global keys
-  final GlobalKey<CalendarState> _calendarKey = GlobalKey<CalendarState>();
 
   // scalars
   final Lock _lock = Lock();
+  bool _isAdmin = false;
   bool _isLoading = true;
   int _pendingRequests = 0;
   DateTime _lastCallbackInvoked = DateTime.now();
@@ -103,10 +104,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
               if (eventRaw != null) {
                 EventRecord event = Utils()
                     .convertRawToDatatype(eventRaw, EventRecord.fromJson);
-                if (_calendarKey.currentState != null) {
-                  _calendarKey.currentState!
-                      .fillAvailabilityIndicators(date: event.date);
-                }
               }
             }
           },
@@ -138,6 +135,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
     });
 
     // access control
+    _isAdmin = await Utils().isAdmin();
 
     // perform async operations here
     _pendingRequests = await _getPendingRequestsCount();
@@ -184,60 +182,21 @@ class _SangeetSevaState extends State<SangeetSeva> {
             title: Text(widget.title),
             actions: [
               // registered users
-              IconButton(
-                icon: Icon(Icons.group),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Profiles(
-                        title: 'Performer Profiles',
-                        icon: widget.splashImage,
+              if (_isAdmin)
+                IconButton(
+                  icon: Icon(Icons.group),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileList(
+                          title: 'Performer Profiles',
+                          icon: widget.splashImage,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-
-              // calendar
-              IconButton(
-                icon: const Icon(Icons.calendar_month),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CalendarSlots(
-                        title: "Sangeet seva",
-                        icon: widget.splashImage,
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // settings
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {
-                  Widgets().showResponsiveDialog(
-                      context: context,
-                      title: "Settings",
-                      child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Advisory(
-                                  title: "Advisory settings",
-                                  splashImage: widget.splashImage,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text("Advisory settings")),
-                      actions: []);
-                },
-              ),
+                    );
+                  },
+                ),
             ],
           ),
           body: RefreshIndicator(
@@ -263,60 +222,86 @@ class _SangeetSevaState extends State<SangeetSeva> {
                             context: context,
                             child: Center(
                                 child: Column(children: [
-                              // register event
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Stack(children: [
-                                  Widgets().createImageButton(
-                                      context: context,
-                                      image:
-                                          "assets/images/LauncherIcons/Register.png",
-                                      text: "View pending requests",
-                                      onPressed: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                PendingRequests(
-                                              title: "Pending requests",
+                              // new profile
+                              if (_isAdmin)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(children: [
+                                    Widgets().createImageButton(
+                                        context: context,
+                                        image:
+                                            "assets/images/SangeetSeva/AddRequest.png",
+                                        imageOnRight: true,
+                                        text: "Add new profile",
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => RecordPage(
+                                                title: "Add new profile",
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                      fixedWidth: 250),
+                                          );
+                                        },
+                                        fixedWidth: 250),
+                                  ]),
+                                ),
 
-                                  // count
-                                  if (_pendingRequests > 0)
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: GestureDetector(
-                                        child: Container(
-                                          padding: EdgeInsets.only(
-                                              left: 4, right: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          constraints: BoxConstraints(
-                                            minWidth: 10,
-                                            minHeight: 10,
-                                          ),
-                                          child: Text(
-                                            '$_pendingRequests',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                              // Pending requests
+                              if (_isAdmin)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(children: [
+                                    Widgets().createImageButton(
+                                        context: context,
+                                        image:
+                                            "assets/images/SangeetSeva/PendingRequests.png",
+                                        text: "View pending requests",
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PendingRequests(
+                                                title: "Pending requests",
+                                              ),
                                             ),
-                                            textAlign: TextAlign.center,
+                                          );
+                                        },
+                                        fixedWidth: 250),
+
+                                    // count
+                                    if (_pendingRequests > 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: GestureDetector(
+                                          child: Container(
+                                            padding: EdgeInsets.only(
+                                                left: 4, right: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            constraints: BoxConstraints(
+                                              minWidth: 10,
+                                              minHeight: 10,
+                                            ),
+                                            child: Text(
+                                              '$_pendingRequests',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    )
-                                ]),
-                              ),
+                                      )
+                                  ]),
+                                ),
 
                               // view registered events
                               Padding(
@@ -336,7 +321,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                     },
                                     text: "View registered events",
                                     image:
-                                        "assets/images/LauncherIcons/RegisteredEvents.png",
+                                        "assets/images/SangeetSeva/RegisteredEvents.png",
                                     context: context,
                                     imageOnRight: true,
                                     fixedWidth: 250),

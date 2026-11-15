@@ -12,10 +12,10 @@ class Inventory extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _ProcurementState createState() => _ProcurementState();
+  _InventoryState createState() => _InventoryState();
 }
 
-class _ProcurementState extends State<Inventory> {
+class _InventoryState extends State<Inventory> {
   // scalars
   final Lock _lock = Lock();
   bool _isLoading = true;

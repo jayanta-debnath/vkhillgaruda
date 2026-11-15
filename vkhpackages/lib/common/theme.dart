@@ -128,6 +128,12 @@ class ThemeCreator {
         trackColor: WidgetStateProperty.all(primaryColor.withOpacity(0.5)),
       ),
 
+      // tabbed bar
+      tabBarTheme: TabBarThemeData(
+        labelColor: surfaceColor,
+        unselectedLabelColor: textColor,
+      ),
+
       // Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

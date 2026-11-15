@@ -13,7 +13,6 @@ reltype = ""
 hostingsite = ""
 rootdir = ""
 target = "both"  # Default: build both web and apk
-app_selection = "both"  # Default: release both apps
 verbose = False  # Default: detailed logging disabled
 warnings = []  # Collect warnings to display at the end
 
@@ -163,7 +162,7 @@ def update_changelog(app, version):
     filtered_log_messages = []
     for log_message in log_messages:
         first_line = log_message.split("\n")[0]
-        if first_line.startswith("feature:") or first_line.startswith("fix:"):
+        if first_line.startswith("feature:") or first_line.startswith("feat:") or first_line.startswith("fix:"):
             filtered_log_messages.append(log_message)
     log_messages = filtered_log_messages
     log_messages.reverse()
@@ -174,8 +173,10 @@ def update_changelog(app, version):
         changelog = json.load(file)
         if f"{version}" in changelog.keys():
             for msg in log_messages:
-                if msg.startswith("feature:"):
-                    clean_msg = msg.replace("feature:", "").strip()
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
                     if clean_msg not in changelog[f"{version}"]["features"]:
                         changelog[f"{version}"]["features"].append(clean_msg)
                 elif msg.startswith("fix:"):
@@ -185,8 +186,10 @@ def update_changelog(app, version):
         else:
             changelog[f"{version}"] = {"features": [], "fixes": []}
             for msg in log_messages:
-                if msg.startswith("feature:"):
-                    clean_msg = msg.replace("feature:", "").strip()
+                if msg.startswith("feature:") or msg.startswith("feat:"):
+                    # Determine the prefix to remove
+                    prefix = "feature:" if msg.startswith("feature:") else "feat:"
+                    clean_msg = msg.replace(prefix, "").strip()
                     changelog[f"{version}"]["features"].append(clean_msg)
                 elif msg.startswith("fix:"):
                     clean_msg = msg.replace("fix:", "").strip()
@@ -208,7 +211,7 @@ def update_changelog(app, version):
         json.dump(changelog, file, indent=4)
 
     print("Testcases refreshing")
-    with open(f"{rootdir}/vkhgaruda/test/nitya_seva.md", "r+") as testspec:
+    with open(f"{rootdir}/test/nitya_seva.md", "r+") as testspec:
         content = testspec.read()
         testspec.seek(0)
         testspec.write(content.replace("-[x]", "-[]"))
@@ -253,9 +256,7 @@ Examples:
   python 02_release.py --type release --target apk
   python 02_release.py --type test --target both
   python 02_release.py -t release -T web
-  python 02_release.py --type release --app vkhgaruda
-  python 02_release.py --type release --app vkhsangeetseva
-  python 02_release.py --type release --app both
+  python 02_release.py --type release
   python 02_release.py --type release --verbose
         """,
     )
@@ -274,13 +275,6 @@ Examples:
         help="Build target: web, apk, or both (default: both)",
     )
     parser.add_argument(
-        "-a",
-        "--app",
-        choices=["vkhgaruda", "vkhsangeetseva", "both"],
-        default="both",
-        help="App to release: vkhgaruda, vkhsangeetseva, or both (default: both)",
-    )
-    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -291,12 +285,10 @@ Examples:
 
     reltype = args.type
     target = args.target
-    app_selection = args.app
     verbose = args.verbose
 
     print(f"Release type: {reltype}")
     print(f"Target: {target}")
-    print(f"App: {app_selection}")
     print(f"Verbose logging: {verbose}")
 
     rootdir = run_command("git rev-parse --show-toplevel")
@@ -389,6 +381,9 @@ def has_firebase_functions(app):
 
         with open(firebase_json_path, "r") as f:
             firebase_config = json.load(f)
+            confirm = input("Do you want to publish the firebase function? (y/n) ")
+            if confirm == "n":
+                return False
             # Check if 'functions' key exists and is not empty
             return (
                 "functions" in firebase_config and len(firebase_config["functions"]) > 0
@@ -398,10 +393,11 @@ def has_firebase_functions(app):
         return False
 
 
-def release(app):
+def release():
+    app = "vkhgaruda"
     os.chdir(rootdir)
 
-    print("get the branch name")
+    # get the branch name
     branch_name = run_command("git rev-parse --abbrev-ref HEAD")
     branch_name = branch_name.lstrip()
     version_full = get_value_from_file(f"{app}/pubspec.yaml", "version")
@@ -412,9 +408,9 @@ def release(app):
     version = version_full.split("+")[0].strip()
     version_suffix = version_full.split("+")[1].strip() if "+" in version_full else "0"
 
-    input("Log the time taken for the release and press Enter...")
+    input("Log the time taken in github milestone and press Enter...")
 
-    print("Changing directory to app folder")
+    # Changing directory to app folder
     try:
         os.chdir(app)
     except FileNotFoundError:
@@ -619,11 +615,7 @@ def main():
         print("!" * 70 + "\n")
         input()
 
-    if app_selection in ["vkhgaruda", "both"]:
-        release("vkhgaruda")
-
-    if app_selection in ["vkhsangeetseva", "both"]:
-        release("vkhsangeetseva")
+    release()
 
     # Print all warnings at the end
     if warnings:

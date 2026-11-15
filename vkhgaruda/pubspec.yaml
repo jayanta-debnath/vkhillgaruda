@@ -6,11 +6,11 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # followed by an optional build number separated by a +.
 # build by specifying --build-name and --build-number, respectively.
-# Read more about Android versioning at https: 12.0.0+10
+# Read more about Android versioning at https: 13.0.0+11
 # In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
-version: 12.0.0+10
+version: 13.0.0+11
 
 environment:
   sdk: ^3.6.0
@@ -52,6 +52,10 @@ dependencies:
   share_plus: any
   package_info_plus: ^9.0.0
   firebase_messaging: ^15.2.10
+  fast_image_resizer: ^0.0.2
+  file_picker: ^10.1.2
+  image_picker: ^1.2.4
+  flutter_rating_bar: ^4.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -86,9 +90,6 @@ flutter:
     - assets/images/LauncherIcons/NityaSeva.png
     - assets/images/LauncherIcons/Deepotsava.png
     - assets/images/LauncherIcons/Harinaam.png
-    - assets/images/LauncherIcons/Register.png
-    - assets/images/LauncherIcons/PastEvents.png
-    - assets/images/LauncherIcons/RegisteredEvents.png
     - assets/images/Common/morning.png
     - assets/images/Common/evening.png
     - assets/images/Common/add.png
@@ -132,6 +133,9 @@ flutter:
     - assets/images/NityaSeva/JalaDana.png
     - assets/images/NityaSeva/laddu.png
     - assets/images/NityaSeva/sadhu_seva.png
+    - assets/images/SangeetSeva/AddRequest.png
+    - assets/images/SangeetSeva/PendingRequests.png
+    - assets/images/SangeetSeva/RegisteredEvents.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see
