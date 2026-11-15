@@ -488,6 +488,12 @@ class _EventDetailsState extends State<EventDetails> {
     String eventPath =
         "${Const().dbrootSangeetSeva}/Events/${_mainPerformer!.mobile}/$dbdate/$slotName";
 
+    // check if event is already submitted
+    bool pathExists = await FB().pathExists(eventPath);
+    if (!pathExists) {
+      await _onSubmit();
+    }
+
     if (_eventStatus == "Approved") {
       // event is already booked
 
@@ -1205,10 +1211,10 @@ class _EventDetailsState extends State<EventDetails> {
 
                     // submit button
                     SizedBox(height: 20),
-
                     if (_isAdmin &&
                         widget.readOnly == null &&
-                        widget.oldEvent == null)
+                        widget.oldEvent == null &&
+                        _eventStatus == "Pending")
                       ElevatedButton(
                         onPressed: _onSubmit,
                         child: Text("Submit"),
