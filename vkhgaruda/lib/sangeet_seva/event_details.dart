@@ -56,7 +56,9 @@ class _EventDetailsState extends State<EventDetails> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _raagaController = TextEditingController();
   final TextEditingController _taalaController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _notePerformerController =
+      TextEditingController();
+  final TextEditingController _noteTempleController = TextEditingController();
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
 
   @override
@@ -95,7 +97,8 @@ class _EventDetailsState extends State<EventDetails> {
     _titleController.dispose();
     _raagaController.dispose();
     _taalaController.dispose();
-    _noteController.dispose();
+    _notePerformerController.dispose();
+    _noteTempleController.dispose();
 
     // listeners
     for (var listener in _listeners) {
@@ -197,7 +200,7 @@ class _EventDetailsState extends State<EventDetails> {
           _performers.addAll(performanceRequest!.performers);
           _guests = performanceRequest.guests;
           _songs.addAll(performanceRequest.songs);
-          _noteController.text = performanceRequest.notePerformer;
+          _notePerformerController.text = performanceRequest.notePerformer;
         }
       }
       Supporter self = Supporter(
@@ -425,7 +428,7 @@ class _EventDetailsState extends State<EventDetails> {
       performers: _performers,
       guests: _guests,
       songs: _songs,
-      notePerformer: _noteController.text,
+      notePerformer: _notePerformerController.text,
       status: "Pending",
     );
 
@@ -513,7 +516,7 @@ class _EventDetailsState extends State<EventDetails> {
         if (await FB().pathExists(eventPath)) {
           // change status of event
           _eventStatus = "Rejected";
-          _note = _noteController.text;
+          _note = _noteTempleController.text;
           await FB().setValue(path: "$eventPath/status", value: _eventStatus);
           await FB().setValue(path: "$eventPath/noteTemple", value: _note);
 
@@ -536,7 +539,7 @@ class _EventDetailsState extends State<EventDetails> {
       EventRecord event =
           Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
       event.status = action;
-      event.noteTemple = _noteController.text;
+      event.noteTemple = _noteTempleController.text;
       eventRaw = event.toJson();
       await FB().setValue(path: eventPath, value: eventRaw);
 
@@ -583,7 +586,7 @@ class _EventDetailsState extends State<EventDetails> {
                     style: themeGaruda.textTheme.headlineSmall),
                 TextField(
                   maxLines: 2,
-                  controller: _noteController,
+                  controller: _noteTempleController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                   ),
@@ -631,7 +634,7 @@ class _EventDetailsState extends State<EventDetails> {
           TextField(
             focusNode: focusNode,
             maxLines: 3,
-            controller: _noteController,
+            controller: _notePerformerController,
             decoration: InputDecoration(
               hintText: "Enter your note here",
               border: OutlineInputBorder(),
@@ -1176,10 +1179,10 @@ class _EventDetailsState extends State<EventDetails> {
                       title: "Note from performer",
                       child: Column(
                         children: [
-                          if (_noteController.text.isNotEmpty)
+                          if (_notePerformerController.text.isNotEmpty)
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(_noteController.text),
+                              child: Text(_notePerformerController.text),
                             ),
                           TextButton(
                             onPressed: () async {
@@ -1190,7 +1193,7 @@ class _EventDetailsState extends State<EventDetails> {
                             },
                             child: _isAdmin
                                 ? Text(
-                                    _noteController.text.isEmpty
+                                    _notePerformerController.text.isEmpty
                                         ? "Add some notes"
                                         : "Edit notes",
                                   )
