@@ -30,4 +30,9 @@
 -[] edit, delete entry
 
 # new features
--[] making ticket editable
+-[] button to add request
+-[] Add new request
+-[] profile tab
+-[] events tab
+-[] add event by admin
+-[] refresh button

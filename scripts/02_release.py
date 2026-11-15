@@ -211,7 +211,7 @@ def update_changelog(app, version):
         json.dump(changelog, file, indent=4)
 
     print("Testcases refreshing")
-    with open(f"{rootdir}/vkhgaruda/test/nitya_seva.md", "r+") as testspec:
+    with open(f"{rootdir}/test/nitya_seva.md", "r+") as testspec:
         content = testspec.read()
         testspec.seek(0)
         testspec.write(content.replace("-[x]", "-[]"))
@@ -285,12 +285,10 @@ Examples:
 
     reltype = args.type
     target = args.target
-    app_selection = args.app
     verbose = args.verbose
 
     print(f"Release type: {reltype}")
     print(f"Target: {target}")
-    print(f"App: {app_selection}")
     print(f"Verbose logging: {verbose}")
 
     rootdir = run_command("git rev-parse --show-toplevel")
@@ -407,7 +405,7 @@ def release():
     version = version_full.split("+")[0].strip()
     version_suffix = version_full.split("+")[1].strip() if "+" in version_full else "0"
 
-    input("Log the time taken for the release and press Enter...")
+    input("Log the time taken in github milestone and press Enter...")
 
     # Changing directory to app folder
     try:

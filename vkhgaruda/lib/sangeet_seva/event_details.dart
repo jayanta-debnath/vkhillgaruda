@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhpackages/vkhpackages.dart';
-import 'package:vkhgaruda/sangeet_seva/sangeet_seva.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class EventDetails extends StatefulWidget {
@@ -815,7 +814,7 @@ class _EventDetailsState extends State<EventDetails> {
                   flex: salutationFlex,
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: "Salutation"),
-                    value: salutation.isNotEmpty
+                    initialValue: salutation.isNotEmpty
                         ? salutation
                         : SSConst().salutations.first,
                     items: SSConst().salutations.map((salutation) {
@@ -899,7 +898,7 @@ class _EventDetailsState extends State<EventDetails> {
                   children: [
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(labelText: "Specialization"),
-                      value: specialization,
+                      initialValue: specialization,
                       items: ["Vocalist", ...SSConst().instrumentSkills].map((
                         specialization,
                       ) {

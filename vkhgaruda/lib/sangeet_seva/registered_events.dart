@@ -60,7 +60,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
               _events.add(event);
 
               if (mainPerformer != null) {
-                _mainPerformers[mainPerformer!.mobile] = mainPerformer;
+                _mainPerformers[mainPerformer.mobile] = mainPerformer;
               }
             });
           },
@@ -152,7 +152,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
             if (mainPerformer != null) {
-              _mainPerformers[mainPerformer!.mobile] = mainPerformer!;
+              _mainPerformers[mainPerformer.mobile] = mainPerformer;
             }
           }
         }
