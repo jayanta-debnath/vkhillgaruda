@@ -34,6 +34,7 @@ class ProfileState extends State<Profile> {
   late String _salutation;
   bool _isAdmin = false;
   PerformerProfile? _profile;
+  bool _isDirty = false;
 
   // lists
   List<SangeetExp> _exp = [];
@@ -129,6 +130,11 @@ class ProfileState extends State<Profile> {
   }
 
   Future<void> _save({bool goback = true}) async {
+    // check dirty state
+    if (!_isDirty) {
+      return;
+    }
+
     // validation of form
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       Toaster().error('There are errors in the form');
@@ -184,17 +190,19 @@ class ProfileState extends State<Profile> {
       widget.onProfileSaved!(_profile!);
     }
 
+    // prepare for return
+    _isDirty = false;
+    Toaster().info("Profile saved");
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
 
-      Toaster().info("Profile saved");
+      if (goback) {
+        Navigator.of(context).pop();
+      }
     }
 
-    if (mounted && goback == true) {
-      Navigator.of(context).pop();
-    }
   }
 
   Widget _createAudioClipTile(int index) {
@@ -753,7 +761,6 @@ class ProfileState extends State<Profile> {
                   ),
                 ),
 
-                // salutation
                 SizedBox(height: 10),
                 Widgets().createTopLevelCard(
                   context: context,
@@ -762,6 +769,7 @@ class ProfileState extends State<Profile> {
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
+                        // salutation
                         InputDecorator(
                           decoration: const InputDecoration(
                             labelText: 'Salutation',
@@ -774,6 +782,7 @@ class ProfileState extends State<Profile> {
                             child: DropdownButton<String>(
                               value: _salutation,
                               onChanged: (String? newValue) {
+                                _isDirty = true;
                                 setState(() {
                                   _salutation = newValue!;
                                 });
@@ -798,6 +807,7 @@ class ProfileState extends State<Profile> {
                           decoration: const InputDecoration(
                             labelText: 'Full name',
                           ),
+                          onChanged: (value) => _isDirty = true,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Name cannot be empty';
@@ -816,6 +826,7 @@ class ProfileState extends State<Profile> {
                               const InputDecoration(labelText: 'Mobile'),
                           readOnly:
                               _mobileController.text.isEmpty ? false : true,
+                          onChanged: (value) => _isDirty = true,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Mobile number cannot be empty';
@@ -834,6 +845,7 @@ class ProfileState extends State<Profile> {
                             labelText: 'Sangeet academic details',
                             hintText: "e.g. MA in music",
                           ),
+                          onChanged: (value) => _isDirty = true,
                           validator: (value) {
                             // if (value == null || value.isEmpty) {
                             //   return 'Field cannot be empty';
@@ -869,8 +881,6 @@ class ProfileState extends State<Profile> {
                       TextButton(
                         onPressed: () async {
                           await _showDialogSangeetExp(context);
-
-                          
                         },
                         child: Text(
                           _exp.isEmpty
@@ -908,8 +918,6 @@ class ProfileState extends State<Profile> {
                           TextButton(
                             onPressed: () async {
                               await _showDialogYoutube(context);
-
-                              
                             },
                             child: Text(
                               _youtubeLinks.isEmpty
