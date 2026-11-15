@@ -14,7 +14,10 @@
             "profile is saving even when a dialog is cancelled",
             "mixup of note for temple and performer",
             "prevent duplicate event submissions and restrict submit button visibility",
-            "profile save only when dirty"
+            "profile save only when dirty",
+            "trigger update",
+            "trigger update check",
+            "version comparison"
         ]
     },
     "12.0.0": {
