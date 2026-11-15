@@ -588,7 +588,7 @@ def release():
             trigger = "true"
         print(f"Setting {app_prefix}_trigger_update = {trigger}")
         update_remote_config(
-            f"{app_prefix}_trigger_update", "true", cred_file=cred_file
+            f"{app_prefix}_trigger_update", trigger, cred_file=cred_file
         )
 
         if branch_name != "main":
