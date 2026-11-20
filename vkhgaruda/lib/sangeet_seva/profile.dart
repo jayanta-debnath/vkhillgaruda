@@ -55,13 +55,6 @@ class ProfileState extends State<Profile> {
   void initState() {
     super.initState();
 
-    // set admin status
-    Utils().isAdmin().then(
-          (value) => setState(() {
-            _isAdmin = value;
-          }),
-        );
-
     _salutation = SSConst().salutations[0];
     _profile = widget.oldUserDetails;
 
@@ -90,7 +83,8 @@ class ProfileState extends State<Profile> {
     }
 
     await _lock.synchronized(() async {
-      // perform your work here
+      // fetch admin status and profile data together
+      _isAdmin = await Utils().isAdmin();
 
       if (_profile != null) {
         // read db
