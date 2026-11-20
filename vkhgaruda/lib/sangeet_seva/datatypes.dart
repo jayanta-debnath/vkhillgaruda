@@ -3,7 +3,7 @@ class EventRecord {
   DateTime eventStart;
   DateTime eventEnd;
   final String eventRequesterMobile;
-  final List<Supporter> performers;
+  final List<PerformerProfileMini> performers;
   final int guests;
   final List<String> songs;
   String status; // Pending, Approved, Rejected
@@ -46,7 +46,7 @@ class EventRecord {
               Map<String, dynamic> supportMap = Map<String, dynamic>.from(
                 supportRaw,
               );
-              return Supporter.fromJson(supportMap);
+              return PerformerProfileMini.fromJson(supportMap);
             }),
     );
   }
@@ -122,19 +122,19 @@ class Slot {
   }
 }
 
-class Supporter {
+class PerformerProfileMini {
   String salutation;
   String name;
   String specialization;
 
-  Supporter({
+  PerformerProfileMini({
     required this.salutation,
     required this.name,
     required this.specialization,
   });
 
-  factory Supporter.fromJson(Map<String, dynamic> json) {
-    return Supporter(
+  factory PerformerProfileMini.fromJson(Map<String, dynamic> json) {
+    return PerformerProfileMini(
       salutation: json['salutation'] as String,
       name: json['name'] as String,
       specialization: json['specialization'] as String,
@@ -160,7 +160,7 @@ class PerformerProfile {
   final List<SangeetExp> exps;
   final List<String> youtubeUrls;
   final List<String> audioClipUrls;
-  final List<Supporter> referrals;
+  final List<PerformerProfileMini> referrals;
   String fcmToken;
   int? rating;
 
@@ -201,9 +201,10 @@ class PerformerProfile {
           : List<String>.from(json['audioClipUrls']),
       referrals: json['referrals'] == null
           ? []
-          : List<Supporter>.from(
+          : List<PerformerProfileMini>.from(
               json['referrals'].map(
-                (e) => Supporter.fromJson(Map<String, dynamic>.from(e as Map)),
+                (e) => PerformerProfileMini.fromJson(
+                    Map<String, dynamic>.from(e as Map)),
               ),
             ),
       fcmToken: json['fcmToken'] ?? '',

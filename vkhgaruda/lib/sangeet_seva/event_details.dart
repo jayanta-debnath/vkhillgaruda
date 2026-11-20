@@ -47,7 +47,7 @@ class _EventDetailsState extends State<EventDetails> {
   bool _isAdmin = false;
 
   // lists
-  final List<Supporter> _performers = [];
+  final List<PerformerProfileMini> _performers = [];
   int _guests = 0;
   final List<String> _songs = [];
 
@@ -116,19 +116,28 @@ class _EventDetailsState extends State<EventDetails> {
 
     _isAdmin = await Utils().isAdmin();
 
-    // fetch form values
+    // fetch user details
     String mobile = _mainPerformer!.mobile;
-    bool userExists = await FB().pathExists(
+    FB()
+        .pathExists(
       "${Const().dbrootSangeetSeva}/Users/$mobile",
-    );
-    Map<String, dynamic> userdetailsJson = {};
-    if (userExists) {
-      userdetailsJson = await FB().getJson(
-        path: "${Const().dbrootSangeetSeva}/Users/$mobile",
-      );
-    } else {
-      Toaster().error("User not found");
-    }
+    )
+        .then((userExists) async {
+      Map<String, dynamic> userdetailsJson = {};
+      if (userExists) {
+        userdetailsJson = await FB().getJson(
+          path: "${Const().dbrootSangeetSeva}/Users/$mobile",
+        );
+      } else {
+        Toaster().error("User not found");
+      }
+
+
+
+      if (userdetailsJson.isNotEmpty) {
+        _mainPerformer = PerformerProfile.fromJson(userdetailsJson);
+      }
+    });
 
     // preferred event time
     _eventStart = widget.eventStart ?? _eventStart;
@@ -142,20 +151,54 @@ class _EventDetailsState extends State<EventDetails> {
       }
     }
 
-    // read the performance details
+    // read the event details
     EventRecord? performanceRequest;
     if (widget.oldEvent != null) {
       String dbdate = DateFormat("yyyy-MM-dd").format(widget.oldEvent!.date);
       String slotName = DateFormat("HH_mm").format(widget.oldEvent!.eventStart);
       String dbpath =
           "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
-      Map<String, dynamic> data = await FB().getJson(path: dbpath);
-      performanceRequest = Utils().convertRawToDatatype(
-        data,
-        EventRecord.fromJson,
-      );
+      FB().getJson(path: dbpath).then(
+        (Map<String, dynamic> data) {
+          if (data.isEmpty && !mounted) {
+            return;
+          }
 
-      _eventStatus = performanceRequest!.status;
+          performanceRequest = Utils().convertRawToDatatype(
+            data,
+            EventRecord.fromJson,
+          );
+
+          setState(() {
+            _eventStatus = performanceRequest!.status;
+
+            // performers
+            if (widget.oldEvent != null) {
+              _performers.clear();
+              _songs.clear();
+              if (widget.oldEvent != null) {
+                // populate the lists
+                _performers.addAll(performanceRequest!.performers);
+                _guests = performanceRequest!.guests;
+                _songs.addAll(performanceRequest!.songs);
+                _notePerformerController.text =
+                    performanceRequest!.notePerformer;
+              }
+            }
+
+            PerformerProfileMini self = PerformerProfileMini(
+              salutation: _mainPerformer!.salutation == "Others"
+                  ? ""
+                  : _mainPerformer!.salutation,
+              name: _mainPerformer!.name,
+              specialization: "Vocalist",
+            );
+            if (_performers.isEmpty) {
+              _performers.add(self);
+            }
+          });
+        },
+      );
 
       _addListeners(dbpath);
     }
@@ -166,52 +209,6 @@ class _EventDetailsState extends State<EventDetails> {
 
     setState(() {
       _isLoading = false;
-
-      if (userdetailsJson.isNotEmpty) {
-        _mainPerformer = PerformerProfile.fromJson(userdetailsJson);
-      }
-
-      // write fcm token if not set
-      FirebaseMessaging.instance.getToken().then((fcmToken) async {
-        if (_mainPerformer != null &&
-            (_mainPerformer!.fcmToken.isEmpty ||
-                _mainPerformer!.fcmToken != (fcmToken ?? ""))) {
-          bool userExists = await FB().pathExists(
-            "${Const().dbrootSangeetSeva}/Users/$mobile",
-          );
-          if (userExists) {
-            String dbpath =
-                "${Const().dbrootSangeetSeva}/Users/$mobile/fcmToken";
-            FB().setValue(
-              path: dbpath,
-              value: fcmToken ?? "",
-            ); // no need to await
-          }
-        }
-      });
-
-      // performers
-      if (widget.oldEvent != null) {
-        _performers.clear();
-        _songs.clear();
-        if (widget.oldEvent != null) {
-          // populate the lists
-          _performers.addAll(performanceRequest!.performers);
-          _guests = performanceRequest.guests;
-          _songs.addAll(performanceRequest.songs);
-          _notePerformerController.text = performanceRequest.notePerformer;
-        }
-      }
-      Supporter self = Supporter(
-        salutation: _mainPerformer!.salutation == "Others"
-            ? ""
-            : _mainPerformer!.salutation,
-        name: _mainPerformer!.name,
-        specialization: "Vocalist",
-      );
-      if (_performers.isEmpty) {
-        _performers.add(self);
-      }
     });
   }
 
@@ -363,8 +360,6 @@ class _EventDetailsState extends State<EventDetails> {
             : null);
   }
 
-
-
   Future<void> _onSubmit({bool goback = true}) async {
     // validations for edit event
     if (widget.oldEvent != null) {
@@ -490,7 +485,6 @@ class _EventDetailsState extends State<EventDetails> {
           //     "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotName";
           // await FB()
           //     .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
-
         }
       }
     } else {
@@ -528,7 +522,6 @@ class _EventDetailsState extends State<EventDetails> {
       await FB().setValue(
           path: "${Const().dbrootSangeetSeva}/PendingRequests",
           value: pendingRequestsRaw);
-
     }
   }
 
@@ -734,7 +727,7 @@ class _EventDetailsState extends State<EventDetails> {
 
   Future<void> _showAddPerformerDialog({
     required BuildContext context,
-    Supporter? oldUser,
+    PerformerProfileMini? oldUser,
   }) async {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -916,7 +909,7 @@ class _EventDetailsState extends State<EventDetails> {
 
             Navigator.pop(context);
 
-            Supporter user = Supporter(
+            PerformerProfileMini user = PerformerProfileMini(
               salutation: salutation,
               name: performerNameController.text,
               specialization: specialization == "Other"
