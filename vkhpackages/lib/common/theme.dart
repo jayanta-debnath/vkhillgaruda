@@ -24,7 +24,7 @@ class ThemeCreator {
         secondary: Color.lerp(primaryColor, Colors.white, 0.95)!,
         surface: surfaceColor,
         onPrimary: surfaceColor,
-        onSecondary: surfaceColor,
+        onSecondary: primaryColor,
         onSurface: Colors.black,
       ),
 
