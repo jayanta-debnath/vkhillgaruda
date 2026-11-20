@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 class DateHeaderMonth extends StatefulWidget {
   final void Function(DateTime)? onMonthChanged;
@@ -16,6 +17,19 @@ class _DateHeaderDateState extends State<DateHeaderMonth> {
   @override
   initState() {
     super.initState();
+  }
+
+  Future<void> _showMonthPickerDialog(BuildContext context) async {
+    final picked = await showMonthPicker(
+      context: context,
+      initialDate: _month,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (picked != null) {
+      setState(() => _month = picked);
+    }
   }
 
   @override
@@ -49,7 +63,7 @@ class _DateHeaderDateState extends State<DateHeaderMonth> {
           // date
           GestureDetector(
             onTap: () {
-              // Add your tap handling logic here
+              _showMonthPickerDialog(context);
             },
             child: Container(
               width: 150.0,
