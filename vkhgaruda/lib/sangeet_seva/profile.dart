@@ -822,8 +822,15 @@ class ProfileState extends State<Profile> {
                         // mobile
                         TextFormField(
                           controller: _mobileController,
-                          decoration:
-                              const InputDecoration(labelText: 'Mobile'),
+                          decoration: InputDecoration(
+                            labelText: 'Mobile',
+                            prefixText: '+91 ',
+                            prefixStyle: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                            ),
+                          ),
+                          keyboardType: TextInputType.phone,
                           readOnly:
                               _mobileController.text.isEmpty ? false : true,
                           onChanged: (value) => _isDirty = true,
