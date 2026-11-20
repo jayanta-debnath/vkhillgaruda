@@ -21,12 +21,9 @@ class _ProfileListState extends State<ProfileList> {
   // scalars
   final Lock _lock = Lock();
   bool _isLoading = true;
-  String _tab = "Performers";
 
   // lists
   final List<PerformerProfile> _performers = [];
-  final List<Map<int, Supporter>> _supporters =
-      []; // Map<PerformerIndex, Referral>
 
   // controllers, listeners and focus nodes
 
@@ -41,7 +38,6 @@ class _ProfileListState extends State<ProfileList> {
   dispose() {
     // clear all lists
     _performers.clear();
-    _supporters.clear();
 
     // clear all controllers and focus nodes
 
@@ -65,14 +61,6 @@ class _ProfileListState extends State<ProfileList> {
         Map<String, dynamic> userJson = Map<String, dynamic>.from(userRaw);
         PerformerProfile user = PerformerProfile.fromJson(userJson);
         _performers.add(user);
-      }
-
-      // supporters
-      _supporters.clear();
-      for (PerformerProfile user in _performers) {
-        for (var value in user.referrals) {
-          _supporters.add({_performers.indexOf(user): value});
-        }
       }
     });
 
@@ -134,22 +122,6 @@ class _ProfileListState extends State<ProfileList> {
     );
   }
 
-  Widget _createSupporterCard(int indexSupporter) {
-    Map<int, Supporter> memberMap = _supporters[indexSupporter];
-    Supporter member = memberMap.values.first;
-    return ListTile(
-      title: Text("${member.salutation} ${member.name}"),
-      subtitle: Row(
-        children: [
-          // specialization
-          Icon(Icons.workspace_premium, size: 16),
-          SizedBox(width: 5),
-          Text(member.specialization),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -185,43 +157,20 @@ class _ProfileListState extends State<ProfileList> {
                           // leave some space at top
                           SizedBox(height: 10),
 
-                          // radio performers vs supporters
-                          RadioRow(
-                            items: ["Performers", "Supporters"],
-                            onChanged: (value) {
-                              setState(() {
-                                _tab = value;
-                              });
+                          // performers list
+
+                          // existing profiles
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _performers.length,
+                            itemBuilder: (context, index) {
+                              return Card(child: _createPerformerCard(index));
                             },
                           ),
 
-                          // performers list
-                          if (_tab == "Performers")
-
-                            // existing profiles
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: _performers.length,
-                              itemBuilder: (context, index) {
-                                return Card(child: _createPerformerCard(index));
-                              },
-                            ),
-
-                          // supporters list
-                          if (_tab == "Supporters")
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: _supporters.length,
-                              itemBuilder: (context, index) {
-                                return Card(child: _createSupporterCard(index));
-                              },
-                            ),
-
                           // empty message
-                          if ((_tab == "Performers" && _performers.isEmpty) ||
-                              (_tab == "Supporters" && _supporters.isEmpty))
+                          if (_performers.isEmpty)
                             Center(
                               child: Text("No profiles found"),
                             ),
