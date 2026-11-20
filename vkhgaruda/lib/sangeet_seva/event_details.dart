@@ -363,36 +363,7 @@ class _EventDetailsState extends State<EventDetails> {
             : null);
   }
 
-// status = Approved / Rejected
-  Future<void> _notifyUser(String status) async {
-    // prepare notification
-    String date = DateFormat("EEE, dd MM, yyyy").format(_eventStart);
-    String startTime = DateFormat("hh:mm a").format(_eventStart);
-    String endTime = DateFormat("hh:mm a").format(_eventEnd);
-    NotificationEntry notif = NotificationEntry(
-        title: status == "Approved"
-            ? "Request approved"
-            : (status == "Rejected" ? "Request rejected" : status),
-        timestamp: DateTime.now(),
-        isRead: false,
-        message: "Event: $date [$startTime - $endTime]",
-        actions: status == "Approved" ? ["advisory"] : []);
 
-    // send notification to user
-    if (_mainPerformer?.fcmToken != null &&
-        _mainPerformer!.fcmToken.isNotEmpty) {
-      Utils().sendNotification(
-          fcmToken: _mainPerformer!.fcmToken,
-          title: notif.title,
-          body: notif.message);
-    }
-
-    // store notification in database
-    String dbkey = Utils().convertTimestampToDbKey(notif.timestamp);
-    String dbpathNotif =
-        "${Const().dbrootSangeetSeva}/Notifications/Performers/${_mainPerformer!.mobile}/$dbkey";
-    await FB().setJson(path: dbpathNotif, json: notif.toJson());
-  }
 
   Future<void> _onSubmit({bool goback = true}) async {
     // validations for edit event
@@ -454,18 +425,7 @@ class _EventDetailsState extends State<EventDetails> {
     }
 
     // show success message
-    if (widget.oldEvent == null) {
-      // notify coordinator
-      String date = DateFormat("EEE, dd MM, yyyy").format(widget.selectedDate);
-      String startTime = DateFormat("h:mm a").format(_eventStart);
-      String endTime = DateFormat("h:mm a").format(_eventEnd);
-      Utils().sendNotificationToTopic(
-        topic: Const().fcmTopicSSCoordinators,
-        title: "New event request",
-        body: "Event request for $date [$startTime - $endTime]",
-      );
-    } else {
-      // edit
+    if (widget.oldEvent != null) {
       Toaster().info("Saved");
     }
 
@@ -531,7 +491,6 @@ class _EventDetailsState extends State<EventDetails> {
           // await FB()
           //     .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
 
-          _notifyUser(_eventStatus);
         }
       }
     } else {
@@ -570,7 +529,6 @@ class _EventDetailsState extends State<EventDetails> {
           path: "${Const().dbrootSangeetSeva}/PendingRequests",
           value: pendingRequestsRaw);
 
-      _notifyUser(action);
     }
   }
 

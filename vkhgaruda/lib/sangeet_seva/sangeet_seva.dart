@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
@@ -23,12 +22,6 @@ class SangeetSeva extends StatefulWidget {
   _SangeetSevaState createState() => _SangeetSevaState();
 }
 
-// Top-level function for handling background messages
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Message in background: ${message.notification?.title}");
-}
-
 class _SangeetSevaState extends State<SangeetSeva> {
   // global keys
 
@@ -38,7 +31,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
   bool _isLoading = true;
   int _pendingRequests = 0;
   DateTime _lastCallbackInvoked = DateTime.now();
-  late FirebaseMessaging _firebaseMessaging;
 
   // lists
 
@@ -48,23 +40,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
   @override
   initState() {
     super.initState();
-
-    // setup notifications
-    _firebaseMessaging = FirebaseMessaging.instance;
-    _firebaseMessaging.requestPermission();
-    _firebaseMessaging.getToken().then((token) {
-      print("FCM Token: $token");
-    });
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Message received: ${message.notification?.title}");
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Message clicked: ${message.notification?.title}");
-    });
-    if (!kIsWeb) {
-      FirebaseMessaging.instance
-          .subscribeToTopic(Const().fcmTopicSSCoordinators);
-    }
 
     // listen to database events
     FB().listenForChangeInList(
@@ -99,12 +74,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
 
               // process the received data
               _decrementPendingRequests();
-
-              var eventRaw = await FB().getValue(path: data['path']);
-              if (eventRaw != null) {
-                EventRecord event = Utils()
-                    .convertRawToDatatype(eventRaw, EventRecord.fromJson);
-              }
             }
           },
 
