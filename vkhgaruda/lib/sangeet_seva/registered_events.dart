@@ -25,6 +25,8 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
   final Lock _lock = Lock();
   bool _isLoading = true;
   DateTime _lastCallbackInvoked = DateTime.now();
+  DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  late DateTime _endDate;
 
   // lists
   final List<EventRecord> _events = [];
@@ -36,6 +38,8 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
   @override
   initState() {
     super.initState();
+
+    _endDate = DateTime(_startDate.year, _startDate.month + 1, 0);
 
     FB().listenForChange(
         "${Const().dbrootSangeetSeva}/BookedEvents",
@@ -128,8 +132,8 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
       _events.clear();
       _mainPerformers.clear();
       String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents";
-      Map<String, dynamic> kvs = await FB()
-          .getValuesByDateRange(path: dbpath, startDate: DateTime.now());
+      Map<String, dynamic> kvs = await FB().getValuesByDateRange(
+          path: dbpath, startDate: _startDate, endDate: _endDate);
       if (kvs.isNotEmpty) {
         for (var kv in kvs.entries) {
           List eventLinksRaw = kv.value;
@@ -138,16 +142,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
             EventRecord event =
                 Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
 
-            // Add validation to check if eventStart is not in the past (only checking date)
-            DateTime today = DateTime.now();
-            DateTime startOfDay = DateTime(today.year, today.month, today.day);
-            DateTime eventStartOfDay = DateTime(event.eventStart.year,
-                event.eventStart.month, event.eventStart.day);
-
-            if (!eventStartOfDay.isBefore(startOfDay) &&
-                event.status == "Approved") {
-              _events.add(event);
-            }
+            _events.add(event);
 
             PerformerProfile? mainPerformer =
                 await SSUtils().getPerformerProfile(event.eventRequesterMobile);
@@ -189,22 +184,58 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
     String performer = _mainPerformers[mobile]!.name;
     String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl ?? "";
 
+    Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
+    if (_events[index].status == "Approved") {
+      statusIcon = Icon(Icons.check_circle, color: Colors.green);
+    } else if (_events[index].status == "Rejected") {
+      statusIcon = Icon(Icons.cancel_outlined, color: Colors.red);
+    }
+
+    // set the text color to gray if event is in the past
+    Color textColor = Colors.black;
+    if (_events[index].eventEnd.isBefore(DateTime.now())) {
+      textColor = Colors.grey;
+    }
+
     return Card(
         child: ListTile(
       title: Text(
         title,
+        style: Theme.of(context)
+            .textTheme
+            .headlineSmall!
+            .copyWith(color: textColor),
       ),
-      leading: CircleAvatar(
-          backgroundImage:
-              (profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl))),
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 4.0),
+        child: CircleAvatar(
+            backgroundImage:
+                (profilePicUrl.isEmpty ? null : NetworkImage(profilePicUrl))),
+      ),
       subtitle: Row(
         children: [
-          Icon(Icons.person, size: 16),
-          Text(performer),
+          Icon(Icons.person, size: 16, color: textColor),
+          Text(
+            performer,
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall!
+                .copyWith(color: textColor),
+          ),
           SizedBox(width: 10),
-          Icon(Icons.phone, size: 16),
-          Text(mobile),
+          Icon(Icons.phone, size: 16, color: textColor),
+          Text(
+            mobile,
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall!
+                .copyWith(color: textColor),
+          ),
         ],
+      ),
+      trailing: Padding(
+        padding: const EdgeInsets.only(right: 4.0),
+        child: statusIcon,
       ),
     ));
   }
@@ -229,6 +260,10 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                       // leave some space at top
                       SizedBox(height: 10),
 
+                      // month header
+                      DateHeader(),
+
+                      // list of events
                       Widgets().createTopLevelResponsiveContainer(context, [
                         // your widgets here
                         ...List.generate(_events.length, (index) {

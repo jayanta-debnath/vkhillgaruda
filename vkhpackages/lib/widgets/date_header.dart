@@ -24,43 +24,6 @@ class _DateHeaderState extends State<DateHeader> {
     setState(() {});
   }
 
-  void _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(child: child),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  _date = DateTime.now();
-                });
-                if (widget.callbacks != null) {
-                  widget.callbacks!.onChange(_date);
-                }
-              },
-              child: Text('Today'),
-            ),
-          ],
-        );
-      },
-    );
-    if (picked != null && picked != _date) {
-      setState(() {
-        _date = picked;
-      });
-      if (widget.callbacks != null) {
-        widget.callbacks!.onChange(_date);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(
