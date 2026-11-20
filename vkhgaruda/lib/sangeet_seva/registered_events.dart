@@ -261,7 +261,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                       SizedBox(height: 10),
 
                       // month header
-                      DateHeader(),
+                      DateHeaderMonth(),
 
                       // list of events
                       Widgets().createTopLevelResponsiveContainer(context, [

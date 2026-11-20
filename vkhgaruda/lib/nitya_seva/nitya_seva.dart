@@ -591,7 +591,7 @@ class _NityaSevaState extends State<NityaSeva> {
                 child: ListView(
                   children: [
                     // date header
-                    DateHeader(callbacks:
+                    DateHeaderDate(callbacks:
                         DateHeaderCallbacks(onChange: (DateTime date) {
                       _onDateChange(date);
                     })),

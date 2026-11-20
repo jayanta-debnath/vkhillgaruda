@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class YearHeader extends StatefulWidget {
+class DateHeaderYear extends StatefulWidget {
   final void Function(int)? onYearChanged;
   final int startYear;
   final bool descending; // when true current year first (default)
 
-  const YearHeader({
+  const DateHeaderYear({
     super.key,
     this.onYearChanged,
     this.startYear = 2020,
@@ -13,10 +13,10 @@ class YearHeader extends StatefulWidget {
   });
 
   @override
-  State<YearHeader> createState() => _YearHeaderState();
+  State<DateHeaderYear> createState() => _DateHeaderYearState();
 }
 
-class _YearHeaderState extends State<YearHeader> {
+class _DateHeaderYearState extends State<DateHeaderYear> {
   late int _currentYear;
   late List<int> _years; // generated from startYear..now
   final ScrollController _scrollController = ScrollController();

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class DateHeader extends StatefulWidget {
+class DateHeaderDate extends StatefulWidget {
   final DateHeaderCallbacks? callbacks;
 
-  const DateHeader({super.key, this.callbacks});
+  const DateHeaderDate({super.key, this.callbacks});
 
   @override
-  State<DateHeader> createState() => _DateHeaderState();
+  State<DateHeaderDate> createState() => _DateHeaderState();
 }
 
-class _DateHeaderState extends State<DateHeader> {
+class _DateHeaderState extends State<DateHeaderDate> {
   DateTime _date = DateTime.now();
 
   @override
