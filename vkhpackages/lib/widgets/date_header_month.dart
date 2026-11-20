@@ -34,25 +34,30 @@ class _DateHeaderDateState extends State<DateHeaderMonth> {
               ),
             ),
             onPressed: () {
-              if (widget.onMonthChanged == null) {
-                return;
-              }
-
+              final newMonth = DateTime(
+                _month.year,
+                _month.month - 1,
+                _month.day,
+              );
               setState(() {
-                _month = DateTime(_month.year, _month.month - 1, _month.day);
+                _month = newMonth;
               });
-
-              widget.onMonthChanged!(_month);
+              widget.onMonthChanged?.call(newMonth);
             },
           ),
 
           // date
-          Container(
-            width: 150.0,
-            alignment: Alignment.center,
-            child: Text(
-              DateFormat('MMM, yyyy').format(_month),
-              style: Theme.of(context).textTheme.headlineMedium,
+          GestureDetector(
+            onTap: () {
+              // Add your tap handling logic here
+            },
+            child: Container(
+              width: 150.0,
+              alignment: Alignment.center,
+              child: Text(
+                DateFormat('MMM, yyyy').format(_month),
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
             ),
           ),
 
@@ -63,20 +68,15 @@ class _DateHeaderDateState extends State<DateHeaderMonth> {
               color: Theme.of(context).iconTheme.color,
             ), // Default points right
             onPressed: () {
-              if (widget.onMonthChanged == null) {
-                return;
-              }
-
-              if (_month.year == DateTime.now().year &&
-                  _month.month == DateTime.now().month) {
-                return;
-              }
-
+              final newMonth = DateTime(
+                _month.year,
+                _month.month + 1,
+                _month.day,
+              );
               setState(() {
-                _month = DateTime(_month.year, _month.month + 1, _month.day);
+                _month = newMonth;
               });
-
-              widget.onMonthChanged!(_month);
+              widget.onMonthChanged?.call(newMonth);
             },
           ),
         ],
