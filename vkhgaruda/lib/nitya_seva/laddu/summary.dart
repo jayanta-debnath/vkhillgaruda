@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:vkhgaruda/nitya_seva/laddu/datatypes.dart';
 import 'package:vkhgaruda/nitya_seva/laddu/utils.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:vkhpackages/vkhpackages.dart';
 
 class Summary extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -15,6 +14,7 @@ class Summary extends StatefulWidget {
 }
 
 // hint: templateKey.currentState!.refresh();
+// ignore: non_constant_identifier_names, library_private_types_in_public_api
 final GlobalKey<_SummaryState> SummaryKey = GlobalKey<_SummaryState>();
 
 class _SummaryState extends State<Summary> {
@@ -23,19 +23,12 @@ class _SummaryState extends State<Summary> {
   // theme ticketColors
   final Color colorPrimary =
       ColorScheme.fromSeed(seedColor: const Color(0xFF3B4043)).primary;
-  final _ticketColors = {
-    '500': Colors.blue[300],
-    '500variant': Colors.blue[900],
-    '600': Colors.yellow[600],
-    '600variant': Colors.yellow[900],
-    '1000': Colors.green[300],
-    '1000variant': Colors.green[900],
-    '2500': Colors.pink[200],
-    '2500variant': Colors.pink[900],
-  };
 
+  // ignore: non_constant_identifier_names
   int total_procured = 0;
+  // ignore: non_constant_identifier_names
   int total_carry = 0;
+  // ignore: non_constant_identifier_names
   int total_served = 0;
 
   LadduReturn? lr;
@@ -56,7 +49,7 @@ class _SummaryState extends State<Summary> {
       lr = readLadduReturnStatus(widget.sessionData);
 
       // formulate session title for summary widget
-      
+
       sessionTitle = await CalculateSessionTitle(widget.sessionData);
 
       total_procured = 0;
@@ -192,134 +185,6 @@ class _SummaryState extends State<Summary> {
   void restock(int procured) {
     total_procured += procured;
     setState(() {});
-  }
-
-  Widget _getBarChart(BuildContext context) {
-    const double barChartHeight = 150.0; // Set a fixed height for the bar chart
-
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 16),
-          SizedBox(
-            height: barChartHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(barLabels.length, (index) {
-                Color barColor;
-                switch (barLabels[index]) {
-                  case "Seva 500":
-                    barColor = _ticketColors['500']!;
-                    break;
-                  case "Seva 600":
-                    barColor = _ticketColors['600']!;
-                    break;
-                  case "Seva 1000":
-                    barColor = _ticketColors['1000']!;
-                    break;
-                  case "Seva 2500":
-                    barColor = _ticketColors['2500']!;
-                    break;
-                  default:
-                    barColor = Utils().getRandomDarkColor();
-                }
-
-                // Add newline character to the labels
-                String label = '${barLabels[index].replaceAll(' ', '\n')} ';
-
-                return Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(barValues[index].toString()),
-                      SizedBox(height: 4),
-                      Flexible(
-                        child: Container(
-                          height: (barValues[index] /
-                                  barValues.reduce((a, b) => a > b ? a : b)) *
-                              (barChartHeight -
-                                  50), // Adjust bar height proportionally
-                          color: barColor,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(label, textAlign: TextAlign.center),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _getBarChartEmpty(BuildContext context) {
-    const double barChartHeight = 150.0; // Set a fixed height for the bar chart
-    const int numberOfBars = 5; // Define the number of bars for the placeholder
-    const List<String> barLabels = [
-      'loading values',
-      'loading values',
-      'loading values',
-      'loading values',
-      'loading values'
-    ]; // Placeholder labels
-    const List<int> barValues = [
-      50,
-      40,
-      30,
-      20,
-      10
-    ]; // Values in descending order
-    const Color barColor = Colors.grey; // Set bar color to grey
-    const Color textColorDefault = Colors.grey; // Set text color to grey
-
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 16),
-          SizedBox(
-            height: barChartHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(numberOfBars, (index) {
-                return Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        barValues[index].toString(),
-                        style: TextStyle(
-                            color: textColorDefault), // Set text color
-                      ),
-                      SizedBox(height: 4),
-                      Flexible(
-                        child: Container(
-                          height:
-                              barValues[index].toDouble(), // Height for bars
-                          color: barColor,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        barLabels[index],
-                        style: TextStyle(
-                            color: textColorDefault), // Set text color
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _getLoading(BuildContext context) {

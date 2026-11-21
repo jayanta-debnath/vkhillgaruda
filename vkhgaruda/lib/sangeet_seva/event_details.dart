@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
@@ -131,8 +130,6 @@ class _EventDetailsState extends State<EventDetails> {
       } else {
         Toaster().error("User not found");
       }
-
-
 
       if (userdetailsJson.isNotEmpty) {
         _mainPerformer = PerformerProfile.fromJson(userdetailsJson);

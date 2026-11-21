@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
-import 'package:vkhgaruda/sangeet_seva/pending_requests.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
 import 'package:vkhgaruda/sangeet_seva/registered_events.dart';
 import 'package:vkhgaruda/sangeet_seva/sswelcome.dart';
 import 'package:vkhpackages/vkhpackages.dart';
-import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
 class SangeetSeva extends StatefulWidget {
   final String title;
@@ -29,7 +26,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
   final Lock _lock = Lock();
   bool _isAdmin = false;
   bool _isLoading = true;
-  int _pendingRequests = 0;
   DateTime _lastCallbackInvoked = DateTime.now();
 
   // lists
@@ -51,9 +47,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
                 .subtract(Duration(seconds: Const().fbListenerDelay)))) {
               _lastCallbackInvoked = DateTime.now();
             }
-
-            // process the received data
-            _incrementPendingRequests();
           },
 
           // edit
@@ -71,9 +64,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
             if (_lastCallbackInvoked.isBefore(DateTime.now()
                 .subtract(Duration(seconds: Const().fbListenerDelay)))) {
               _lastCallbackInvoked = DateTime.now();
-
-              // process the received data
-              _decrementPendingRequests();
             }
           },
 
@@ -107,7 +97,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
     _isAdmin = await Utils().isAdmin();
 
     // perform async operations here
-    _pendingRequests = await _getPendingRequestsCount();
 
     await _lock.synchronized(() async {
       // fetch form values
@@ -121,24 +110,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
 
     setState(() {
       _isLoading = false;
-    });
-  }
-
-  void _decrementPendingRequests() {
-    setState(() {
-      _pendingRequests--;
-    });
-  }
-
-  Future<int> _getPendingRequestsCount() async {
-    List<dynamic> pendingRequestsRaw = await FB()
-        .getList(path: "${Const().dbrootSangeetSeva}/PendingRequests");
-    return pendingRequestsRaw.length;
-  }
-
-  void _incrementPendingRequests() {
-    setState(() {
-      _pendingRequests++;
     });
   }
 
@@ -216,62 +187,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                   ]),
                                 ),
 
-                              // Pending requests
-                              if (_isAdmin)
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Stack(children: [
-                                    Widgets().createImageButton(
-                                        context: context,
-                                        image:
-                                            "assets/images/SangeetSeva/PendingRequests.png",
-                                        text: "View pending requests",
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PendingRequests(
-                                                title: "Pending requests",
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        fixedWidth: 250),
-
-                                    // count
-                                    if (_pendingRequests > 0)
-                                      Positioned(
-                                        right: 0,
-                                        top: 0,
-                                        child: GestureDetector(
-                                          child: Container(
-                                            padding: EdgeInsets.only(
-                                                left: 4, right: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            constraints: BoxConstraints(
-                                              minWidth: 10,
-                                              minHeight: 10,
-                                            ),
-                                            child: Text(
-                                              '$_pendingRequests',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                  ]),
-                                ),
-
                               // view registered events
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -280,11 +195,9 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              RegisteredEvents(
-                                                  title: "Registered Events",
-                                                  splashImage:
-                                                      widget.splashImage),
+                                          builder: (context) => EventList(
+                                              title: "Registered Events",
+                                              splashImage: widget.splashImage),
                                         ),
                                       );
                                     },
@@ -295,21 +208,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                     imageOnRight: true,
                                     fixedWidth: 250),
                               ),
-
-                              // view past events
-                              // Padding(
-                              //   padding: const EdgeInsets.all(8.0),
-                              //   child: Widgets().createImageButton(
-                              //       onPressed: () {
-                              //         Toaster()
-                              //             .error("Feature not available yet");
-                              //       },
-                              //       text: 'View past events',
-                              //       image:
-                              //           "assets/images/LauncherIcons/PastEvents.png",
-                              //       context: context,
-                              //       fixedWidth: 250),
-                              // ),
                             ])))
                       ]),
 

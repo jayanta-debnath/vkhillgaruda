@@ -23,12 +23,13 @@ class _DateHeaderDateState extends State<DateHeaderMonth> {
     final picked = await showMonthPicker(
       context: context,
       initialDate: _month,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2026),
       lastDate: DateTime(2030),
     );
 
     if (picked != null) {
       setState(() => _month = picked);
+      widget.onMonthChanged?.call(_month);
     }
   }
 

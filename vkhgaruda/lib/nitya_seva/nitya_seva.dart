@@ -26,7 +26,6 @@ class _NityaSevaState extends State<NityaSeva> {
   DateTime _selectedDate = DateTime.now();
   DateTime _lastCallbackInvoked = DateTime.now();
   String _username = "Guest";
-  bool _isAdmin = false;
   final GlobalKey<DaySummaryState> _daySummaryKey =
       GlobalKey<DaySummaryState>();
 
@@ -72,7 +71,6 @@ class _NityaSevaState extends State<NityaSeva> {
     }
 
     _username = Utils().getUsername();
-    _isAdmin = await Utils().isAdmin();
 
     // fetch festival sevas from db
     _sevaList.clear();

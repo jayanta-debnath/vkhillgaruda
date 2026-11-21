@@ -9,18 +9,18 @@ import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
-class RegisteredEvents extends StatefulWidget {
+class EventList extends StatefulWidget {
   final String title;
   final String? splashImage;
 
-  const RegisteredEvents({super.key, required this.title, this.splashImage});
+  const EventList({super.key, required this.title, this.splashImage});
 
   @override
   // ignore: library_private_types_in_public_api
   _RegisteredEventsState createState() => _RegisteredEventsState();
 }
 
-class _RegisteredEventsState extends State<RegisteredEvents> {
+class _RegisteredEventsState extends State<EventList> {
   // scalars
   final Lock _lock = Lock();
   bool _isLoading = true;
@@ -87,13 +87,8 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
 
               // process the received data
               // assuming only one data is received
-              String eventPath = data[0]['path'];
-              var eventRaw = await FB().getJson(path: eventPath);
 
               setState(() {
-                EventRecord event = Utils()
-                    .convertRawToDatatype(eventRaw, EventRecord.fromJson);
-
                 Widgets().showMessage(context, "Delete event not implemented");
               });
             }
@@ -127,46 +122,48 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
       _isLoading = true;
     });
 
-    await _lock.synchronized(() async {
-      // populate events list
-      _events.clear();
-      _mainPerformers.clear();
-      String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents";
-      Map<String, dynamic> kvs = await FB().getValuesByDateRange(
-          path: dbpath, startDate: _startDate, endDate: _endDate);
-      if (kvs.isNotEmpty) {
-        for (var kv in kvs.entries) {
-          List eventLinksRaw = kv.value;
-          for (var eventLinkRaw in eventLinksRaw) {
-            var eventRaw = await FB().getValue(path: eventLinkRaw['path']);
-            EventRecord event =
-                Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
+    // populate events list
+    _events.clear();
+    _mainPerformers.clear();
+    String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents";
+    Map<String, dynamic> kvs = await FB().getValuesByDateRange(
+        path: dbpath, startDate: _startDate, endDate: _endDate);
+    if (kvs.isNotEmpty) {
+      for (var kv in kvs.entries) {
+        List eventLinksRaw = kv.value;
+        for (var eventLinkRaw in eventLinksRaw) {
+          FB().getValue(path: eventLinkRaw['path']).then(
+            (eventRaw) {
+              EventRecord event =
+                  Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
+              setState(() {
+                _events.add(event);
+                // sort events by date
+                _events.sort((a, b) {
+                  if (a.date.isBefore(b.date)) {
+                    return -1;
+                  } else if (a.date.isAfter(b.date)) {
+                    return 1;
+                  } else {
+                    return 0;
+                  }
+                });
+              });
 
-            _events.add(event);
-
-            PerformerProfile? mainPerformer =
-                await SSUtils().getPerformerProfile(event.eventRequesterMobile);
-            if (mainPerformer != null) {
-              _mainPerformers[mainPerformer.mobile] = mainPerformer;
-            }
-          }
+              SSUtils().getPerformerProfile(event.eventRequesterMobile).then(
+                (mainPerformer) {
+                  if (mainPerformer != null) {
+                    setState(() {
+                      _mainPerformers[mainPerformer.mobile] = mainPerformer;
+                    });
+                  }
+                },
+              );
+            },
+          );
         }
       }
-
-      // sort events by date
-      _events.sort((a, b) {
-        if (a.date.isBefore(b.date)) {
-          return -1;
-        } else if (a.date.isAfter(b.date)) {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
-    });
-
-    // perform any remaining async operations here
-
+    }
     setState(() {
       _isLoading = false;
     });
@@ -178,7 +175,6 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
         " (${Time().convertDateTimeTo12hrFormat(_events[index].eventStart)} - ${Time().convertDateTimeTo12hrFormat(_events[index].eventEnd)})";
     String mobile = _events[index].eventRequesterMobile;
     if (_mainPerformers[mobile] == null) {
-      Toaster().error("Could not find user");
       return const SizedBox();
     }
     String performer = _mainPerformers[mobile]!.name;
@@ -240,6 +236,12 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
     ));
   }
 
+  void _onMonthChange(DateTime mon) {
+    _startDate = DateTime(mon.year, mon.month, 1);
+    _endDate = DateTime(mon.year, mon.month + 1, 0);
+    refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -261,7 +263,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                       SizedBox(height: 10),
 
                       // month header
-                      DateHeaderMonth(),
+                      DateHeaderMonth(onMonthChanged: _onMonthChange),
 
                       // list of events
                       Widgets().createTopLevelResponsiveContainer(context, [
@@ -273,7 +275,7 @@ class _RegisteredEventsState extends State<RegisteredEvents> {
                                   .getPerformerProfile(
                                       _events[index].eventRequesterMobile);
 
-                              if (profile != null) {
+                              if (profile != null && mounted) {
                                 Navigator.push(context,
                                     MaterialPageRoute(builder: (context) {
                                   return EventDetails(
