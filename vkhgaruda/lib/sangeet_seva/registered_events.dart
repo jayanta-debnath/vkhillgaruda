@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
@@ -22,8 +21,8 @@ class EventList extends StatefulWidget {
 
 class _RegisteredEventsState extends State<EventList> {
   // scalars
-  final Lock _lock = Lock();
   bool _isLoading = true;
+  bool _isSecondaryLoading = false;
   DateTime _lastCallbackInvoked = DateTime.now();
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   late DateTime _endDate;
@@ -118,8 +117,14 @@ class _RegisteredEventsState extends State<EventList> {
   }
 
   Future<void> refresh() async {
+    // prevent multiple refresh
+    if (_isSecondaryLoading) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
+      _isSecondaryLoading = true;
     });
 
     // populate events list
@@ -128,9 +133,13 @@ class _RegisteredEventsState extends State<EventList> {
     String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents";
     Map<String, dynamic> kvs = await FB().getValuesByDateRange(
         path: dbpath, startDate: _startDate, endDate: _endDate);
+    int count = 0;
+    final int totalEvents =
+        kvs.values.fold(0, (sum, v) => sum + (v as List).length);
     if (kvs.isNotEmpty) {
       for (var kv in kvs.entries) {
         List eventLinksRaw = kv.value;
+
         for (var eventLinkRaw in eventLinksRaw) {
           FB().getValue(path: eventLinkRaw['path']).then(
             (eventRaw) {
@@ -159,6 +168,14 @@ class _RegisteredEventsState extends State<EventList> {
                   }
                 },
               );
+
+              // check if all the events are fetched
+              count++;
+              if (count >= totalEvents) {
+                setState(() {
+                  _isSecondaryLoading = false;
+                });
+              }
             },
           );
         }
@@ -215,7 +232,7 @@ class _RegisteredEventsState extends State<EventList> {
             performer,
             style: Theme.of(context)
                 .textTheme
-                .headlineSmall!
+                .bodyMedium!
                 .copyWith(color: textColor),
           ),
           SizedBox(width: 10),
@@ -224,7 +241,7 @@ class _RegisteredEventsState extends State<EventList> {
             mobile,
             style: Theme.of(context)
                 .textTheme
-                .headlineSmall!
+                .bodyMedium!
                 .copyWith(color: textColor),
           ),
         ],
@@ -292,6 +309,10 @@ class _RegisteredEventsState extends State<EventList> {
                           );
                         }),
                       ]),
+
+                      // secondary loading
+                      if (_isSecondaryLoading)
+                        Center(child: CircularProgressIndicator()),
 
                       // empty message
                       if (_events.isEmpty)
