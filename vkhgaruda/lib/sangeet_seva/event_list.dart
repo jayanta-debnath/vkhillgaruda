@@ -16,10 +16,10 @@ class EventList extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _RegisteredEventsState createState() => _RegisteredEventsState();
+  _EventListState createState() => _EventListState();
 }
 
-class _RegisteredEventsState extends State<EventList> {
+class _EventListState extends State<EventList> {
   // scalars
   bool _isLoading = true;
   bool _isSecondaryLoading = false;
@@ -41,7 +41,7 @@ class _RegisteredEventsState extends State<EventList> {
     _endDate = DateTime(_startDate.year, _startDate.month + 1, 0);
 
     FB().listenForChange(
-        "${Const().dbrootSangeetSeva}/BookedEvents",
+        "${Const().dbrootSangeetSeva}/EventsByDate",
         FBCallbacks(
           // add
           add: (data) async {
@@ -130,15 +130,15 @@ class _RegisteredEventsState extends State<EventList> {
     // populate events list
     _events.clear();
     _mainPerformers.clear();
-    String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents";
+    String dbpath = "${Const().dbrootSangeetSeva}/EventsByDate";
     Map<String, dynamic> kvs = await FB().getValuesByDateRange(
         path: dbpath, startDate: _startDate, endDate: _endDate);
     int count = 0;
-    final int totalEvents =
-        kvs.values.fold(0, (sum, v) => sum + (v as List).length);
+    int totalEvents = 0;
     if (kvs.isNotEmpty) {
       for (var kv in kvs.entries) {
         List eventLinksRaw = kv.value;
+        totalEvents += eventLinksRaw.length;
 
         for (var eventLinkRaw in eventLinksRaw) {
           FB().getValue(path: eventLinkRaw['path']).then(

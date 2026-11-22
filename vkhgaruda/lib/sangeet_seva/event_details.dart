@@ -154,7 +154,7 @@ class _EventDetailsState extends State<EventDetails> {
       String dbdate = DateFormat("yyyy-MM-dd").format(widget.oldEvent!.date);
       String slotName = DateFormat("HH_mm").format(widget.oldEvent!.eventStart);
       String dbpath =
-          "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName";
+          "${Const().dbrootSangeetSeva}/EventsByMobile/$mobile/$dbdate/$slotName";
       FB().getJson(path: dbpath).then(
         (Map<String, dynamic> data) {
           if (data.isEmpty && !mounted) {
@@ -401,20 +401,10 @@ class _EventDetailsState extends State<EventDetails> {
 
     mobile = _mainPerformer!.mobile;
     FB().setJson(
-      path: "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
+      path:
+          "${Const().dbrootSangeetSeva}/EventsByMobile/$mobile/$dbdate/$slotName",
       json: performanceRequest.toJson(),
     );
-
-    // add to pending requests
-    if (widget.oldEvent == null || widget.oldEvent!.status != "Pending") {
-      FB().addToList(
-        listpath: "${Const().dbrootSangeetSeva}/PendingRequests",
-        data: {
-          "path":
-              "${Const().dbrootSangeetSeva}/Events/$mobile/$dbdate/$slotName",
-        },
-      );
-    }
 
     // show success message
     if (widget.oldEvent != null) {
@@ -435,9 +425,9 @@ class _EventDetailsState extends State<EventDetails> {
     String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
     String slotName = DateFormat("HH_mm").format(_eventStart);
     String bookedEventPath =
-        "${Const().dbrootSangeetSeva}/BookedEvents/$dbdate";
+        "${Const().dbrootSangeetSeva}/EventsByDate/$dbdate";
     String eventPath =
-        "${Const().dbrootSangeetSeva}/Events/${_mainPerformer!.mobile}/$dbdate/$slotName";
+        "${Const().dbrootSangeetSeva}/EventsByMobile/${_mainPerformer!.mobile}/$dbdate/$slotName";
 
     // check if event is already submitted
     bool pathExists = await FB().pathExists(eventPath);
@@ -502,23 +492,8 @@ class _EventDetailsState extends State<EventDetails> {
 
       // append to booked events
       String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
-      String dbpath = "${Const().dbrootSangeetSeva}/BookedEvents/$dbdate";
+      String dbpath = "${Const().dbrootSangeetSeva}/EventsByDate/$dbdate";
       await FB().addToList(listpath: dbpath, data: {"path": eventPath});
-
-      // loop through all pending requests, remove the matching one
-      List pendingRequestsRaw = await FB()
-          .getList(path: "${Const().dbrootSangeetSeva}/PendingRequests");
-      for (var pendingRequestRaw in pendingRequestsRaw) {
-        Map<String, dynamic> pendingRequest =
-            Map<String, dynamic>.from(pendingRequestRaw);
-        if (pendingRequest['path'] == eventPath) {
-          pendingRequestsRaw.remove(pendingRequestRaw);
-          break;
-        }
-      }
-      await FB().setValue(
-          path: "${Const().dbrootSangeetSeva}/PendingRequests",
-          value: pendingRequestsRaw);
     }
   }
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
 import 'package:vkhgaruda/sangeet_seva/profile_list.dart';
-import 'package:vkhgaruda/sangeet_seva/registered_events.dart';
+import 'package:vkhgaruda/sangeet_seva/event_list.dart';
 import 'package:vkhgaruda/sangeet_seva/sswelcome.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 
@@ -26,7 +26,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
   final Lock _lock = Lock();
   bool _isAdmin = false;
   bool _isLoading = true;
-  DateTime _lastCallbackInvoked = DateTime.now();
 
   // lists
 
@@ -36,42 +35,6 @@ class _SangeetSevaState extends State<SangeetSeva> {
   @override
   initState() {
     super.initState();
-
-    // listen to database events
-    FB().listenForChangeInList(
-        "${Const().dbrootSangeetSeva}/PendingRequests",
-        FBCallbacks(
-          // add
-          add: (data) {
-            if (_lastCallbackInvoked.isBefore(DateTime.now()
-                .subtract(Duration(seconds: Const().fbListenerDelay)))) {
-              _lastCallbackInvoked = DateTime.now();
-            }
-          },
-
-          // edit
-          edit: () {
-            if (_lastCallbackInvoked.isBefore(DateTime.now()
-                .subtract(Duration(seconds: Const().fbListenerDelay)))) {
-              _lastCallbackInvoked = DateTime.now();
-
-              refresh();
-            }
-          },
-
-          // delete
-          delete: (data) async {
-            if (_lastCallbackInvoked.isBefore(DateTime.now()
-                .subtract(Duration(seconds: Const().fbListenerDelay)))) {
-              _lastCallbackInvoked = DateTime.now();
-            }
-          },
-
-          // get listeners
-          getListeners: (listeners) {
-            _listeners = listeners;
-          },
-        ));
 
     refresh();
   }
