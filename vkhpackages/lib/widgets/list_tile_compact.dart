@@ -59,7 +59,8 @@ class ListTileCompact extends StatelessWidget {
                       if (title is Text)
                         Text(
                           (title as Text).data ?? '',
-                          style: Theme.of(context).textTheme.headlineSmall,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.merge((title as Text).style),
                         )
                       else if (title != null)
                         title!,
@@ -68,7 +69,8 @@ class ListTileCompact extends StatelessWidget {
                       if (subtitle is Text)
                         Text(
                           (subtitle as Text).data ?? '',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.merge((subtitle as Text).style),
                         )
                       else if (subtitle != null)
                         subtitle!,
@@ -78,7 +80,8 @@ class ListTileCompact extends StatelessWidget {
                         Text(
                           (infotext as Text).data ?? '',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(fontStyle: FontStyle.italic),
+                              ?.copyWith(fontStyle: FontStyle.italic)
+                              .merge((infotext as Text).style),
                         )
                       else if (infotext != null)
                         infotext!,

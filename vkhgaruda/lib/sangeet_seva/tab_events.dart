@@ -76,6 +76,17 @@ class TabEventsState extends State<TabEvents> {
             Map<String, dynamic> json3 = Map<String, dynamic>.from(json3Raw);
             _events.add(EventRecord.fromJson(json3));
           }
+
+          // sort the events
+          _events.sort((a, b) {
+            if (a.date.isBefore(b.date)) {
+              return -1;
+            } else if (a.date.isAfter(b.date)) {
+              return 1;
+            } else {
+              return 0;
+            }
+          });
         }
       }
 
@@ -106,15 +117,26 @@ class TabEventsState extends State<TabEvents> {
       image = NetworkImage(widget.profile!.profilePicUrl!);
     }
 
+    // set color to grey out past events
+    Color color = _events[index].eventEnd.isBefore(DateTime.now())
+        ? Colors.grey
+        : Colors.black;
+
     return Widgets().createTopLevelCard(
       context: context,
       child: ListTileCompact(
         leading: CircleAvatar(
           backgroundImage: image,
         ),
-        title: Text(DateFormat("EEE, dd MMM yyyy").format(_events[index].date)),
+        title: Text(DateFormat("EEE, dd MMM yyyy").format(_events[index].date),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall!
+                .copyWith(color: color)),
         subtitle: Text(
-            "${DateFormat("HH:mm").format(_events[index].eventStart)} to ${DateFormat("HH:mm").format(_events[index].eventEnd)}"),
+            "${DateFormat("HH:mm").format(_events[index].eventStart)} to ${DateFormat("HH:mm").format(_events[index].eventEnd)}",
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(color: color)),
         trailing: SSConst().statusIcon[_events[index].status],
         onTap: () => Navigator.push(
             context,

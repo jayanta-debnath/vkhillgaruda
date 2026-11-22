@@ -357,20 +357,6 @@ class _EventDetailsState extends State<EventDetails> {
             : null);
   }
 
-  void _onContextMenu(String menuEntry) {
-    switch (menuEntry) {
-      case "Mark approved":
-        _showActionDialog("Approved");
-        return;
-      case "Mark rejected":
-        _showActionDialog("Rejected");
-        return;
-      case "Mark tentative":
-        _showActionDialog("Pending");
-        return;
-    }
-  }
-
   Future<void> _onSubmit({bool goback = true}) async {
     // validations for edit event
     if (widget.oldEvent != null) {
@@ -414,10 +400,21 @@ class _EventDetailsState extends State<EventDetails> {
     String slotName = DateFormat("HH_mm").format(performanceRequest.eventStart);
 
     mobile = _mainPerformer!.mobile;
-    FB().setJson(
+    FB()
+        .setJson(
       path:
           "${Const().dbrootSangeetSeva}/EventsByMobile/$mobile/$dbdate/$slotName",
       json: performanceRequest.toJson(),
+    )
+        .then(
+      (value) {
+        FB().addToList(
+            listpath: "${Const().dbrootSangeetSeva}/EventsByDate/$dbdate",
+            data: {
+              "path":
+                  "${Const().dbrootSangeetSeva}/EventsByMobile/$mobile/$dbdate/$slotName"
+            });
+      },
     );
 
     // show success message
@@ -436,8 +433,6 @@ class _EventDetailsState extends State<EventDetails> {
   Future<void> _performAction(String action) async {
     String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
     String slotName = DateFormat("HH_mm").format(_eventStart);
-    String bookedEventPath =
-        "${Const().dbrootSangeetSeva}/EventsByDate/$dbdate";
     String eventPath =
         "${Const().dbrootSangeetSeva}/EventsByMobile/${_mainPerformer!.mobile}/$dbdate/$slotName";
 
@@ -458,32 +453,12 @@ class _EventDetailsState extends State<EventDetails> {
 
         _eventStatus = action;
 
-        // delete from booked events
-        if (_mainPerformer != null) {
-          List bookedEventsRaw = await FB().getList(path: bookedEventPath);
-          List bookedEventsOutput = [];
-          for (var bookedEventRaw in bookedEventsRaw) {
-            Map<String, dynamic> bookedEvent =
-                Map<String, dynamic>.from(bookedEventRaw);
-            if (bookedEvent['path'] != eventPath) {
-              bookedEventsOutput.add({"path": bookedEvent['path']});
-            }
-          }
-          await FB().setValue(path: bookedEventPath, value: bookedEventsOutput);
-        }
-
         if (await FB().pathExists(eventPath)) {
           // change status of event
           _eventStatus = "Rejected";
           _note = _noteTempleController.text;
           await FB().setValue(path: "$eventPath/status", value: _eventStatus);
           await FB().setValue(path: "$eventPath/noteTemple", value: _note);
-
-          // mark the availability of the slot
-          // String slotPath =
-          //     "${Const().dbrootSangeetSeva}/Slots/$dbdate/$slotName";
-          // await FB()
-          //     .setJson(path: slotPath, json: widget.eventRecord.slot.toJson());
         }
       }
     } else {
@@ -499,14 +474,9 @@ class _EventDetailsState extends State<EventDetails> {
       event.noteTemple = _noteTempleController.text;
       eventRaw = event.toJson();
       await FB().setValue(path: eventPath, value: eventRaw);
-
-      // Toaster().info("Request processed");
-
-      // append to booked events
-      String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
-      String dbpath = "${Const().dbrootSangeetSeva}/EventsByDate/$dbdate";
-      await FB().addToList(listpath: dbpath, data: {"path": eventPath});
     }
+
+    Toaster().info("Status updated");
   }
 
   // action = Pending, Approved, Rejected
@@ -515,7 +485,7 @@ class _EventDetailsState extends State<EventDetails> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Change request to $action"),
+          title: Text("Change event to $action"),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,12 +515,7 @@ class _EventDetailsState extends State<EventDetails> {
               child: Text("Mark $action"),
               onPressed: () async {
                 Navigator.pop(context);
-
-                if (action == "Approved") {
-                  await _performAction("Approved");
-                } else {
-                  await _performAction("Rejected");
-                }
+                await _performAction(action);
               },
             ),
           ],
@@ -976,7 +941,11 @@ class _EventDetailsState extends State<EventDetails> {
                                   child: Center(child: Text(item)),
                                 );
                               }).toList(),
-                              onChanged: (value) {},
+                              onChanged: (value) {
+                                if (value != null) {
+                                  _showActionDialog(value);
+                                }
+                              },
                             ),
                           ),
                           Expanded(
