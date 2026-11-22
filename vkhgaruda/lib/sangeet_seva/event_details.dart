@@ -962,8 +962,10 @@ class _EventDetailsState extends State<EventDetails> {
                       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                       child: Row(
                         children: [
-                          Expanded(child: Text("Status:")),
                           Expanded(
+                              flex: 1, child: Center(child: Text("Status:"))),
+                          Expanded(
+                            flex: 2,
                             child: DropdownButton<String>(
                               isExpanded: true,
                               value: _eventStatus,
@@ -971,12 +973,16 @@ class _EventDetailsState extends State<EventDetails> {
                                   .map((item) {
                                 return DropdownMenuItem(
                                   value: item,
-                                  child: Text(item),
+                                  child: Center(child: Text(item)),
                                 );
                               }).toList(),
                               onChanged: (value) {},
                             ),
                           ),
+                          Expanded(
+                              flex: 1,
+                              child: SSConst().statusIcon[_eventStatus] ??
+                                  Container())
                         ],
                       ),
                     ),

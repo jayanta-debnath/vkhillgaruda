@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhgaruda/sangeet_seva/event_details.dart';
+import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhgaruda/sangeet_seva/ssutils.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
@@ -197,13 +198,6 @@ class _EventListState extends State<EventList> {
     String performer = _mainPerformers[mobile]!.name;
     String profilePicUrl = _mainPerformers[mobile]!.profilePicUrl ?? "";
 
-    Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
-    if (_events[index].status == "Approved") {
-      statusIcon = Icon(Icons.check_circle, color: Colors.green);
-    } else if (_events[index].status == "Rejected") {
-      statusIcon = Icon(Icons.cancel_outlined, color: Colors.red);
-    }
-
     // set the text color to gray if event is in the past
     Color textColor = Colors.black;
     if (_events[index].eventEnd.isBefore(DateTime.now())) {
@@ -248,7 +242,7 @@ class _EventListState extends State<EventList> {
       ),
       trailing: Padding(
         padding: const EdgeInsets.only(right: 4.0),
-        child: statusIcon,
+        child: SSConst().statusIcon[_events[index].status],
       ),
     ));
   }

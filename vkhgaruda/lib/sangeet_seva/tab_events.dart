@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:vkhgaruda/sangeet_seva/event_details.dart';
 import 'package:vkhgaruda/sangeet_seva/slot_selection.dart';
+import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 
@@ -105,13 +106,6 @@ class TabEventsState extends State<TabEvents> {
       image = NetworkImage(widget.profile!.profilePicUrl!);
     }
 
-    Icon statusIcon = Icon(Icons.help_outline, color: Colors.orange);
-    if (_events[index].status == "Approved") {
-      statusIcon = Icon(Icons.check_circle, color: Colors.green);
-    } else if (_events[index].status == "Rejected") {
-      statusIcon = Icon(Icons.cancel_outlined, color: Colors.red);
-    }
-
     return Widgets().createTopLevelCard(
       context: context,
       child: ListTileCompact(
@@ -121,7 +115,7 @@ class TabEventsState extends State<TabEvents> {
         title: Text(DateFormat("EEE, dd MMM yyyy").format(_events[index].date)),
         subtitle: Text(
             "${DateFormat("HH:mm").format(_events[index].eventStart)} to ${DateFormat("HH:mm").format(_events[index].eventEnd)}"),
-        trailing: statusIcon,
+        trailing: SSConst().statusIcon[_events[index].status],
         onTap: () => Navigator.push(
             context,
             MaterialPageRoute(

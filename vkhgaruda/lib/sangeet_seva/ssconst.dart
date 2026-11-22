@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'datatypes.dart';
 
 class SSConst {
@@ -54,6 +56,12 @@ class SSConst {
   final List<Map<String, dynamic>> aartiTimings = [
     // {"name": "Sandhya Aarti", "from": "07:00 PM", "to": "07:15 PM"},
   ];
+
+  final Map<String, Icon> statusIcon = {
+    "Pending": Icon(Icons.help_outline, color: Colors.orange),
+    "Approved": Icon(Icons.check_circle, color: Colors.green),
+    "Rejected": Icon(Icons.cancel, color: Colors.red),
+  };
 
   final maxEventDuration = 60; // mins
 }
