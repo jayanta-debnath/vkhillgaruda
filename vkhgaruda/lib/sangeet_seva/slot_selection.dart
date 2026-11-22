@@ -305,7 +305,7 @@ class _SlotSelectionState extends State<SlotSelection> {
                                     onPressed: () async {
                                       await _onSelectSlot();
                                     },
-                                    child: Text("Select slot"),
+                                    child: Text("Next.."),
                                   ),
                                 ),
                               ],

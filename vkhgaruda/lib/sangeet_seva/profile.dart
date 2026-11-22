@@ -80,6 +80,8 @@ class ProfileState extends State<Profile> {
       setState(() {
         _isLoading = true;
       });
+    } else {
+      return;
     }
 
     await _lock.synchronized(() async {
@@ -196,7 +198,6 @@ class ProfileState extends State<Profile> {
         Navigator.of(context).pop();
       }
     }
-
   }
 
   Widget _createAudioClipTile(int index) {

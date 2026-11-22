@@ -357,6 +357,20 @@ class _EventDetailsState extends State<EventDetails> {
             : null);
   }
 
+  void _onContextMenu(String menuEntry) {
+    switch (menuEntry) {
+      case "Mark approved":
+        _showActionDialog("Approved");
+        return;
+      case "Mark rejected":
+        _showActionDialog("Rejected");
+        return;
+      case "Mark tentative":
+        _showActionDialog("Pending");
+        return;
+    }
+  }
+
   Future<void> _onSubmit({bool goback = true}) async {
     // validations for edit event
     if (widget.oldEvent != null) {
@@ -407,9 +421,7 @@ class _EventDetailsState extends State<EventDetails> {
     );
 
     // show success message
-    if (widget.oldEvent != null) {
-      Toaster().info("Saved");
-    }
+    Toaster().info("Saved");
 
     // go to homepage
     if (goback && mounted) {
@@ -914,23 +926,11 @@ class _EventDetailsState extends State<EventDetails> {
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
-              // reject button
-              if (_isAdmin && (_eventStatus != "Rejected"))
+              // save button
+              if (_isAdmin &&
+                  (widget.readOnly == null || widget.readOnly == false))
                 IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    _showActionDialog("Rejected");
-                  },
-                ),
-
-              // approve button
-              if (_isAdmin && (_eventStatus != "Approved"))
-                IconButton(
-                  icon: Icon(Icons.check),
-                  onPressed: () {
-                    _showActionDialog("Approved");
-                  },
-                ),
+                    icon: Icon(Icons.save), onPressed: () => _onSubmit()),
             ],
           ),
           body: RefreshIndicator(
@@ -958,28 +958,50 @@ class _EventDetailsState extends State<EventDetails> {
                     ),
 
                     // approval status
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 1,
-                        horizontal: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _eventStatus == "Approved"
-                            ? Colors.green
-                            : (_eventStatus == "Rejected"
-                                ? Colors.red
-                                : Colors.orange),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(width: 1, color: Colors.grey),
-                      ),
-                      child: Text(
-                        "Status: $_eventStatus",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text("Status:")),
+                          Expanded(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: _eventStatus,
+                              items: ["Pending", "Approved", "Rejected"]
+                                  .map((item) {
+                                return DropdownMenuItem(
+                                  value: item,
+                                  child: Text(item),
+                                );
+                              }).toList(),
+                              onChanged: (value) {},
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     vertical: 1,
+                    //     horizontal: 5,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: _eventStatus == "Approved"
+                    //         ? Colors.green
+                    //         : (_eventStatus == "Rejected"
+                    //             ? Colors.red
+                    //             : Colors.orange),
+                    //     borderRadius: BorderRadius.circular(12),
+                    //     border: Border.all(width: 1, color: Colors.grey),
+                    //   ),
+                    //   child: Text(
+                    //     "Status: $_eventStatus",
+                    //     style: TextStyle(
+                    //       color: Colors.white,
+                    //       fontWeight: FontWeight.bold,
+                    //     ),
+                    //   ),
+                    // ),
 
                     // temple notes
                     SizedBox(height: 10),
@@ -1130,17 +1152,6 @@ class _EventDetailsState extends State<EventDetails> {
                         ],
                       ),
                     ),
-
-                    // submit button
-                    SizedBox(height: 20),
-                    if (_isAdmin &&
-                        widget.readOnly == null &&
-                        widget.oldEvent == null &&
-                        _eventStatus == "Pending")
-                      ElevatedButton(
-                        onPressed: _onSubmit,
-                        child: Text("Submit"),
-                      ),
 
                     // leave some space at bottom
                     SizedBox(height: 100),

@@ -159,7 +159,7 @@ class _SangeetSevaState extends State<SangeetSeva> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => EventList(
-                                              title: "Registered Events",
+                                              title: "List of events",
                                               splashImage: widget.splashImage),
                                         ),
                                       );
