@@ -446,7 +446,7 @@ class _EventDetailsState extends State<EventDetails> {
       // event is already booked
 
       if (action == "Approved") {
-        Toaster().info("Event is already approved");
+        Toaster().info("Concert is already approved");
         return;
       } else {
         // reject an approved event
@@ -998,7 +998,7 @@ class _EventDetailsState extends State<EventDetails> {
                     if (_mainPerformer != null)
                       Widgets().createTopLevelCard(
                         context: context,
-                        title: "Event requester",
+                        title: "Concert requester",
                         child: ListTileCompact(
                             leading: CircleAvatar(
                               backgroundImage:

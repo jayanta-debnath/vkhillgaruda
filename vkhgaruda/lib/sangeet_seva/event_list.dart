@@ -290,7 +290,7 @@ class _EventListState extends State<EventList> {
                                 Navigator.push(context,
                                     MaterialPageRoute(builder: (context) {
                                   return EventDetails(
-                                    title: "Event details",
+                                    title: "Concert details",
                                     oldEvent: _events[index],
                                     selectedDate: _events[index].eventStart,
                                     profile: profile,

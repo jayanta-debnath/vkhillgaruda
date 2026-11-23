@@ -142,7 +142,7 @@ class TabEventsState extends State<TabEvents> {
             context,
             MaterialPageRoute(
                 builder: (context) => EventDetails(
-                    title: "Event Details",
+                    title: "Concert Details",
                     selectedDate: _events[index].date,
                     oldEvent: _events[index],
                     doubleBack: false,
@@ -156,7 +156,7 @@ class TabEventsState extends State<TabEvents> {
       context,
       MaterialPageRoute(
           builder: (context) => SlotSelection(
-                title: "Event Registration",
+                title: "Concert Registration",
                 profile: widget.profile!,
               )),
     );

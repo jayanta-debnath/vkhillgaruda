@@ -97,7 +97,7 @@ class _SlotSelectionState extends State<SlotSelection> {
         (minutesSinceMidnight(_timeEnd) - minutesSinceMidnight(_timeStart))
             .abs();
     if (difference < 30) {
-      Toaster().error("Event duration should be at least 30 mins");
+      Toaster().error("Concert duration should be at least 30 mins");
       return;
     }
 
