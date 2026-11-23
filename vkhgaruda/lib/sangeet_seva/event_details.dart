@@ -442,11 +442,9 @@ class _EventDetailsState extends State<EventDetails> {
       } else {
         // reject an approved event
 
-        _eventStatus = action;
-
         if (await FB().pathExists(eventPath)) {
           // change status of event
-          _eventStatus = "Rejected";
+          _eventStatus = action;
           _note = _noteTempleController.text;
           await FB().setValue(path: "$eventPath/status", value: _eventStatus);
           await FB().setValue(path: "$eventPath/noteTemple", value: _note);
@@ -476,15 +474,14 @@ class _EventDetailsState extends State<EventDetails> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Change event to $action"),
+          title: Text("Are you sure?"),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Are you sure?"),
+                Text("Change event to $action"),
                 SizedBox(height: 10),
-                Text("Note from temple:",
-                    style: themeGaruda.textTheme.headlineSmall),
+                Text("Remarks:", style: themeGaruda.textTheme.headlineSmall),
                 TextField(
                   maxLines: 2,
                   controller: _noteTempleController,
@@ -893,7 +890,6 @@ class _EventDetailsState extends State<EventDetails> {
             },
           )
         ],
-        skipCancel: true,
         title: "Select slot for concert",
         child: SlotSelection(
             key: _keySlotSelection,
@@ -950,7 +946,12 @@ class _EventDetailsState extends State<EventDetails> {
                       child: Row(
                         children: [
                           Expanded(
-                              flex: 1, child: Center(child: Text("Status:"))),
+                              flex: 1,
+                              child: Center(
+                                  child: Text("Status:",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall))),
                           Expanded(
                             flex: 2,
                             child: DropdownButton<String>(
@@ -977,28 +978,6 @@ class _EventDetailsState extends State<EventDetails> {
                         ],
                       ),
                     ),
-                    // Container(
-                    //   padding: EdgeInsets.symmetric(
-                    //     vertical: 1,
-                    //     horizontal: 5,
-                    //   ),
-                    //   decoration: BoxDecoration(
-                    //     color: _eventStatus == "Approved"
-                    //         ? Colors.green
-                    //         : (_eventStatus == "Rejected"
-                    //             ? Colors.red
-                    //             : Colors.orange),
-                    //     borderRadius: BorderRadius.circular(12),
-                    //     border: Border.all(width: 1, color: Colors.grey),
-                    //   ),
-                    //   child: Text(
-                    //     "Status: $_eventStatus",
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontWeight: FontWeight.bold,
-                    //     ),
-                    //   ),
-                    // ),
 
                     // temple notes
                     SizedBox(height: 10),
@@ -1123,7 +1102,7 @@ class _EventDetailsState extends State<EventDetails> {
                     // performer note
                     Widgets().createTopLevelCard(
                       context: context,
-                      title: "Note from performer",
+                      title: "Remarks",
                       child: Column(
                         children: [
                           if (_notePerformerController.text.isNotEmpty)
