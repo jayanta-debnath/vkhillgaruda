@@ -15,16 +15,14 @@ class SlotSelection extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _SlotSelectionState createState() => _SlotSelectionState();
+  SlotSelectionState createState() => SlotSelectionState();
 }
 
-class _SlotSelectionState extends State<SlotSelection> {
+class SlotSelectionState extends State<SlotSelection> {
   // scalars
-  final Lock _lock = Lock();
-  bool _isLoading = true;
   DateTime _date = DateTime.now().add(Duration(days: 1));
-  TimeOfDay _timeStart = TimeOfDay.now();
-  late TimeOfDay _timeEnd;
+  TimeOfDay _startTime = TimeOfDay.now();
+  late TimeOfDay _endTime;
 
   // lists
   final List<String> _possibleDurations = [
@@ -40,9 +38,7 @@ class _SlotSelectionState extends State<SlotSelection> {
   initState() {
     super.initState();
 
-    _timeEnd = Utils().addMinutesToTimeOfDay(_timeStart, 60);
-
-    refresh();
+    _endTime = Utils().addMinutesToTimeOfDay(_startTime, 60);
   }
 
   @override
@@ -55,68 +51,35 @@ class _SlotSelectionState extends State<SlotSelection> {
     super.dispose();
   }
 
-  Future<void> refresh() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // access control
-
-    // perform async operations here
-
-    await _lock.synchronized(() async {
-      // fetch form values
-
-      // refresh all child widgets
-
-      // perform sync operations here
-    });
-
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _onSelectSlot() async {
+  SlotSelectionType? onSelectSlot() {
     // check if slot is in the past
     DateTime now = DateTime.now();
     if (_date.isBefore(now)) {
       Toaster().error("Cannot book slot in the past");
-      return;
+      return null;
     }
 
     // validate if end time is greater than start time
-    if (_timeEnd.compareTo(_timeStart) < 0) {
+    if (_endTime.compareTo(_startTime) < 0) {
       Toaster().error("End time should be greater than start time");
-      return;
+      return null;
     }
 
     // validate if end time is greater than start time by 30 mins
     int minutesSinceMidnight(TimeOfDay time) => time.hour * 60 + time.minute;
     final difference =
-        (minutesSinceMidnight(_timeEnd) - minutesSinceMidnight(_timeStart))
+        (minutesSinceMidnight(_endTime) - minutesSinceMidnight(_startTime))
             .abs();
     if (difference < 30) {
       Toaster().error("Concert duration should be at least 30 mins");
-      return;
+      return null;
     }
 
-    // go to next page
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EventDetails(
-            title: widget.title,
-            selectedDate: _date,
-            eventStart: _toDateTime(_timeStart),
-            eventEnd: _toDateTime(_timeEnd),
-            profile: widget.profile,
-            doubleBack: true,
-          ),
-        ),
-      );
-    }
+    // after validation success, return the object with correct data
+    return SlotSelectionType(
+        date: _date,
+        startTime: _toDateTime(_startTime),
+        endTime: _toDateTime(_endTime));
   }
 
   DateTime _toDateTime(TimeOfDay time) {
@@ -125,209 +88,180 @@ class _SlotSelectionState extends State<SlotSelection> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Center(
+        child: Column(
       children: [
-        Scaffold(
-          appBar: AppBar(title: Text(widget.title)),
-          body: RefreshIndicator(
-            onRefresh: refresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: Column(
-                    children: [
-                      // leave some space at top
-                      SizedBox(height: 10),
-
-                      Widgets().createTopLevelResponsiveContainer(context, [
-                        // your widgets here
-                        Widgets().createTopLevelCard(
-                          context: context,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // select date and time
-                                Column(
-                                  children: [
-                                    // date row
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            "Date",
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.headlineSmall,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            DateFormat(
-                                              "EEE, dd MMM yyyy",
-                                            ).format(_date),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: IconButton(
-                                            onPressed: () async {
-                                              _date = await showDatePicker(
-                                                    context: context,
-                                                    locale: const Locale(
-                                                      'en',
-                                                      'GB',
-                                                    ),
-                                                    firstDate: _date,
-                                                    lastDate: _date.add(
-                                                      Duration(days: 365),
-                                                    ),
-                                                  ) ??
-                                                  _date;
-                                              setState(() {});
-                                            },
-                                            icon: Icon(
-                                              Icons.calendar_month_outlined,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // start time row
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            "Time",
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.headlineSmall,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            _timeStart.format(context),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: IconButton(
-                                            onPressed: () async {
-                                              _timeStart = await showTimePicker(
-                                                    context: context,
-                                                    initialTime: _timeStart,
-                                                  ) ??
-                                                  _timeStart;
-                                              _timeEnd = Utils()
-                                                  .addMinutesToTimeOfDay(
-                                                      _timeStart, 60);
-
-                                              setState(() {});
-                                            },
-                                            icon: Icon(Icons.access_time),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    // duration
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            "Duration",
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.headlineSmall,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 4,
-                                          child: DropdownButton(
-                                              items: _possibleDurations
-                                                  .map((item) {
-                                                return DropdownMenuItem(
-                                                  value: item,
-                                                  child: Text(item),
-                                                );
-                                              }).toList(),
-                                              value: "1 hr",
-                                              isExpanded: true,
-                                              onChanged: (value) =>
-                                                  setState(() {
-                                                    switch (value) {
-                                                      case "30 mins":
-                                                        _timeEnd = Utils()
-                                                            .addMinutesToTimeOfDay(
-                                                                _timeStart, 30);
-                                                        break;
-
-                                                      case "1 hr":
-                                                        _timeEnd = Utils()
-                                                            .addMinutesToTimeOfDay(
-                                                                _timeStart, 60);
-                                                        break;
-
-                                                      case "1.5 hrs":
-                                                        _timeEnd = Utils()
-                                                            .addMinutesToTimeOfDay(
-                                                                _timeStart, 90);
-                                                        break;
-
-                                                      case "2 hrs":
-                                                        _timeEnd = Utils()
-                                                            .addMinutesToTimeOfDay(
-                                                                _timeStart,
-                                                                120);
-                                                        break;
-                                                    }
-                                                  })),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-
-                                // button to go to next page
-                                const SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      await _onSelectSlot();
-                                    },
-                                    child: Text("Next.."),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+        // your widgets here
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                "Date",
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall,
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                DateFormat(
+                  "EEE, dd MMM yyyy",
+                ).format(_date),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: IconButton(
+                onPressed: () async {
+                  _date = await showDatePicker(
+                        context: context,
+                        locale: const Locale(
+                          'en',
+                          'GB',
                         ),
-                      ]),
-
-                      // leave some space at bottom
-                      SizedBox(height: 100),
-                    ],
-                  ),
+                        firstDate: _date,
+                        lastDate: _date.add(
+                          Duration(days: 365),
+                        ),
+                      ) ??
+                      _date;
+                  setState(() {});
+                },
+                icon: Icon(
+                  Icons.calendar_month_outlined,
                 ),
               ),
             ),
-          ),
+          ],
         ),
 
-        // circular progress indicator
-        if (_isLoading)
-          LoadingOverlay(image: "assets/images/Logo/SangeetSeva.png"),
+        // start time row
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                "Time",
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall,
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                _startTime.format(context),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: IconButton(
+                onPressed: () async {
+                  _startTime = await showTimePicker(
+                        context: context,
+                        initialTime: _startTime,
+                      ) ??
+                      _startTime;
+                  _endTime = Utils().addMinutesToTimeOfDay(_startTime, 60);
+
+                  setState(() {});
+                },
+                icon: Icon(Icons.access_time),
+              ),
+            ),
+          ],
+        ),
+
+        // duration
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                "Duration",
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall,
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: DropdownButton(
+                  items: _possibleDurations.map((item) {
+                    return DropdownMenuItem(
+                      value: item,
+                      child: Text(item),
+                    );
+                  }).toList(),
+                  value: "1 hr",
+                  isExpanded: true,
+                  onChanged: (value) => setState(() {
+                        switch (value) {
+                          case "30 mins":
+                            _endTime =
+                                Utils().addMinutesToTimeOfDay(_startTime, 30);
+                            break;
+
+                          case "1 hr":
+                            _endTime =
+                                Utils().addMinutesToTimeOfDay(_startTime, 60);
+                            break;
+
+                          case "1.5 hrs":
+                            _endTime =
+                                Utils().addMinutesToTimeOfDay(_startTime, 90);
+                            break;
+
+                          case "2 hrs":
+                            _endTime =
+                                Utils().addMinutesToTimeOfDay(_startTime, 120);
+                            break;
+                        }
+                      })),
+            ),
+          ],
+        ),
       ],
+    ));
+  }
+}
+
+class SlotSelectionType {
+  final DateTime date;
+  final DateTime startTime;
+  final DateTime endTime;
+
+  SlotSelectionType({
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+  });
+
+  // Factory constructor to create a SlotSelectionType from JSON
+  factory SlotSelectionType.fromJson(Map<String, dynamic> json) {
+    return SlotSelectionType(
+      date: json['date'] as DateTime,
+      startTime: json['startTime'] as DateTime,
+      endTime: json['endTime'] as DateTime,
     );
   }
+
+  // Method to convert SlotSelectionType to JSON
+  Map<String, dynamic> toJson() {
+    return {'date': date, 'startTime': startTime, 'endTime': endTime};
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SlotSelectionType &&
+          runtimeType == other.runtimeType &&
+          date == other.date &&
+          startTime == other.startTime &&
+          endTime == other.endTime;
+
+  @override
+  int get hashCode => Object.hash(date, startTime, endTime);
 }

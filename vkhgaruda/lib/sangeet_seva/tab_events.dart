@@ -152,13 +152,18 @@ class TabEventsState extends State<TabEvents> {
   }
 
   void _onAddNewEvent() {
+    if (widget.profile == null) {
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SlotSelection(
-                title: "Concert Registration",
-                profile: widget.profile!,
-              )),
+        builder: (context) => EventDetails(
+          title: "Concert registration",
+          profile: widget.profile!,
+        ),
+      ),
     );
   }
 

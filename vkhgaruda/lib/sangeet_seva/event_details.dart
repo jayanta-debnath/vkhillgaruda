@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vkhgaruda/sangeet_seva/record_page.dart';
+import 'package:vkhgaruda/sangeet_seva/slot_selection.dart';
 import 'package:vkhgaruda/sangeet_seva/ssconst.dart';
 import 'package:vkhpackages/vkhpackages.dart';
 import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
@@ -10,25 +11,25 @@ import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 class EventDetails extends StatefulWidget {
   final String title;
   final String? icon;
-  final DateTime selectedDate;
+  final DateTime? selectedDate;
   final EventRecord? oldEvent;
   final bool? readOnly;
   final DateTime? eventStart;
   final DateTime? eventEnd;
   final PerformerProfile profile;
-  final bool doubleBack;
+  final bool? doubleBack;
 
   const EventDetails(
       {super.key,
       required this.title,
       this.icon,
-      required this.selectedDate,
+      this.selectedDate,
       this.oldEvent,
       this.readOnly,
       this.eventStart,
       this.eventEnd,
       required this.profile,
-      required this.doubleBack});
+      this.doubleBack});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -44,6 +45,8 @@ class _EventDetailsState extends State<EventDetails> {
   String _eventStatus = "Pending";
   String _note = "";
   bool _isAdmin = false;
+  final GlobalKey<SlotSelectionState> _keySlotSelection =
+      GlobalKey<SlotSelectionState>();
 
   // lists
   final List<PerformerProfileMini> _performers = [];
@@ -135,6 +138,11 @@ class _EventDetailsState extends State<EventDetails> {
         _mainPerformer = PerformerProfile.fromJson(userdetailsJson);
       }
     });
+
+    // prompt to select slot
+    if (widget.oldEvent == null && mounted && _mainPerformer != null) {
+      await _showSlotSelectionDialog(context);
+    }
 
     // preferred event time
     _eventStart = widget.eventStart ?? _eventStart;
@@ -383,7 +391,7 @@ class _EventDetailsState extends State<EventDetails> {
 
     // populate the data structure
     EventRecord performanceRequest = EventRecord(
-      date: widget.selectedDate,
+      date: _eventStart,
       eventStart: _eventStart,
       eventEnd: _eventEnd,
       eventRequesterMobile: _mainPerformer!.mobile,
@@ -423,7 +431,7 @@ class _EventDetailsState extends State<EventDetails> {
     // go to homepage
     if (goback && mounted) {
       Navigator.pop(context);
-      if (widget.doubleBack) {
+      if (widget.doubleBack ?? false) {
         Navigator.pop(context);
       }
     }
@@ -883,6 +891,33 @@ class _EventDetailsState extends State<EventDetails> {
     );
   }
 
+  Future<void> _showSlotSelectionDialog(BuildContext context) {
+    return Widgets().showResponsiveDialog(
+        context: context,
+        actions: [
+          ElevatedButton(
+            child: Text("OK"),
+            onPressed: () {
+              SlotSelectionType? slotSelection =
+                  _keySlotSelection.currentState?.onSelectSlot();
+              setState(() {
+                if (slotSelection != null) {
+                  _eventStart = slotSelection.startTime;
+                  _eventEnd = slotSelection.endTime;
+                }
+              });
+              Navigator.pop(context);
+            },
+          )
+        ],
+        skipCancel: true,
+        title: "Select slot for concert",
+        child: SlotSelection(
+            key: _keySlotSelection,
+            title: "Select slot for concert",
+            profile: _mainPerformer!));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -908,19 +943,23 @@ class _EventDetailsState extends State<EventDetails> {
                     // leave some space at top
                     SizedBox(height: 10),
 
-                    // date
-                    Text(
-                      DateFormat(
-                        "EEE, dd MMM, yyyy",
-                      ).format(widget.selectedDate),
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-
-                    // event timing
-                    Text(
-                      "${Time().convertDateTimeTo12hrFormat(_eventStart)} - ${Time().convertDateTimeTo12hrFormat(_eventEnd)}",
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
+                    // date and time
+                    OutlinedButton(
+                        onPressed: () => _showSlotSelectionDialog(context),
+                        child: Column(
+                          children: [
+                            Text(
+                              DateFormat(
+                                "EEE, dd MMM, yyyy",
+                              ).format(_eventStart),
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            Text(
+                              "${Time().convertDateTimeTo12hrFormat(_eventStart)} - ${Time().convertDateTimeTo12hrFormat(_eventEnd)}",
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                          ],
+                        )),
 
                     // approval status
                     Padding(

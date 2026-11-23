@@ -120,6 +120,18 @@ class Slot {
   Map<String, dynamic> toJson() {
     return {'name': name, 'avl': avl, 'from': from, 'to': to};
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Slot &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          from == other.from &&
+          to == other.to;
+
+  @override
+  int get hashCode => Object.hash(name, from, to);
 }
 
 class PerformerProfileMini {
