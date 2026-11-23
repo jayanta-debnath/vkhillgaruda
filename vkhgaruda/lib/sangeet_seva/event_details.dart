@@ -114,8 +114,6 @@ class _EventDetailsState extends State<EventDetails> {
       _isLoading = true;
     });
 
-    // perform async operations here
-
     _isAdmin = await Utils().isAdmin();
 
     // fetch user details
@@ -139,11 +137,6 @@ class _EventDetailsState extends State<EventDetails> {
       }
     });
 
-    // prompt to select slot
-    if (widget.oldEvent == null && mounted && _mainPerformer != null) {
-      await _showSlotSelectionDialog(context);
-    }
-
     // preferred event time
     _eventStart = widget.eventStart ?? _eventStart;
     _eventEnd = widget.eventEnd ?? _eventEnd;
@@ -154,6 +147,11 @@ class _EventDetailsState extends State<EventDetails> {
         _eventEnd = widget.oldEvent!.eventEnd;
         _eventStatus = widget.oldEvent!.status;
       }
+    }
+
+    // prompt to select slot
+    if (widget.oldEvent == null && mounted && _mainPerformer != null) {
+      await _showSlotSelectionDialog(context);
     }
 
     // read the event details
@@ -174,43 +172,36 @@ class _EventDetailsState extends State<EventDetails> {
             EventRecord.fromJson,
           );
 
-          setState(() {
-            _eventStatus = performanceRequest!.status;
+          _eventStatus = performanceRequest!.status;
 
-            // performers
+          // performers
+          if (widget.oldEvent != null) {
+            _performers.clear();
+            _songs.clear();
             if (widget.oldEvent != null) {
-              _performers.clear();
-              _songs.clear();
-              if (widget.oldEvent != null) {
-                // populate the lists
-                _performers.addAll(performanceRequest!.performers);
-                _guests = performanceRequest!.guests;
-                _songs.addAll(performanceRequest!.songs);
-                _notePerformerController.text =
-                    performanceRequest!.notePerformer;
-              }
+              // populate the lists
+              _performers.addAll(performanceRequest!.performers);
+              _guests = performanceRequest!.guests;
+              _songs.addAll(performanceRequest!.songs);
+              _notePerformerController.text = performanceRequest!.notePerformer;
             }
-
-            PerformerProfileMini self = PerformerProfileMini(
-              salutation: _mainPerformer!.salutation == "Others"
-                  ? ""
-                  : _mainPerformer!.salutation,
-              name: _mainPerformer!.name,
-              specialization: "Vocalist",
-            );
-            if (_performers.isEmpty) {
-              _performers.add(self);
-            }
-          });
+          }
         },
       );
 
       _addListeners(dbpath);
     }
 
-    // refresh all child widgets
-
-    // perform sync operations here
+    PerformerProfileMini self = PerformerProfileMini(
+      salutation: _mainPerformer!.salutation == "Others"
+          ? ""
+          : _mainPerformer!.salutation,
+      name: _mainPerformer!.name,
+      specialization: "Vocalist",
+    );
+    if (_performers.isEmpty) {
+      _performers.add(self);
+    }
 
     setState(() {
       _isLoading = false;
