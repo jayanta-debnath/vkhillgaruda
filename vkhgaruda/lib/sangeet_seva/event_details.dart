@@ -277,7 +277,7 @@ class _EventDetailsState extends State<EventDetails> {
                     case "Edit":
                       await _showAddSongDialog(context: context, index: index);
                       if (widget.oldEvent != null) {
-                        _onSubmit(goback: false);
+                        _onSubmit();
                       }
                       break;
                     case "Delete":
@@ -290,7 +290,7 @@ class _EventDetailsState extends State<EventDetails> {
                             _songs.removeAt(index);
                           });
                           if (widget.oldEvent != null) {
-                            _onSubmit(goback: false);
+                            _onSubmit();
                           }
                         },
                       );
@@ -341,7 +341,7 @@ class _EventDetailsState extends State<EventDetails> {
                         oldUser: member,
                       );
                       if (widget.oldEvent != null) {
-                        _onSubmit(goback: false);
+                        _onSubmit();
                       }
                       break;
                     case "Remove":
@@ -354,7 +354,7 @@ class _EventDetailsState extends State<EventDetails> {
                             _performers.removeAt(index);
                           });
                           if (widget.oldEvent != null) {
-                            _onSubmit(goback: false);
+                            _onSubmit();
                           }
                         },
                       );
@@ -365,7 +365,7 @@ class _EventDetailsState extends State<EventDetails> {
             : null);
   }
 
-  Future<void> _onSubmit({bool goback = true}) async {
+  Future<void> _onSubmit() async {
     // validations for edit event
     if (widget.oldEvent != null) {
       // validate if event is already approved
@@ -427,14 +427,6 @@ class _EventDetailsState extends State<EventDetails> {
 
     // show success message
     Toaster().info("Saved");
-
-    // go to homepage
-    if (goback && mounted) {
-      Navigator.pop(context);
-      if (widget.doubleBack ?? false) {
-        Navigator.pop(context);
-      }
-    }
   }
 
   // action = Approved or Rejected
@@ -1091,7 +1083,7 @@ class _EventDetailsState extends State<EventDetails> {
                                       context: context);
 
                                   if (widget.oldEvent != null) {
-                                    _onSubmit(goback: false);
+                                    _onSubmit();
                                   }
                                 },
                                 child: _isAdmin
@@ -1123,7 +1115,7 @@ class _EventDetailsState extends State<EventDetails> {
                                 onPressed: () async {
                                   await _showAddSongDialog(context: context);
                                   if (widget.oldEvent != null) {
-                                    _onSubmit(goback: false);
+                                    _onSubmit();
                                   }
                                 },
                                 child: _isAdmin
@@ -1152,7 +1144,7 @@ class _EventDetailsState extends State<EventDetails> {
                             onPressed: () async {
                               await _showAddNoteDialog(context);
                               if (widget.oldEvent != null) {
-                                _onSubmit(goback: false);
+                                _onSubmit();
                               }
                             },
                             child: _isAdmin
