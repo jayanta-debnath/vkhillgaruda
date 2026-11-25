@@ -137,7 +137,7 @@ class _EventDetailsState extends State<EventDetails> {
 
           if (performanceRequest != null) {
             _eventStart = performanceRequest!.eventStart;
-            _eventStart = performanceRequest!.eventEnd;
+            _eventEnd = performanceRequest!.eventEnd;
             _eventStatus = performanceRequest!.status;
             _noteTemple = performanceRequest!.noteTemple;
             _noteTempleController.text = _noteTemple;
@@ -890,16 +890,26 @@ class _EventDetailsState extends State<EventDetails> {
                         onPressed: () => _showSlotSelectionDialog(context),
                         child: Column(
                           children: [
-                            Text(
-                              DateFormat(
-                                "EEE, dd MMM, yyyy",
-                              ).format(_eventStart ?? DateTime.now()),
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            Text(
-                              "${Time().convertDateTimeTo12hrFormat(_eventStart ?? DateTime.now())} - ${Time().convertDateTimeTo12hrFormat(_eventEnd ?? DateTime.now())}",
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
+                            if (_eventStart != null)
+                              Text(
+                                DateFormat(
+                                  "EEE, dd MMM, yyyy",
+                                ).format(_eventStart!),
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
+                              ),
+                            if (_eventStart != null && _eventEnd != null)
+                              Text(
+                                "${Time().convertDateTimeTo12hrFormat(_eventStart!)} - ${Time().convertDateTimeTo12hrFormat(_eventEnd ?? DateTime.now())}",
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall,
+                              ),
+                            if (_eventStart == null || _eventEnd == null)
+                              Text(
+                                "Select slot",
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
+                              )
                           ],
                         )),
 

@@ -88,9 +88,7 @@ class _EventListState extends State<EventList> {
               // process the received data
               // assuming only one data is received
 
-              setState(() {
-                Widgets().showMessage(context, "Delete event not implemented");
-              });
+              setState(() {});
             }
           },
 
@@ -144,38 +142,40 @@ class _EventListState extends State<EventList> {
         for (var eventLinkRaw in eventLinksRaw) {
           FB().getValue(path: eventLinkRaw['path']).then(
             (eventRaw) {
-              EventRecord event =
-                  Utils().convertRawToDatatype(eventRaw, EventRecord.fromJson);
-              setState(() {
-                _events.add(event);
-                // sort events by date
-                _events.sort((a, b) {
-                  if (a.date.isBefore(b.date)) {
-                    return -1;
-                  } else if (a.date.isAfter(b.date)) {
-                    return 1;
-                  } else {
-                    return 0;
-                  }
-                });
-              });
-
-              SSUtils().getPerformerProfile(event.eventRequesterMobile).then(
-                (mainPerformer) {
-                  if (mainPerformer != null) {
-                    setState(() {
-                      _mainPerformers[mainPerformer.mobile] = mainPerformer;
-                    });
-                  }
-                },
-              );
-
-              // check if all the events are fetched
-              count++;
-              if (count >= totalEvents) {
+              if (eventRaw != null) {
+                EventRecord event = Utils()
+                    .convertRawToDatatype(eventRaw, EventRecord.fromJson);
                 setState(() {
-                  _isSecondaryLoading = false;
+                  _events.add(event);
+                  // sort events by date
+                  _events.sort((a, b) {
+                    if (a.date.isBefore(b.date)) {
+                      return -1;
+                    } else if (a.date.isAfter(b.date)) {
+                      return 1;
+                    } else {
+                      return 0;
+                    }
+                  });
                 });
+
+                SSUtils().getPerformerProfile(event.eventRequesterMobile).then(
+                  (mainPerformer) {
+                    if (mainPerformer != null) {
+                      setState(() {
+                        _mainPerformers[mainPerformer.mobile] = mainPerformer;
+                      });
+                    }
+                  },
+                );
+
+                // check if all the events are fetched
+                count++;
+                if (count >= totalEvents) {
+                  setState(() {
+                    _isSecondaryLoading = false;
+                  });
+                }
               }
             },
           );
