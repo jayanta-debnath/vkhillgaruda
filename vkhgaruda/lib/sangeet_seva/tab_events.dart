@@ -143,8 +143,8 @@ class TabEventsState extends State<TabEvents> {
             MaterialPageRoute(
                 builder: (context) => EventDetails(
                     title: "Concert Details",
-                    selectedDate: _events[index].date,
-                    oldEvent: _events[index],
+                    eventStart: _events[index].eventStart,
+                    eventEnd: _events[index].eventEnd,
                     doubleBack: false,
                     profile: widget.profile!))),
       ),

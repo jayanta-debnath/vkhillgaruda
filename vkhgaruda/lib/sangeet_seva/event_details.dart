@@ -11,8 +11,6 @@ import 'package:vkhgaruda/sangeet_seva/datatypes.dart';
 class EventDetails extends StatefulWidget {
   final String title;
   final String? icon;
-  final DateTime? selectedDate;
-  final EventRecord? oldEvent;
   final bool? readOnly;
   final DateTime? eventStart;
   final DateTime? eventEnd;
@@ -23,8 +21,6 @@ class EventDetails extends StatefulWidget {
       {super.key,
       required this.title,
       this.icon,
-      this.selectedDate,
-      this.oldEvent,
       this.readOnly,
       this.eventStart,
       this.eventEnd,
@@ -40,10 +36,10 @@ class _EventDetailsState extends State<EventDetails> {
   // scalars
   bool _isLoading = true;
   PerformerProfile? _mainPerformer;
-  late DateTime _eventStart;
-  late DateTime _eventEnd;
+  DateTime? _eventStart;
+  DateTime? _eventEnd;
   String _eventStatus = "Pending";
-  String _note = "";
+  String _noteTemple = "";
   bool _isAdmin = false;
   final GlobalKey<SlotSelectionState> _keySlotSelection =
       GlobalKey<SlotSelectionState>();
@@ -57,8 +53,6 @@ class _EventDetailsState extends State<EventDetails> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _raagaController = TextEditingController();
   final TextEditingController _taalaController = TextEditingController();
-  final TextEditingController _notePerformerController =
-      TextEditingController();
   final TextEditingController _noteTempleController = TextEditingController();
   List<StreamSubscription<DatabaseEvent>> _listeners = [];
 
@@ -66,24 +60,9 @@ class _EventDetailsState extends State<EventDetails> {
   initState() {
     super.initState();
 
-    // set the event start and end time
-    if (widget.eventStart != null) {
-      _eventStart = widget.eventStart!;
-    } else if (widget.oldEvent != null) {
-      _eventStart = widget.oldEvent!.eventStart;
-    } else {
-      _eventStart = DateTime.now();
-    }
-
-    if (widget.eventEnd != null) {
-      _eventEnd = widget.eventEnd!;
-    } else if (widget.oldEvent != null) {
-      _eventEnd = widget.oldEvent!.eventEnd;
-    } else {
-      _eventEnd = DateTime.now();
-    }
-
     _mainPerformer = widget.profile;
+    _eventStart = widget.eventStart;
+    _eventEnd = widget.eventEnd;
 
     refresh();
   }
@@ -98,7 +77,6 @@ class _EventDetailsState extends State<EventDetails> {
     _titleController.dispose();
     _raagaController.dispose();
     _taalaController.dispose();
-    _notePerformerController.dispose();
     _noteTempleController.dispose();
 
     // listeners
@@ -135,30 +113,15 @@ class _EventDetailsState extends State<EventDetails> {
       if (userdetailsJson.isNotEmpty) {
         _mainPerformer = PerformerProfile.fromJson(userdetailsJson);
       }
+
+      setState(() {});
     });
 
-    // preferred event time
-    _eventStart = widget.eventStart ?? _eventStart;
-    _eventEnd = widget.eventEnd ?? _eventEnd;
-    if (widget.readOnly == null || widget.readOnly == false) {
-      // edit event
-      if (widget.oldEvent != null) {
-        _eventStart = widget.oldEvent!.eventStart;
-        _eventEnd = widget.oldEvent!.eventEnd;
-        _eventStatus = widget.oldEvent!.status;
-      }
-    }
-
-    // prompt to select slot
-    if (widget.oldEvent == null && mounted && _mainPerformer != null) {
-      await _showSlotSelectionDialog(context);
-    }
-
     // read the event details
-    EventRecord? performanceRequest;
-    if (widget.oldEvent != null) {
-      String dbdate = DateFormat("yyyy-MM-dd").format(widget.oldEvent!.date);
-      String slotName = DateFormat("HH_mm").format(widget.oldEvent!.eventStart);
+    if (_eventStart != null) {
+      EventRecord? performanceRequest;
+      String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart!);
+      String slotName = DateFormat("HH_mm").format(_eventStart!);
       String dbpath =
           "${Const().dbrootSangeetSeva}/EventsByMobile/$mobile/$dbdate/$slotName";
       FB().getJson(path: dbpath).then(
@@ -172,35 +135,43 @@ class _EventDetailsState extends State<EventDetails> {
             EventRecord.fromJson,
           );
 
-          _eventStatus = performanceRequest!.status;
+          if (performanceRequest != null) {
+            _eventStart = performanceRequest!.eventStart;
+            _eventStart = performanceRequest!.eventEnd;
+            _eventStatus = performanceRequest!.status;
+            _noteTemple = performanceRequest!.noteTemple;
+            _noteTempleController.text = _noteTemple;
 
-          // performers
-          if (widget.oldEvent != null) {
+            // performers and songs
             _performers.clear();
             _songs.clear();
-            if (widget.oldEvent != null) {
-              // populate the lists
-              _performers.addAll(performanceRequest!.performers);
-              _guests = performanceRequest!.guests;
-              _songs.addAll(performanceRequest!.songs);
-              _notePerformerController.text = performanceRequest!.notePerformer;
-            }
+            _performers.addAll(performanceRequest!.performers);
+            _guests = performanceRequest!.guests;
+            _songs.addAll(performanceRequest!.songs);
           }
+
+          setState(() {});
         },
       );
-
       _addListeners(dbpath);
     }
 
-    PerformerProfileMini self = PerformerProfileMini(
-      salutation: _mainPerformer!.salutation == "Others"
-          ? ""
-          : _mainPerformer!.salutation,
-      name: _mainPerformer!.name,
-      specialization: "Vocalist",
-    );
-    if (_performers.isEmpty) {
-      _performers.add(self);
+    // prompt to select slot
+    if (mounted && _eventStart == null) {
+      await _showSlotSelectionDialog(context);
+    }
+
+    if (_mainPerformer != null) {
+      PerformerProfileMini self = PerformerProfileMini(
+        salutation: _mainPerformer!.salutation == "Others"
+            ? ""
+            : _mainPerformer!.salutation,
+        name: _mainPerformer!.name,
+        specialization: "Vocalist",
+      );
+      if (_performers.isEmpty) {
+        _performers.add(self);
+      }
     }
 
     setState(() {
@@ -267,9 +238,8 @@ class _EventDetailsState extends State<EventDetails> {
                   switch (action) {
                     case "Edit":
                       await _showAddSongDialog(context: context, index: index);
-                      if (widget.oldEvent != null) {
-                        _onSubmit();
-                      }
+                      _onSubmit();
+
                       break;
                     case "Delete":
                       Widgets().showConfirmDialog(
@@ -280,9 +250,7 @@ class _EventDetailsState extends State<EventDetails> {
                           setState(() {
                             _songs.removeAt(index);
                           });
-                          if (widget.oldEvent != null) {
-                            _onSubmit();
-                          }
+                          _onSubmit();
                         },
                       );
                       break;
@@ -331,9 +299,8 @@ class _EventDetailsState extends State<EventDetails> {
                         context: context,
                         oldUser: member,
                       );
-                      if (widget.oldEvent != null) {
-                        _onSubmit();
-                      }
+                      _onSubmit();
+
                       break;
                     case "Remove":
                       Widgets().showConfirmDialog(
@@ -344,9 +311,7 @@ class _EventDetailsState extends State<EventDetails> {
                           setState(() {
                             _performers.removeAt(index);
                           });
-                          if (widget.oldEvent != null) {
-                            _onSubmit();
-                          }
+                          _onSubmit();
                         },
                       );
                       break;
@@ -357,40 +322,29 @@ class _EventDetailsState extends State<EventDetails> {
   }
 
   Future<void> _onSubmit() async {
-    // validations for edit event
-    if (widget.oldEvent != null) {
-      // validate if event is already approved
-      if (widget.oldEvent!.status == "Approved") {
-        Toaster().error("Can't update approved event");
-        return;
-      }
-
-      // validate if event is in the past
-      DateTime today = DateTime.now();
-      today = DateTime(today.year, today.month, today.day);
-      if (widget.oldEvent!.date.isBefore(today)) {
-        Toaster().error("Can't update past event");
-        return;
-      }
-    }
-
     // validate number of performers
     if (_performers.isEmpty) {
       Toaster().error("Please enter at least 1 performer");
       return;
     }
 
+    // validate slot
+    if (_eventStart == null || _eventEnd == null) {
+      Toaster().error("No slot selected");
+      return;
+    }
+
     // populate the data structure
     EventRecord performanceRequest = EventRecord(
-      date: _eventStart,
-      eventStart: _eventStart,
-      eventEnd: _eventEnd,
+      date: _eventStart!,
+      eventStart: _eventStart!,
+      eventEnd: _eventEnd!,
       eventRequesterMobile: _mainPerformer!.mobile,
       performers: _performers,
       guests: _guests,
       songs: _songs,
-      notePerformer: _notePerformerController.text,
       status: "Pending",
+      noteTemple: _noteTemple,
     );
 
     // save to firebase
@@ -422,8 +376,14 @@ class _EventDetailsState extends State<EventDetails> {
 
   // action = Approved or Rejected
   Future<void> _performAction(String action) async {
-    String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart);
-    String slotName = DateFormat("HH_mm").format(_eventStart);
+    // validate slot
+    if (_eventStart == null || _eventEnd == null) {
+      Toaster().error("No slot selected");
+      return;
+    }
+
+    String dbdate = DateFormat("yyyy-MM-dd").format(_eventStart!);
+    String slotName = DateFormat("HH_mm").format(_eventStart!);
     String eventPath =
         "${Const().dbrootSangeetSeva}/EventsByMobile/${_mainPerformer!.mobile}/$dbdate/$slotName";
 
@@ -445,9 +405,10 @@ class _EventDetailsState extends State<EventDetails> {
         if (await FB().pathExists(eventPath)) {
           // change status of event
           _eventStatus = action;
-          _note = _noteTempleController.text;
+          _noteTemple = _noteTempleController.text;
           await FB().setValue(path: "$eventPath/status", value: _eventStatus);
-          await FB().setValue(path: "$eventPath/noteTemple", value: _note);
+          await FB()
+              .setValue(path: "$eventPath/noteTemple", value: _noteTemple);
         }
       }
     } else {
@@ -521,15 +482,15 @@ class _EventDetailsState extends State<EventDetails> {
 
     await Widgets().showResponsiveDialog(
       context: context,
-      title: "Add note for performer",
+      title: "Add some remarks",
       child: Column(
         children: [
           TextField(
-            focusNode: focusNode,
             maxLines: 3,
-            controller: _notePerformerController,
+            focusNode: focusNode,
+            controller: _noteTempleController,
             decoration: InputDecoration(
-              hintText: "Enter your note here",
+              hintText: "Enter some remarks here",
               border: OutlineInputBorder(),
             ),
           ),
@@ -539,7 +500,9 @@ class _EventDetailsState extends State<EventDetails> {
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
-            setState(() {});
+            setState(() {
+              _noteTemple = _noteTempleController.text;
+            });
           },
           child: Text("Save"),
         ),
@@ -930,11 +893,11 @@ class _EventDetailsState extends State<EventDetails> {
                             Text(
                               DateFormat(
                                 "EEE, dd MMM, yyyy",
-                              ).format(_eventStart),
+                              ).format(_eventStart ?? DateTime.now()),
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             Text(
-                              "${Time().convertDateTimeTo12hrFormat(_eventStart)} - ${Time().convertDateTimeTo12hrFormat(_eventEnd)}",
+                              "${Time().convertDateTimeTo12hrFormat(_eventStart ?? DateTime.now())} - ${Time().convertDateTimeTo12hrFormat(_eventEnd ?? DateTime.now())}",
                               style: Theme.of(context).textTheme.headlineSmall,
                             ),
                           ],
@@ -978,22 +941,6 @@ class _EventDetailsState extends State<EventDetails> {
                         ],
                       ),
                     ),
-
-                    // temple notes
-                    SizedBox(height: 10),
-                    if (widget.oldEvent != null &&
-                        widget.oldEvent!.noteTemple.isNotEmpty)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.yellow,
-                          border: Border.all(color: Colors.black, width: 2),
-                        ),
-                        child: ListTile(
-                          title: Text("Notes from temple"),
-                          subtitle: Text(widget.oldEvent!.noteTemple),
-                        ),
-                      ),
-                    SizedBox(height: 10),
 
                     // event requester
                     if (_mainPerformer != null)
@@ -1052,9 +999,7 @@ class _EventDetailsState extends State<EventDetails> {
                                   await _showAddPerformerDialog(
                                       context: context);
 
-                                  if (widget.oldEvent != null) {
-                                    _onSubmit();
-                                  }
+                                  _onSubmit();
                                 },
                                 child: _isAdmin
                                     ? Text(
@@ -1084,9 +1029,7 @@ class _EventDetailsState extends State<EventDetails> {
                             TextButton(
                                 onPressed: () async {
                                   await _showAddSongDialog(context: context);
-                                  if (widget.oldEvent != null) {
-                                    _onSubmit();
-                                  }
+                                  _onSubmit();
                                 },
                                 child: _isAdmin
                                     ? Text(
@@ -1099,27 +1042,28 @@ class _EventDetailsState extends State<EventDetails> {
                       ),
                     ),
 
-                    // performer note
+                    // notes
                     Widgets().createTopLevelCard(
                       context: context,
                       title: "Remarks",
                       child: Column(
                         children: [
-                          if (_notePerformerController.text.isNotEmpty)
+                          // temple notes
+                          SizedBox(height: 10),
+                          if (_noteTemple.isNotEmpty)
                             Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(_notePerformerController.text),
-                            ),
+                                alignment: Alignment.centerLeft,
+                                child: Text(_noteTemple)),
+
+                          SizedBox(height: 10),
                           TextButton(
                             onPressed: () async {
                               await _showAddNoteDialog(context);
-                              if (widget.oldEvent != null) {
-                                _onSubmit();
-                              }
+                              _onSubmit();
                             },
                             child: _isAdmin
                                 ? Text(
-                                    _notePerformerController.text.isEmpty
+                                    _noteTemple.isEmpty
                                         ? "Add some notes"
                                         : "Edit notes",
                                   )

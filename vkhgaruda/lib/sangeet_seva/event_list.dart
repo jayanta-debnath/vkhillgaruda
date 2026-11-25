@@ -291,8 +291,8 @@ class _EventListState extends State<EventList> {
                                     MaterialPageRoute(builder: (context) {
                                   return EventDetails(
                                     title: "Concert details",
-                                    oldEvent: _events[index],
-                                    selectedDate: _events[index].eventStart,
+                                    eventStart: _events[index].eventStart,
+                                    eventEnd: _events[index].eventEnd,
                                     profile: profile,
                                     doubleBack: false,
                                   );
